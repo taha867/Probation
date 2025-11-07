@@ -1,0 +1,122 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #2b2a4c;
+    color: #333;
+    line-height: 1.6;
+}
+
+.container {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 10px;
+    background-color: #f2f2f2;
+    margin-left: 50px;
+    margin-right: 50px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    border-radius: 15px;
+    overflow: hidden;
+
+
+
+}
+
+header {
+    grid-column: span 12;
+    background-color: #58577f;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+
+    padding: 0px 60px;
+}
+
+header img {
+    width: 140px;
+    height: 70;
+    border-radius: 5px;
+    margin-right: 15px;
+    transform: perspective(400px) rotateY(+40deg);
+    /* Negative value tilts it inward (right edge toward you).
+    Positive value tilts it outward (left edge toward you).*/
+
+}
+
+header h1 {
+    color: #ffffff;
+    padding-left: 50px;
+    font-size: 120px;
+    font-style: italic;
+}
+
+
+
+aside {
+    grid-column: span 3;
+    
+}
+
+ul {
+
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+
+}
+
+
+li a {
+  display: block;
+  color: rgb(161, 105, 105);
+  text-align: center;
+  padding: 20px;
+  text-decoration: none;
+  text-align: left;   
+  border-bottom: 1px dotted #999;
+}
+
+li a:hover {
+  background-color: #2b6ab3;
+}
+
+aside p{
+    padding: 20px;
+    text-align: justify;
+
+}
+
+main {
+    grid-column: span 9;
+    padding-top: 30px;  
+    padding-left: 15px;  
+}
+
+main h2 {
+font-size: 35px;
+color: #351e1e;
+}
+
+main p{
+    padding-right: 20px;
+    text-align: justify;
+}
+
+footer {
+    grid-column: span 12;
+    background-color: #724747;
+    padding: 20px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-weight: bold;
+}
+
