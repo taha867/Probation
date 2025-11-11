@@ -2,6 +2,8 @@
     box-sizing: border-box;
     margin: 0;
     padding: 0;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 body {
@@ -197,6 +199,7 @@ nav ul li a:hover {
     gap: 20px;
     max-width: 1000px;
     margin: 0 auto;
+
 }
 
 .stats-grid div h3 {
@@ -204,6 +207,7 @@ nav ul li a:hover {
     font-size: 40px;
     color: #222;
     margin-bottom: 10px;
+    overflow-wrap: break-word;
 }
 
 .stats-grid div p {
@@ -212,6 +216,7 @@ nav ul li a:hover {
     color: #777;
     text-transform: uppercase;
     font-weight: bold;
+
 }
 
 
@@ -614,11 +619,11 @@ div.gallery-item a.ReadMe {
 
     div.gallery-item {
         margin: 10px;
-        width: 150px;
+        max-width: 150px;
     }
 
     .sermon-item {
-        width: 150px;
+        max-width: 150px;
 
     }
 
@@ -663,7 +668,7 @@ div.gallery-item a.ReadMe {
 
     .gallery-item,
     .sermon-item {
-        width: 45%;
+        max-width: 45%;
     }
 
     .quote p {
@@ -696,7 +701,7 @@ div.gallery-item a.ReadMe {
     }
 }
 
-/* Small devices (mobile phones, <= 600px) */
+
 @media screen and (max-width: 600px) {
 
     .container {
@@ -705,11 +710,11 @@ div.gallery-item a.ReadMe {
 
     div.gallery-item {
         margin: 10px;
-        width: 150px;
+        max-width: 150px;
     }
 
     .sermon-item {
-        width: 150px;
+        max-width: 150px;
 
     }
 
@@ -735,23 +740,28 @@ div.gallery-item a.ReadMe {
         font-size: 16px;
     }
 
-    .intro h2{
+    .intro h2 {
         font-size: 20px;
     }
-    .intro p{
+
+    .intro p {
         font-size: 13px;
     }
-    .stats-text{
+
+    .stats-text {
         font-size: 10px;
     }
+
     .stats-grid {
         grid-template-columns: repeat(4, 1fr);
-        
+
     }
-    .stats-grid div h3{
+
+    .stats-grid div h3 {
         font-size: 20px;
     }
-    .stats-grid div p{
+
+    .stats-grid div p {
         font-size: 10px;
     }
 
@@ -770,7 +780,7 @@ div.gallery-item a.ReadMe {
 
     .gallery-item,
     .sermon-item {
-        width: 80%;
+        max-width: 80%;
     }
 
     .quote p {
