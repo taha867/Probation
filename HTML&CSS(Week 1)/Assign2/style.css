@@ -653,19 +653,20 @@ div.gallery-item a.ReadMe {
         justify-content: center;
     }
 
-    .services p{
+    .services p {
         font-size: 15px;
     }
 
-    .sermons p{
+    .sermons p {
         font-size: 14px;
     }
+
     .gallery-item,
     .sermon-item {
         width: 45%;
     }
 
-    .quote p{
+    .quote p {
         font-size: 15px;
     }
 
@@ -673,13 +674,13 @@ div.gallery-item a.ReadMe {
         grid-template-columns: repeat(2, 1fr);
     }
 
-.upcoming-events p{
-    font-size: 14px;
-}
+    .upcoming-events p {
+        font-size: 14px;
+    }
 
-.news-section p{
-    font-size: 14px;
-}
+    .news-section p {
+        font-size: 14px;
+    }
 
     .news-grid {
         grid-template-columns: repeat(2, 1fr);
@@ -714,12 +715,12 @@ div.gallery-item a.ReadMe {
 
 
     header h1 {
-        font-size: 50px;
+        font-size: 30px;
     }
 
     nav ul li a {
-        padding: 10px 20px;
-        font-size: 14px;
+        padding: 10px 7px;
+        font-size: 11px;
     }
 
     .hero {
@@ -727,15 +728,31 @@ div.gallery-item a.ReadMe {
     }
 
     .hero h1 {
-        font-size: 32px;
+        font-size: 25px;
     }
 
     .hero p {
         font-size: 16px;
     }
 
+    .intro h2{
+        font-size: 20px;
+    }
+    .intro p{
+        font-size: 13px;
+    }
+    .stats-text{
+        font-size: 10px;
+    }
     .stats-grid {
         grid-template-columns: repeat(4, 1fr);
+        
+    }
+    .stats-grid div h3{
+        font-size: 20px;
+    }
+    .stats-grid div p{
+        font-size: 10px;
     }
 
     .services .gallery,
@@ -743,40 +760,41 @@ div.gallery-item a.ReadMe {
         justify-content: center;
     }
 
-    .services p{
-        font-size: 15px;
+    .services p {
+        font-size: 9px;
     }
 
-    .sermons p{
+    .sermons p {
         font-size: 14px;
     }
+
     .gallery-item,
     .sermon-item {
-        width: 45%;
+        width: 80%;
     }
 
-    .quote p{
-        font-size: 15px;
+    .quote p {
+        font-size: 12px;
     }
 
     .event-grid {
         grid-template-columns: repeat(2, 1fr);
     }
 
-.upcoming-events p{
-    font-size: 14px;
-}
+    .upcoming-events p {
+        font-size: 14px;
+    }
 
-.news-section p{
-    font-size: 14px;
-}
+    .news-section p {
+        font-size: 12px;
+    }
 
     .news-grid {
         grid-template-columns: repeat(2, 1fr);
     }
 
     .footer-content {
-        flex-direction: row;
+        flex-direction: column;
         text-align: center;
     }
 
