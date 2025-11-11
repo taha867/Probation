@@ -1,0 +1,60 @@
+/* responsive.css - W3Schools style simple breakpoints */
+
+@media screen and (max-width: 1024px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .event-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .news-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .gallery,
+  .sermon-gallery {
+    flex-direction: column;
+    align-items: center;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  nav ul {
+    flex-direction: column;
+  }
+
+  .hero-content h1 {
+    font-size: 36px;
+  }
+
+  section {
+    padding: 60px 20px;
+  }
+
+  .container {
+    padding: 30px 20px;
+    background-position: center;
+    background-size: cover;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .event-grid,
+  .news-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .footer-content {
+    flex-direction: column;
+    text-align: center;
+  }
+  .container {
+    padding: 20px 15px;
+  }
+}

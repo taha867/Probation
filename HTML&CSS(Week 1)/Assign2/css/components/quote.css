@@ -1,0 +1,17 @@
+.quote {
+  background: #5a6e5a;
+  color: white;
+  text-align: center;
+  padding: 60px 40px;
+}
+
+.quote p {
+  font-size: 28px;
+  font-style: italic;
+  margin-bottom: 15px;
+}
+
+.quote h4 {
+  font-size: 20px;
+  font-style: italic;
+}

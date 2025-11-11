@@ -1,0 +1,50 @@
+.sermons {
+  background: #fff;
+}
+
+.sermon-gallery {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 25px;
+}
+
+.sermon-item {
+  position: relative;
+  width: 350px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  overflow: hidden;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.sermon-item img {
+  height: 230px;
+  object-fit: cover;
+  width: 100%;
+}
+
+.play-button {
+  position: absolute;
+  top: 45%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 35px;
+  color: #5a7d5a;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  line-height: 60px;
+}
+
+.sermon-item h3 {
+  margin-top: 15px;
+  font-size: 18px;
+}
+
+.sermon-item p {
+  font-size: 14px;
+  color: #777;
+  margin-bottom: 20px;
+}

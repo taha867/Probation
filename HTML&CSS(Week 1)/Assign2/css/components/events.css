@@ -1,0 +1,42 @@
+.upcoming-events {
+  background: #fff;
+  text-align: center;
+}
+
+.event-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 30px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.event-card {
+  text-align: left;
+  padding: 20px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+.event-date {
+  font-size: 14px;
+  color: #777;
+  font-style: italic;
+  margin-bottom: 5px;
+}
+
+.event-card h3 {
+  margin-bottom: 10px;
+  font-size: 18px;
+}
+
+.event-card p {
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.read-more {
+  color: #5a7d5a;
+  font-weight: bold;
+}

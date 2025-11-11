@@ -1,0 +1,30 @@
+.stats {
+  background: #fff;
+  text-align: center;
+}
+
+.stats-text {
+  margin-bottom: 40px;
+  font-size: 16px;
+  line-height: 1.8;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 25px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.stats-grid h3 {
+  font-size: 40px;
+  color: #222;
+}
+
+.stats-grid p {
+  font-size: 13px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #777;
+}

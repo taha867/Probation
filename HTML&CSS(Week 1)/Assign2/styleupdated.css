@@ -1,3 +1,4 @@
+/* === UNIVERSAL STYLES === */
 * {
     box-sizing: border-box;
     margin: 0;
@@ -13,32 +14,36 @@ body {
     background-repeat: repeat;
     background-size: cover;
     background-position: center;
+    color: #333;
+    line-height: 1.6;
 }
 
+/* === CONTAINER === */
 .container {
     display: grid;
     grid-template-columns: repeat(12, 1fr);
     max-width: 1500px;
-
     margin: auto;
+    padding: 0 20px;
 }
 
+/* === HEADER === */
 header {
     grid-column: span 12;
     background: #fff;
     text-align: center;
-    padding: 20px;
+    padding: 30px 20px;
+    border-bottom: 1px solid #ddd;
 }
 
 header h1 {
-
     font-size: 70px;
     color: #5a7452;
     font-weight: 700;
     text-align: center;
-    padding: 20px 0;
 }
 
+/* === NAVIGATION === */
 nav {
     grid-column: span 12;
     background: #fff;
@@ -51,8 +56,6 @@ nav ul {
     display: flex;
     justify-content: center;
     list-style: none;
-    margin: 0;
-    padding: 0;
 }
 
 nav ul li a {
@@ -68,6 +71,7 @@ nav ul li a:hover {
     color: #5a6e5a;
 }
 
+/* === HERO SECTION === */
 .hero {
     position: relative;
     background-image: url('./assets/hero.jpg');
@@ -77,10 +81,10 @@ nav ul li a:hover {
     display: flex;
     justify-content: center;
     align-items: center;
+    flex-direction: column;
     text-align: center;
     color: white;
     grid-column: span 12;
-    flex-direction: column;
 }
 
 .hero::before {
@@ -131,6 +135,7 @@ nav ul li a:hover {
     border: none;
     cursor: pointer;
     font-weight: bold;
+    border-radius: 5px;
 }
 
 .btn-green {
@@ -151,35 +156,38 @@ nav ul li a:hover {
     background-color: #f0f0f0;
 }
 
+/* === INTRO === */
 .intro {
     grid-column: span 12;
     background: #fff;
     text-align: center;
-    padding: 30px;
+    padding: 60px 40px;
     font-family: 'Playfair Display', serif;
     border-bottom: 1px solid #ddd;
 }
 
 .intro h2 {
     font-size: 30px;
+    margin-bottom: 15px;
 }
 
 .intro p {
     color: #727171;
+    font-size: 16px;
 }
 
+/* === STATS === */
 .stats {
     grid-column: span 12;
     background: #fff;
     text-align: center;
-    padding: 60px 20px;
+    padding: 60px 40px;
     border-bottom: 1px solid #eee;
 }
 
 .stats-text {
     color: #727171;
     font-size: 16px;
-    line-height: 1.8;
     margin-bottom: 40px;
 }
 
@@ -189,7 +197,6 @@ nav ul li a:hover {
     gap: 20px;
     max-width: 1000px;
     margin: 0 auto;
-
 }
 
 .stats-grid div h3 {
@@ -197,7 +204,6 @@ nav ul li a:hover {
     font-size: 40px;
     color: #222;
     margin-bottom: 10px;
-    overflow-wrap: break-word;
 }
 
 .stats-grid div p {
@@ -206,63 +212,59 @@ nav ul li a:hover {
     color: #777;
     text-transform: uppercase;
     font-weight: bold;
-
 }
 
+/* === SERVICES === */
 .services {
     grid-column: span 12;
     background: #fcfafa;
-    padding: 40px;
+    padding: 60px 40px;
     text-align: center;
     border-bottom: 1px solid #eee;
 }
 
 .services h2 {
     font-size: 32px;
+    margin-bottom: 20px;
 }
 
 .services p {
     color: #727171;
-    margin: 20px 5px 40px;
+    margin-bottom: 40px;
+    font-size: 16px;
 }
 
-div.gallery {
+.gallery {
     display: flex;
     flex-wrap: wrap;
-    justify-content: flex-start;
+    justify-content: center;
+    gap: 25px;
 }
 
-div.gallery-item {
-    margin: 15px;
+.gallery-item {
     border: 1px solid #ccc;
-    width: 430px;
-    padding-bottom: 10px;
-}
-
-div.gallery-item:hover {
-    border: 1px solid #777;
+    border-radius: 5px;
+    width: 420px;
+    background: #fff;
+    overflow: hidden;
 }
 
 .gallery-item img {
     width: 100%;
     height: 250px;
     object-fit: cover;
-    border-radius: 5px;
 }
 
-div.gallery-item div.desc {
+.gallery-item .desc {
     padding: 15px;
-    text-align: center;
-}
-
-div.gallery-item p {
     text-align: left;
 }
 
-div.gallery-item a.ReadMe {
+.gallery-item a.ReadMe {
     color: #5a7d5a;
 }
 
+/* === SERMONS === */
 .sermons {
     grid-column: span 12;
     background: #fff;
@@ -284,8 +286,8 @@ div.gallery-item a.ReadMe {
 
 .sermon-gallery {
     display: flex;
-    justify-content: flex-start;
     flex-wrap: wrap;
+    justify-content: center;
     gap: 25px;
 }
 
@@ -293,11 +295,9 @@ div.gallery-item a.ReadMe {
     position: relative;
     background: #fff;
     border: 1px solid #ddd;
-    width: 430px;
-    text-align: center;
-    padding-bottom: 20px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    width: 420px;
     border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
 .sermon-item img {
@@ -325,50 +325,35 @@ div.gallery-item a.ReadMe {
 }
 
 .play-button:hover {
-    background: rgba(255, 255, 255, 1);
     transform: translate(-50%, -50%) scale(1.1);
 }
 
-.sermon-item h3 {
-    font-size: 18px;
-    margin-top: 20px;
-    color: #222;
-    font-family: 'Playfair Display', serif;
-}
-
-.sermon-item p {
-    font-size: 14px;
-    color: #777;
-    margin-top: 5px;
-}
-
-
+/* === QUOTE === */
 .quote {
     grid-column: span 12;
     background: #5a6e5a;
     color: white;
     text-align: center;
-    padding: 50px;
-
+    padding: 60px 40px;
 }
 
 .quote p {
-    font-size: 30px;
-    padding-bottom: 20px;
+    font-size: 28px;
     font-style: italic;
+    margin-bottom: 15px;
 }
 
 .quote h4 {
-    font-size: 20px;
+    font-size: 18px;
     font-style: italic;
 }
 
+/* === EVENTS === */
 .upcoming-events {
     grid-column: span 12;
     background: #fff;
     text-align: center;
-    padding: 80px 40px;
-    font-family: 'Playfair Display', serif;
+    padding: 60px 40px;
     border-bottom: 1px solid #eee;
 }
 
@@ -397,59 +382,28 @@ div.gallery-item a.ReadMe {
     text-align: left;
     padding: 20px;
     background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 5px;
 }
 
-.event-card .event-date {
-    color: #777;
-    font-style: italic;
-    font-size: 14px;
-    margin-bottom: 10px;
-}
-
-.event-card h3 {
-    font-size: 20px;
-    margin-bottom: 10px;
-    color: #333;
-}
-
-.event-card p {
-    color: #727171;
-    font-size: 15px;
-    line-height: 1.6;
-    margin-bottom: 15px;
-}
-
-.read-more {
-    text-decoration: none;
-    color: #5a6e5a;
-    font-weight: bold;
-}
-
-.read-more:hover {
-    text-decoration: underline;
-}
-
+/* === NEWS SECTION === */
 .news-section {
     grid-column: span 12;
     background: #fff;
     text-align: center;
-    padding: 80px 40px;
-    font-family: 'Playfair Display', serif;
+    padding: 60px 40px;
     border-bottom: 1px solid #eee;
-    margin-bottom: 20px;
 }
 
 .news-section h2 {
     font-size: 32px;
-    color: #222;
-    margin-bottom: 10px;
+    margin-bottom: 20px;
 }
 
 .news-section p {
     color: #727171;
-    margin-bottom: 50px;
+    margin-bottom: 40px;
     font-size: 16px;
-    line-height: 1.6;
 }
 
 .news-grid {
@@ -473,44 +427,13 @@ div.gallery-item a.ReadMe {
     margin-bottom: 15px;
 }
 
-.news-card .news-date {
-    color: #777;
-    font-style: italic;
-    font-size: 14px;
-    margin-bottom: 5px;
-}
-
-.news-card h3 {
-    font-size: 18px;
-    margin-bottom: 10px;
-    color: #333;
-}
-
-.news-card p {
-    color: #727171;
-    font-size: 15px;
-    line-height: 1.6;
-    margin-bottom: 15px;
-}
-
-.news-card .read-more {
-    text-decoration: none;
-    color: #5a6e5a;
-    font-weight: bold;
-}
-
-.news-card .read-more:hover {
-    text-decoration: underline;
-}
-
+/* === FOOTER === */
 .footer {
     grid-column: span 12;
     background-color: #5a6e6e;
     color: #fff;
     text-align: center;
-    padding: 40px 0;
-    font-family: 'Playfair Display', serif;
-    margin-bottom: 20px;
+    padding: 60px 40px;
 }
 
 .footer-content {
@@ -519,8 +442,8 @@ div.gallery-item a.ReadMe {
     align-items: center;
     max-width: 1200px;
     margin: 0 auto;
-    padding: 0 30px;
     flex-wrap: wrap;
+    gap: 20px;
 }
 
 .footer-left,
@@ -531,261 +454,37 @@ div.gallery-item a.ReadMe {
 
 .footer-left p {
     text-align: left;
-    line-height: 1.6;
     font-size: 15px;
 }
 
 .footer-center h2 {
-    font-size: 26px;
-    margin-bottom: 5px;
+    font-size: 24px;
     color: #fff;
 }
 
-.footer-center p {
-    font-size: 14px;
-    color: #ddd;
-    line-height: 1.6;
-}
+/* === RESPONSIVE STYLES === */
 
-.footer-center a {
-    color: #fff;
-    text-decoration: underline;
-}
-
-.footer-center a:hover {
-    color: #cce0cc;
-}
-
+/* Large */
 @media screen and (max-width: 1600px) {
-    .container {
-        max-width: 1100px;
-    }
-
-    div.gallery-item {
-        margin: 10px;
-        width: 300px;
-        padding-bottom: 10px;
-    }
-
-    .sermon-item {
-        width: 300px;
-
-    }
-
+    .container { max-width: 1100px; }
 }
 
-@media screen and (max-width: 1200px) {
-    .container {
-        max-width: 892px;
-    }
-
-    div.gallery-item {
-        margin: 10px;
-        width: 250px;
-    }
-
-    .sermon-item {
-        width: 250px;
-
-    }
-
-}
-
+/* Medium (Tablets) */
 @media screen and (max-width: 992px) {
-
-    .container {
-        max-width: 590px;
-    }
-
-    div.gallery-item {
-        margin: 10px;
-        max-width: 150px;
-    }
-
-    .sermon-item {
-        max-width: 150px;
-
-    }
-
-    header h1 {
-        font-size: 50px;
-    }
-
-    nav ul li a {
-        padding: 10px 20px;
-        font-size: 14px;
-    }
-
-    .hero {
-        height: 400px;
-    }
-
-    .hero h1 {
-        font-size: 32px;
-    }
-
-    .hero p {
-        font-size: 16px;
-    }
-
-    .stats-grid {
-        grid-template-columns: repeat(4, 1fr);
-    }
-
-    .services .gallery,
-    .sermon-gallery {
-        justify-content: center;
-    }
-
-    .services p {
-        font-size: 15px;
-    }
-
-    .sermons p {
-        font-size: 14px;
-    }
-
-    .gallery-item,
-    .sermon-item {
-        max-width: 45%;
-    }
-
-    .quote p {
-        font-size: 15px;
-    }
-
-    .event-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .upcoming-events p {
-        font-size: 14px;
-    }
-
-    .news-section p {
-        font-size: 14px;
-    }
-
-    .news-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .footer-content {
-        flex-direction: row;
-        text-align: center;
-    }
-
-    .footer-left p {
-        text-align: center;
-    }
+    .container { max-width: 700px; }
+    header h1 { font-size: 50px; }
+    nav ul li a { padding: 10px 20px; font-size: 14px; }
+    .gallery-item, .sermon-item { width: 100%; }
+    .event-grid, .news-grid { grid-template-columns: repeat(2, 1fr); }
+    .footer-content { flex-direction: column; text-align: center; }
 }
 
+/* Small (Mobiles) */
 @media screen and (max-width: 600px) {
-
-    .container {
-        max-width: 590px;
-    }
-
-    div.gallery-item {
-        margin: 10px;
-        max-width: 150px;
-    }
-
-    .sermon-item {
-        max-width: 150px;
-
-    }
-
-    header h1 {
-        font-size: 30px;
-    }
-
-    nav ul li a {
-        padding: 10px 7px;
-        font-size: 11px;
-    }
-
-    .hero {
-        height: 400px;
-    }
-
-    .hero h1 {
-        font-size: 25px;
-    }
-
-    .hero p {
-        font-size: 16px;
-    }
-
-    .intro h2 {
-        font-size: 20px;
-    }
-
-    .intro p {
-        font-size: 13px;
-    }
-
-    .stats-text {
-        font-size: 10px;
-    }
-
-    .stats-grid {
-        grid-template-columns: repeat(4, 1fr);
-
-    }
-
-    .stats-grid div h3 {
-        font-size: 20px;
-    }
-
-    .stats-grid div p {
-        font-size: 10px;
-    }
-
-    .services .gallery,
-    .sermon-gallery {
-        justify-content: center;
-    }
-
-    .services p {
-        font-size: 9px;
-    }
-
-    .sermons p {
-        font-size: 14px;
-    }
-
-    .gallery-item,
-    .sermon-item {
-        max-width: 80%;
-    }
-
-    .quote p {
-        font-size: 12px;
-    }
-
-    .event-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .upcoming-events p {
-        font-size: 14px;
-    }
-
-    .news-section p {
-        font-size: 12px;
-    }
-
-    .news-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .footer-content {
-        flex-direction: column;
-        text-align: center;
-    }
-
-    .footer-left p {
-        text-align: center;
-    }
+    header h1 { font-size: 30px; }
+    nav ul li a { font-size: 12px; padding: 10px 5px; }
+    .hero h1 { font-size: 24px; }
+    .intro, .stats, .services, .sermons, .upcoming-events, .news-section { padding: 40px 20px; }
+    .stats-grid, .news-grid, .event-grid { grid-template-columns: 1fr; }
+    .quote p { font-size: 18px; }
 }

@@ -1,0 +1,13 @@
+.intro {
+  background: #fff;
+  text-align: center;
+}
+
+.intro h2 {
+  font-size: 30px;
+  margin-bottom: 10px;
+}
+
+.intro p {
+  color: #727171;
+}

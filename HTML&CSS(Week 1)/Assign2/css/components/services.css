@@ -1,0 +1,39 @@
+.services {
+  background: #fcfafa;
+}
+
+.gallery {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+}
+
+.gallery-item {
+  width: 350px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding-bottom: 10px;
+  background: #fff;
+}
+
+.gallery-item img {
+  height: 230px;
+  object-fit: cover;
+  border-radius: 5px 5px 0 0;
+}
+
+.gallery-item .desc {
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+.gallery-item p {
+  margin: 10px 15px;
+  text-align: left;
+}
+
+.gallery-item a {
+  color: #5a7d5a;
+  margin-left: 15px;
+}
