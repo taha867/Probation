@@ -1,4 +1,4 @@
-/* responsive.css - W3Schools style simple breakpoints */
+
 
 @media screen and (max-width: 1024px) {
   .stats-grid {
@@ -21,8 +21,19 @@
 }
 
 @media screen and (max-width: 768px) {
+ .menu-toggle {
+    display: block; /* Show ☰ on mobile */
+  }
+
   nav ul {
+    display: none; /* Hide menu by default */
     flex-direction: column;
+    text-align: center;
+    padding: 10px 0;
+  }
+
+  nav.show ul {
+    display: flex; /* Show menu when toggled */
   }
 
   .hero-content h1 {
@@ -41,6 +52,8 @@
 }
 
 @media screen and (max-width: 480px) {
+  
+  
   .stats-grid {
     grid-template-columns: 1fr;
   }

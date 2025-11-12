@@ -1,11 +1,35 @@
+
+/* Header styling */
 header {
-  text-align: center;
-  padding: 20px;
   background-color: #f8f8f8;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #ddd;
+  padding: 20px;
 }
 
-header h1 {
-  font-size: 36px;
-  color: #222;
+/* Align “Church” and hamburger in a row */
+.header-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+/* Church title */
+.header-content h1 {
+  font-size: 32px;
+  color: #333;
+  font-family: 'Playfair Display', serif;
+  margin: 0;
+}
+
+/* ☰ Hamburger icon */
+.menu-toggle {
+  font-size: 30px;
+  color: #5a7d5a;
+  cursor: pointer;
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: none; /* Hidden on large screens */
 }

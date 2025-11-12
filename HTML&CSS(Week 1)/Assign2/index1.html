@@ -22,24 +22,27 @@
     <div class="container">
       <!-- Header -->
       <header>
-        <h1>Church</h1>
+        <div class="header-content">
+          <span class="menu-toggle">&#9776;</span>
+          <!-- ☰ icon -->
+          <h1>Church</h1>
+        </div>
       </header>
 
-      <!-- Navigation -->
       <nav>
         <ul>
-          <li><a href="#">Home</a></li>
-          <li><a href="#">Sermons</a></li>
-          <li><a href="#">News</a></li>
-          <li><a href="#">Events</a></li>
-          <li><a href="#">About</a></li>
-          <li><a href="#">Contact</a></li>
-          <li><a href="#">Donate</a></li>
+          <li><a href="#hero">Home</a></li>
+          <li><a href="#services">Services</a></li>
+          <li><a href="#sermons">Sermons</a></li>
+          <li><a href="#events">Events</a></li>
+          <li><a href="#news">News</a></li>
+          <li><a href="#about">About</a></li>
+          <li><a href="#contact">Contact</a></li>
         </ul>
       </nav>
 
       <!-- Hero Section -->
-      <section class="hero">
+      <section class="hero" id="hero">
         <div class="hero-content">
           <h1>
             Living & Sharing the <br />
@@ -54,7 +57,7 @@
       </section>
 
       <!-- Intro -->
-      <section class="intro section">
+      <section class="intro section" id="about">
         <h2>Living in God's Amazing Grace!</h2>
         <p>We are open Sunday to Monday!</p>
       </section>
@@ -66,15 +69,27 @@
           the countries Vokalia and Consonantia.
         </p>
         <div class="stats-grid">
-          <div><h3>9452</h3><p>MEMBERS</p></div>
-          <div><h3>214</h3><p>MINISTRIES</p></div>
-          <div><h3>433</h3><p>CLASSES</p></div>
-          <div><h3>512</h3><p>ACTIVITIES</p></div>
+          <div>
+            <h3>9452</h3>
+            <p>MEMBERS</p>
+          </div>
+          <div>
+            <h3>214</h3>
+            <p>MINISTRIES</p>
+          </div>
+          <div>
+            <h3>433</h3>
+            <p>CLASSES</p>
+          </div>
+          <div>
+            <h3>512</h3>
+            <p>ACTIVITIES</p>
+          </div>
         </div>
       </section>
 
       <!-- Services -->
-      <section class="services section">
+      <section class="services section" id="services">
         <h2>Services</h2>
         <p>
           We have a fun facts far away, behind the word mountains, far from the
@@ -95,9 +110,7 @@
           <div class="gallery-item">
             <img src="./assets/biblicalCounceling.jpg" alt="Counseling" />
             <div class="desc">Biblical Counseling</div>
-            <p>
-              Providing spiritual guidance and strength through God’s Word.
-            </p>
+            <p>Providing spiritual guidance and strength through God’s Word.</p>
             <a href="#">Read More →</a>
           </div>
 
@@ -113,28 +126,43 @@
       </section>
 
       <!-- Sermons -->
-      <section class="sermons section">
+      <section class="sermons section" id="sermons">
         <h2>Our Sermons</h2>
         <p>Listen to our inspiring messages of faith and love.</p>
 
         <div class="sermon-gallery">
           <div class="sermon-item">
             <img src="./assets/soulWinning.jpg" alt="Sermon" />
-            <div class="play-button">▶</div>
+            <a
+              href="https://www.youtube.com/watch?v=G1hKzCkywM8"
+              target="_blank"
+              class="play-button"
+              >▶</a
+            >
             <h3>Soul Winning</h3>
             <p>Pstr. John Doe</p>
           </div>
 
           <div class="sermon-item">
             <img src="./assets/GodMessage.jpg" alt="Message from God" />
-            <div class="play-button">▶</div>
+            <a
+              href="https://www.youtube.com/watch?v=G1hKzCkywM8"
+              target="_blank"
+              class="play-button"
+              >▶</a
+            >
             <h3>Message From God</h3>
             <p>Pstr. John Doe</p>
           </div>
 
           <div class="sermon-item">
             <img src="./assets/ourWorld.jpg" alt="Our World" />
-            <div class="play-button">▶</div>
+            <a
+              href="https://www.youtube.com/watch?v=G1hKzCkywM8"
+              target="_blank"
+              class="play-button"
+              >▶</a
+            >
             <h3>Our World Today</h3>
             <p>Pstr. John Doe</p>
           </div>
@@ -152,7 +180,7 @@
       </section>
 
       <!-- Events -->
-      <section class="upcoming-events section">
+      <section class="upcoming-events section" id="events">
         <h2>Our Events</h2>
         <p>Join us in faith, community, and celebration.</p>
         <div class="event-grid">
@@ -180,7 +208,7 @@
       </section>
 
       <!-- News -->
-      <section class="news-section section">
+      <section class="news-section section" id="news">
         <h2>Our News</h2>
         <p>Stay updated with church announcements and stories.</p>
         <div class="news-grid">
@@ -211,7 +239,7 @@
       </section>
 
       <!-- Footer -->
-      <footer class="footer">
+      <footer class="footer" id="contact">
         <div class="footer-content">
           <div class="footer-left">
             <p>198 West 21th Street, Suite 721<br />New York, NY 10016</p>
@@ -228,5 +256,14 @@
         </div>
       </footer>
     </div>
+
+    <script>
+      const menuToggle = document.querySelector(".menu-toggle");
+      const nav = document.querySelector("nav");
+
+      menuToggle.addEventListener("click", () => {
+        nav.classList.toggle("show"); // Toggle the "show" class
+      });
+    </script>
   </body>
 </html>

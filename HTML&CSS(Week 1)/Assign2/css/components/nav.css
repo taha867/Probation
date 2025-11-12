@@ -1,23 +1,26 @@
+/* Navigation bar styling */
 nav {
-  background-color: #5a7d5a;
+  background-color: #fff;
+  border-bottom: 1px solid #ddd;
 }
 
 nav ul {
-  list-style-type: none;
   display: flex;
   justify-content: center;
   flex-wrap: wrap;
+  list-style: none;
+  margin: 0;
+  padding: 10px 0;
 }
 
 nav ul li {
-  margin: 10px 20px;
+  margin: 0 15px;
 }
 
 nav ul li a {
-  color: white;
   text-decoration: none;
-  font-size: 15px;
-  font-weight: 500;
+  color: #5a7d5a;
+  font-weight: bold;
 }
 
 nav ul li a:hover {

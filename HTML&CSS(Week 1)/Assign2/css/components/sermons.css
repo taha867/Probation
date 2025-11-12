@@ -26,17 +26,33 @@
 
 .play-button {
   position: absolute;
-  top: 45%;
-  left: 50%;
+  top: 50%; /* center vertically */
+  left: 50%; /* center horizontally */
   transform: translate(-50%, -50%);
   font-size: 35px;
-  color: #5a7d5a;
-  background: rgba(255, 255, 255, 0.8);
+  color: white;
+  background: rgba(90, 110, 90, 0.85);
   border-radius: 50%;
   width: 60px;
   height: 60px;
   line-height: 60px;
+  text-align: center;
+  text-decoration: none;
+  transition: all 0.3s ease;
 }
+
+/* On hover, make button pop slightly */
+.play-button:hover {
+  background: rgba(74, 96, 74, 0.95);
+  transform: translate(-50%, -50%) scale(1.1);
+}
+
+/* Slight zoom effect on image hover */
+.sermon-item:hover img {
+  transform: scale(1.05);
+  transition: transform 0.4s ease;
+}
+
 
 .sermon-item h3 {
   margin-top: 15px;

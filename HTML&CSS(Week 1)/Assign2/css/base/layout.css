@@ -3,6 +3,7 @@ body {
   font-family: 'Playfair Display', serif;
   background-color: #fff;
   color: #333;
+  background: url('../../assets/containerBackground.png');
   line-height: 1.6;
 }
 
@@ -10,21 +11,11 @@ body {
 .container {
   max-width: 1200px;
   margin: 0 auto;
-  background: url('../../assets/containerBackground.png');
   padding: 60px 40px;
   border-radius: 10px;
 }
 
-.container::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(255, 255, 255, 0.85);
-  z-index: 0;
-}
+
 
 .container>* {
   position: relative;
@@ -36,4 +27,8 @@ body {
 section {
   padding: 80px 40px;
   border-bottom: 1px solid #eee;
+}
+
+html {
+  scroll-behavior: smooth;
 }
