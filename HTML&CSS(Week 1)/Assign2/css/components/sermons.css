@@ -11,7 +11,7 @@
 
 .sermon-item {
   position: relative;
-  width: 350px;
+  width: 271px;
   border: 1px solid #ddd;
   border-radius: 5px;
   overflow: hidden;
@@ -24,10 +24,11 @@
   width: 100%;
 }
 
+/* Center the play button over the image only */
 .play-button {
   position: absolute;
-  top: 50%; /* center vertically */
-  left: 50%; /* center horizontally */
+  top: 115px; /* Half of 230px image height */
+  left: 50%;
   transform: translate(-50%, -50%);
   font-size: 35px;
   color: white;
@@ -39,6 +40,7 @@
   text-align: center;
   text-decoration: none;
   transition: all 0.3s ease;
+  z-index: 2; /* make sure it stays above image */
 }
 
 /* On hover, make button pop slightly */

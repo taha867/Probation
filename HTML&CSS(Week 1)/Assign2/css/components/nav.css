@@ -1,7 +1,7 @@
-/* Navigation bar styling */
 nav {
   background-color: #fff;
   border-bottom: 1px solid #ddd;
+  transition: left 0.4s ease;
 }
 
 nav ul {
@@ -25,4 +25,50 @@ nav ul li a {
 
 nav ul li a:hover {
   text-decoration: underline;
+}
+
+/* --- Mobile View --- */
+@media screen and (max-width: 768px) {
+  /* Initially hidden off-screen */
+  nav {
+    position: fixed;
+    top: 0;
+    left: -250px; /* hidden to the left */
+    width: 250px;
+    height: 100%;
+    background-color: #5a6e5a;
+    border: none;
+    transition: left 0.4s ease;
+    z-index: 999;
+  }
+
+  /* When navbar is shown */
+  nav.show {
+    left: 0; /* slide in from left */
+  }
+
+  /* Navigation list style */
+  nav ul {
+    flex-direction: column;
+    align-items: flex-start; /* align links to left */
+    padding: 80px 20px; /* padding for spacing */
+    margin: 0;
+  }
+
+  nav ul li {
+    margin: 15px 0;
+  }
+
+  nav ul li a {
+    color: white;
+    font-size: 18px;
+    text-decoration: none;
+    display: block;
+    width: 100%;
+  }
+
+  nav ul li a:hover {
+    text-decoration: underline;
+    color: #dcdcdc;
+  }
 }
