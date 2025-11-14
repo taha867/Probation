@@ -47,6 +47,7 @@
 .play-button:hover {
   background: rgba(74, 96, 74, 0.95);
   transform: translate(-50%, -50%) scale(1.1);
+  text-decoration: none; 
 }
 
 /* Slight zoom effect on image hover */
