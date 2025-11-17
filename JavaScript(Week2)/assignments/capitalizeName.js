@@ -1,18 +1,33 @@
-//function to Capitalize the Names (function that takes an array of names and returns an array with the first letter capitalized.)
-
-const arr = ["samuel", "MABELLE", "letitia", "meridith"];
-
 function capitalizeMe(arr) {
-  let result = [];
-
-  for (let i = 0; i < arr.length; i++) {
-    let name = arr[i];
-
-    let firstChr = name.charAt(0).toUpperCase();
-    let rest = name.slice(1).toLowerCase();
-    result.push(firstChr + rest);
-  }
-  return result;
+  return arr.map(
+    (name) => name.charAt(0).toUpperCase() + name.slice(1).toLowerCase()
+  );
 }
 
-console.log(capitalizeMe(arr));
+function runTests() {
+  const tests = [
+    {
+      input: ["mavis", "senaida", "letty"],
+      expected: ["Mavis", "Senaida", "Letty"],
+    },
+    {
+      input: ["samuel", "MABELLE", "letitia", "meridith"],
+      expected: ["Samuel", "Mabelle", "Letitia", "Meridith"],
+    },
+    {
+      input: ["Slyvia", "Kristal", "Sharilyn", "Calista"],
+      expected: ["Slyvia", "Kristal", "Sharilyn", "Calista"],
+    },
+  ];
+
+  tests.forEach((test, index) => {
+    const result = capitalizeMe(test.input);
+    console.log("Result", result);
+    const passed = JSON.stringify(result) === JSON.stringify(test.expected);
+
+    console.log(`Test ${index + 1}: ${passed ? "PASSED ✅" : "FAILED ❌"}`);
+  });
+}
+
+// Run tests
+runTests();
