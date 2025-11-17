@@ -1,15 +1,11 @@
-
-
-.gallery-item p {
-  margin: 10px 15px;
-  text-align: left;
-}
-
+/* Link styling inside cards */
 .gallery-item a {
   color: #5a7d5a;
   margin-left: 15px;
+  font-weight: bold;
 }
 
+/* Section styling */
 .services {
   background: #fcfafa;
   text-align: center;
@@ -33,14 +29,15 @@
   background: #fff;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
   padding-bottom: 15px;
+
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
 }
 
 /* Image styling */
 .gallery-item img {
   height: 230px;
+  width: 100%;
   object-fit: cover;
   border-radius: 5px 5px 0 0;
 }
@@ -48,17 +45,19 @@
 /* Title */
 .gallery-item .desc {
   font-weight: bold;
-  margin: 10px 15px 5px 15px;
+  margin: 10px 15px 8px;   /* FIX: tighter spacing like news section */
   text-align: left;
+  color: #222;
 }
 
 /* Paragraph with ellipsis */
 .gallery-item p {
-  margin: 5px 15px 45px 15px; /* leave space for button */
+  margin: 0 15px 30px;     /* FIX: uniform spacing + card alignment */
   text-align: left;
   font-size: 15px;
   line-height: 1.6;
   color: #555;
+
   overflow: hidden;
   text-overflow: ellipsis;
 
@@ -66,7 +65,13 @@
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
+
+  /* Standard property */
   line-clamp: 3;
 }
 
-
+/* Keep "Read More" aligned at bottom */
+.gallery-item a {
+  margin-top: auto;         /* pushes button to bottom for alignment */
+  text-decoration: none;
+}

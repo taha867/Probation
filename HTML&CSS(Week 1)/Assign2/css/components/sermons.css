@@ -32,22 +32,26 @@
   transform: translate(-50%, -50%);
   font-size: 35px;
   color: white;
+
+  display: flex; /* ⬅ enables centering */
+  justify-content: center; /* ⬅ centers horizontally */
+  align-items: center; /* ⬅ centers vertically */
+  padding-left: 5px;
+  padding-bottom: 5px;
   background: rgba(90, 110, 90, 0.85);
   border-radius: 50%;
   width: 60px;
   height: 60px;
-  line-height: 60px;
-  text-align: center;
   text-decoration: none;
   transition: all 0.3s ease;
-  z-index: 2; /* make sure it stays above image */
+  z-index: 2;
 }
 
 /* On hover, make button pop slightly */
 .play-button:hover {
   background: rgba(74, 96, 74, 0.95);
   transform: translate(-50%, -50%) scale(1.1);
-  text-decoration: none; 
+  text-decoration: none;
 }
 
 /* Slight zoom effect on image hover */
@@ -55,7 +59,6 @@
   transform: scale(1.05);
   transition: transform 0.4s ease;
 }
-
 
 .sermon-item h3 {
   margin-top: 15px;
