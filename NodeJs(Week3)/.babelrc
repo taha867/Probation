@@ -1,0 +1,14 @@
+//to run sequelize using ES6 syntax
+
+{
+  "presets": [
+    [
+      "@babel/preset-env",
+      {
+        "targets": {
+          "node": "current"
+        }
+      }
+    ]
+  ]
+}
