@@ -2,7 +2,22 @@ import axios from "axios";
 import dotenv from "dotenv";
 dotenv.config();
 
-//get ,sort, filter, search from all po
+/**
+ * What this function receives:
+ *   - Optional filters from req.query: title, body, sort, user.
+ 
+ * What the function does:
+ *   - Loads all posts and all comments from the external API.
+ *   - Filters posts by userId if 'user' is provided.
+ *   - Searches posts by title if 'title' is provided.
+ *   - Searches posts by body if 'body' is provided.
+ *   - Sorts posts alphabetically if 'sort' value is given.
+ *   - Attaches all comments to each post.
+ 
+ * What this function returns:
+ *   - The filtered/sorted/processed list of posts with comments.
+ *   - An error message if something goes wrong during the process.
+ */
 export const getPosts = async (req, res) => {
   try {
     const { title, body, sort, user } = req.query; //Comes from the query string in URL (after ?) (like ?name=value)
@@ -68,7 +83,17 @@ export const getPosts = async (req, res) => {
   }
 };
 
-//get post comment by post id
+/**
+ * What this function receives:
+ *   - req.params.id (postId) from the URL.
+ 
+ * What the function does:
+ *   - Requests all comments of the given post from the external API.
+ 
+ * What this function returns:
+ *   - A list of comments for that specific post.
+ *   - Sends an error response if the API request fails.
+ */
 export const getPostComments = async (req, res) => {
   try {
     const { id: postId } = req.params; //Comes from route path parameters defined in route. (like /users/:id)
@@ -82,55 +107,42 @@ export const getPostComments = async (req, res) => {
   }
 };
 
-//delete post
+/**
+ * What this function receives:
+ *   - req.params.id → the ID of the post to delete.
+ 
+ * What the function does:
+ *   - Sends a delete request to the external API to remove that post.
+ 
+ * What this function returns:
+ *   - A success message if the delete worked.
+ *   - An error message if the deletion failed.
+ */
+
 export const deletePost = async (req, res) => {
   try {
-    const { id: postId } = req.params; //Comes from route path parameters defined in route.
-    
-    await axios.delete(`${process.env.API_URL}/posts/${postId}`);
+    const { id } = req.params; //Comes from route path parameters defined in route.
+
+    await axios.delete(`${process.env.API_URL}/posts/${id}`);
     res.status(200).json({ message: `Post ${id} deleted successfully` });
   } catch (err) {
     return res.status(500).json({ error: "Unable to delete post" });
   }
 };
 
-
-/*
-//delete post and all its comments  by post id
-export const deletePost = async (req, res) => {
-  try {
-    const { id: postId } = req.params;
-
-    // Delete post
-    await axios.delete(`${process.env.API_URL}/posts/${postId}`);
-
-    // Get all comments for this post
-    const commentsResponse = await axios.get(
-      `${process.env.API_URL}/posts/${postId}/comments`
-    );
-
-    const comments = commentsResponse.data;
-
-    // 3Delete each comment one by one
-    for (const comment of comments) {
-      await axios.delete(`${process.env.API_URL}/comments/${comment.id}`);
-    }
-
-    // 4️⃣ Final response
-    return res.status(200).json({
-      message: `Post ${postId} and all its comments deleted successfully`,
-      deletedCommentsCount: comments.length
-    });
-
-  } catch (err) {
-    console.log(err);
-    return res.status(500).json({ error: "Unable to delete post and comments" });
-  }
-};
-
-*/
-
-//get post by post id
+/**
+ * What this function receives:
+ *   - req.params.id → the postId from URL.
+ 
+ * What the function does:
+ *   - Loads a single post by its ID.
+ *   - Loads all comments associated with that post.
+ *   - Combines both into a single formatted response.
+ 
+ * What this function returns:
+ *   - Post details along with its comments.
+ *   - Error response if the post or comments could not be fetched.
+ */
 export const getPostById = async (req, res) => {
   try {
     const { id: postId } = req.params; // POST ID from URL
@@ -168,7 +180,17 @@ export const getPostById = async (req, res) => {
   }
 };
 
-//create a new post post
+/**
+ * What this function receives:
+ *   - req.body containing userId, title, and body for the new post.
+ 
+ * What the function does:
+ *   - Sends a POST request to create a new post in the external API.
+ 
+ * What this function returns:
+ *   - Newly created post data.
+ *   - Error response if creation fails.
+ */
 export const createPost = async (req, res) => {
   try {
     const { userId, title, body } = req.body;
@@ -185,7 +207,18 @@ export const createPost = async (req, res) => {
   }
 };
 
-//UPDATE FULL POST
+/**
+ * What this function receives:
+ *   - req.params.id → post ID to update.
+ *   - req.body → complete updated data (userId, title, body).
+ *
+ * What the function does:
+ *   - Performs a full update using HTTP PUT.
+ *
+ * What this function returns:
+ *   - Updated post data.
+ *   - Error response if full update fails.
+ */
 export const updatePost = async (req, res) => {
   try {
     const { id } = req.params;
