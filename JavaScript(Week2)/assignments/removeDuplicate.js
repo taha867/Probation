@@ -28,7 +28,7 @@ function runTests() {
 
   tests.forEach((test, index) => {
     const result = removeDuplicates(test.input);
-      console.log("Resulted array is:", result);
+    console.log("Resulted array is:", result);
 
     const passed = JSON.stringify(result) === JSON.stringify(test.expected);
     console.log(`Test ${index + 1}: ${passed ? "PASSED ✅" : "FAILED ❌"}`);

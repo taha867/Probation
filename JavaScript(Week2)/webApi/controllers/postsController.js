@@ -236,7 +236,18 @@ export const updatePost = async (req, res) => {
   }
 };
 
-//  PARTIAL UPDATE
+/**
+ * What this function receives:
+ *   - req.params.id → post ID.
+ *   - req.body → only the fields that need updating.
+ 
+ * What the function does:
+ *   - Partially updates a post using HTTP PATCH.
+ 
+ * What this function returns:
+ *   - Partially updated post details.
+ *   - An error response if patching fails.
+ */
 export const patchPost = async (req, res) => {
   try {
     const { id: postId } = req.params;

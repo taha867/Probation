@@ -1,10 +1,18 @@
-import AuthController from '../controllers/AuthController.js'
+import userController from "./userRoutes.js";
+import postRoutes from "./postRoutes.js";
+import commentRoutes from "./commentRoutes.js";
+import subCommentRoutes from "./subCommentRoutes.js";
 
 export default (app) => {
-  app.post('/register', AuthController.signUp);
+ 
+  app.use("/posts", postRoutes);
+  app.use("/users", userController);
+  app.use("/comments", commentRoutes);
+  app.use("/subComments", subCommentRoutes);
 
-// Create a catch-all route for testing the installation.
-app.all('*', (req, res) => res.status(200).send({
-  message: 'Hello World!',
-}));
+  // Create a catch-all route for testing the installation.
+  app.use((req, res) => {
+    res.status(404).json({ message: "Route not found" });
+  });
+
 };

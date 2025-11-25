@@ -1,15 +1,25 @@
 import express from 'express';
 import route from './src/routes/index.js'
+import { initDb } from './src/config/dbConfig.js';
 
 const app = express();
 
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
+const App = async () => {
+  await initDb();
 
-route(app);
+  app.use(express.urlencoded({ extended: true }));
+  app.use(express.json());
 
-const port = 5000;
+  route(app);
 
-app.listen(port, () => {
-  console.log('App is now running at port ', port)
-})
+  const port = process.env.PORT || 3000;
+
+  app.listen(port, () => {
+    console.log('App is now running at port ', port)
+  })
+};
+
+App().catch((error) => {
+  console.error('Failed to start server:', error);
+  process.exit(1);
+});
