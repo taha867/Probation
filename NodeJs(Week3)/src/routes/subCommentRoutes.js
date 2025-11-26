@@ -1,15 +1,14 @@
 import { Router } from "express";
-import subCommentController from "../controllers/subCommentController.js";
+import { create, list, get, update, remove } from "../controllers/subCommentController.js";
 import { authenticateToken } from "../middleware/authMiddleware.js";
 
 const router = Router();
 
-// All sub-comment routes require authentication
-router.post("/", authenticateToken, subCommentController.create);
-router.get("/", authenticateToken, subCommentController.list);
-router.get("/:id", authenticateToken, subCommentController.get);
-router.put("/:id", authenticateToken, subCommentController.update);
-router.delete("/:id", authenticateToken, subCommentController.remove);
+router.post("/", authenticateToken, create);
+router.get("/", authenticateToken, list);
+router.get("/:id", authenticateToken, get);
+router.put("/:id", authenticateToken, update);
+router.delete("/:id", authenticateToken, remove);
 
 export default router;
 

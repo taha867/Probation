@@ -20,3 +20,6 @@
 
 **Run this command**
 `npm run db:migrate`
+
+
+**WE are performing OFF-Set based pagination**

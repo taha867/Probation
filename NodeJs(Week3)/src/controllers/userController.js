@@ -1,21 +1,20 @@
 import { Op } from "sequelize";
 import jwt from "jsonwebtoken";
-import model from "../../models/index.js";
+import model from "../models/index.js";
 
 const { User, Post, Comment, SubComment } = model;
 
-export default {
+
   /*
   URL: POST /users/register (body: name, email, phone, password)
   Response: 201 Created on success or 422 if email/phone already registered
   Business logic: Registers a new user after ensuring unique email/phone
   */
-  async signUp(req, res) {
+  export async function signUp(req, res) {
     const { email, password, name, phone } = req.body;
     try {
       const user = await User.findOne({
-        //[op.or] used to check multiple parameters (or means either phone or email, in case of and it would be both email and phone no)
-        where: { [Op.or]: [{ phone }, { email }] },
+        where: { [Op.or]: [{ phone }, { email }] }, //[op.or] used to check multiple parameters (or means either phone or email, in case of and it would be both email and phone no)
       });
       if (user) {
         return res
@@ -38,14 +37,14 @@ export default {
           "Could not perform operation at this time, kindly try again later.",
       });
     }
-  },
+  };
 
   /*
   URL: POST /users/login (body: email|phone, password)
   Response: 200 OK with JWT token and user profile, 401 on invalid credentials
   Business logic: Authenticates a user, records login metadata, and issues a JWT
   */
-  async signIn(req, res) {
+ export async function signIn(req, res) {
     const { email, phone, password } = req.body;
 
     if (!password || (!email && !phone)) {
@@ -79,15 +78,15 @@ export default {
         process.env.JWT_SECRET,
         { expiresIn: "24h" }
       );
-
+      const { id, name, email: userEmail, phone } = user;
       return res.status(200).send({
         message: "Signed in successfully",
         token,
         user: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          phone: user.phone,
+          id,
+          name,
+          email: userEmail,
+          phone,
         },
       });
     } catch (e) {
@@ -97,14 +96,14 @@ export default {
           "Could not perform operation at this time, kindly try again later.",
       });
     }
-  },
+  };
 
   /*
   URL: GET /users?page=<page>&limit=<limit>
   Response: 200 OK with paginated list of users (excluding passwords)
   Business logic: Lists all users for public consumption with pagination
   */
-  async list(req, res) {
+  export async function list(req, res) {
     const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
     const limit = Math.min(parseInt(req.query.limit, 10) || 20, 100);
     const offset = (page - 1) * limit;
@@ -132,23 +131,23 @@ export default {
         .status(500)
         .send({ message: "Unable to fetch users at this time" });
     }
-  },
+  };
 
   /*
   URL: GET /users/:id/posts?page=<page>&limit=<limit>
   Response: 200 OK with user info plus paginated posts + comments + sub-comments
   Business logic: Returns all posts for a given user along with nested discussion threads
   */
-  async getUserPostsWithComments(req, res) {
+ export async function getUserPostsWithComments(req, res) {
     const requestedUserId = Number(req.params.id);
 
     if (Number.isNaN(requestedUserId)) {
       return res.status(400).send({ message: "Invalid user id" });
     }
 
-    const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
-    const limit = Math.min(parseInt(req.query.limit, 10) || 10, 100);
-    const offset = (page - 1) * limit;
+    const page = Math.max(parseInt(req.query.page, 10) || 1, 1); // reads page from query string, converts it into INT, ensures page is at least 1 (no zero or negative page numbers).
+    const limit = Math.min(parseInt(req.query.limit, 10) || 10, 100); // // reads Limit from query string, converts it into INT, ensures page is at least 1 (no zero or negative page numbers).
+    const offset = (page - 1) * limit; //offset tells the database how many rows to skip before returning results.
 
     try {
       const user = await User.findByPk(requestedUserId, {
@@ -206,5 +205,4 @@ export default {
         .status(500)
         .send({ message: "Unable to fetch posts for this user" });
     }
-  },
-};
+  };

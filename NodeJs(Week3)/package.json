@@ -2,8 +2,8 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon server.js",
-    "db:migrate": "npx sequelize db:migrate --config config/config.js",
-    "db:seed": "npx sequelize db:seed:all --config config/config.js"
+    "db:migrate": "npx sequelize db:migrate",
+    "db:seed": "npx sequelize db:seed:all"
   },
   "dependencies": {
     "@babel/core": "^7.28.5",

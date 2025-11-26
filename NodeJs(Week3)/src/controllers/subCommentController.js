@@ -1,4 +1,4 @@
-import model from "../../models/index.js";
+import model from "../models/index.js";
 
 const { SubComment, Comment, User } = model;
 
@@ -27,13 +27,12 @@ const findSubCommentOr404 = async (id, res) => {
   return subComment;
 };
 
-export default {
-  /*
-  URL: POST /sub-comments (body: commentId, body) with Bearer token
-  Response: 201 Created with sub-comment details
-  Business logic: Validates the parent comment and creates a reply owned by the authenticated user
-  */
-  async create(req, res) {
+/*
+URL: POST /sub-comments (body: commentId, body) with Bearer token
+Response: 201 Created with sub-comment details
+Business logic: Validates the parent comment and creates a reply owned by the authenticated user
+*/
+export async function create(req, res) {
     const { body, commentId } = req.body;
     const userId = req.user.id;
 
@@ -61,14 +60,14 @@ export default {
         .status(500)
         .send({ message: "Unable to create sub-comment at this time" });
     }
-  },
+}
 
-  /*
-  URL: GET /sub-comments?commentId=<id> with Bearer token
-  Response: 200 OK array of sub-comments (with author + parent comment)
-  Business logic: Lists sub-comments, optionally filtered by comment, in reverse chronological order
-  */
-  async list(req, res) {
+/*
+URL: GET /sub-comments?commentId=<id> with Bearer token
+Response: 200 OK array of sub-comments (with author + parent comment)
+Business logic: Lists sub-comments, optionally filtered by comment, in reverse chronological order
+*/
+export async function list(req, res) {
     const { commentId } = req.query;
     const where = commentId ? { commentId } : undefined;
 
@@ -85,14 +84,14 @@ export default {
         .status(500)
         .send({ message: "Unable to fetch sub-comments at this time" });
     }
-  },
+}
 
-  /*
-  URL: GET /sub-comments/:id with Bearer token
-  Response: 200 OK sub-comment payload or 404
-  Business logic: Fetches a single sub-comment including parent comment and author
-  */
-  async get(req, res) {
+/*
+URL: GET /sub-comments/:id with Bearer token
+Response: 200 OK sub-comment payload or 404
+Business logic: Fetches a single sub-comment including parent comment and author
+*/
+export async function get(req, res) {
     try {
       const subComment = await findSubCommentOr404(req.params.id, res);
       if (!subComment) return;
@@ -104,14 +103,14 @@ export default {
         .status(500)
         .send({ message: "Unable to fetch the requested sub-comment" });
     }
-  },
+}
 
-  /*
-  URL: PUT /sub-comments/:id (body: body) with Bearer token
-  Response: 200 OK updated sub-comment (403 if not owner)
-  Business logic: Allows only the author to edit their sub-comment text
-  */
-  async update(req, res) {
+/*
+URL: PUT /sub-comments/:id (body: body) with Bearer token
+Response: 200 OK updated sub-comment (403 if not owner)
+Business logic: Allows only the author to edit their sub-comment text
+*/
+export async function update(req, res) {
     try {
       const subComment = await findSubCommentOr404(req.params.id, res);
       if (!subComment) return;
@@ -139,14 +138,14 @@ export default {
         .status(500)
         .send({ message: "Unable to update the requested sub-comment" });
     }
-  },
+}
 
-  /*
-  URL: DELETE /sub-comments/:id with Bearer token
-  Response: 204 No Content (403 if not owner)
-  Business logic: Deletes a sub-comment only when requested by its author
-  */
-  async remove(req, res) {
+/*
+URL: DELETE /sub-comments/:id with Bearer token
+Response: 204 No Content (403 if not owner)
+Business logic: Deletes a sub-comment only when requested by its author
+*/
+export async function remove(req, res) {
     try {
       const subComment = await findSubCommentOr404(req.params.id, res);
       if (!subComment) return;
@@ -165,6 +164,5 @@ export default {
         .status(500)
         .send({ message: "Unable to delete the requested sub-comment" });
     }
-  },
-};
+  }
 
