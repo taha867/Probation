@@ -15,9 +15,16 @@ export default (sequelize, DataTypes) => {
         onDelete: "CASCADE",
       });
 
-      Comment.hasMany(models.SubComment, {
-        foreignKey: "commentId",
-        as: "subComments",
+      // Self referential relationship for nested comments
+      Comment.belongsTo(models.Comment, {
+        foreignKey: "parentId",
+        as: "parent",
+        onDelete: "CASCADE",
+      });
+
+      Comment.hasMany(models.Comment, {
+        foreignKey: "parentId",
+        as: "replies",
         onDelete: "CASCADE",
       });
     }
@@ -42,6 +49,14 @@ export default (sequelize, DataTypes) => {
         allowNull: false,
         references: {
           model: "Users",
+          key: "id",
+        },
+      },
+      parentId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        references: {
+          model: "Comments",
           key: "id",
         },
       },

@@ -1,208 +1,283 @@
 import { Op } from "sequelize";
-import jwt from "jsonwebtoken";
 import model from "../models/index.js";
 
-const { User, Post, Comment, SubComment } = model;
+const { User, Post, Comment } = model;
+
+// Include structure for comments with nested replies
+const includeCommentAuthor = {
+  model: User,
+  as: "author",
+  attributes: ["id", "name", "email"],
+};
+
+const includeCommentReplies = {
+  model: Comment,
+  as: "replies",
+  include: [
+    {
+      model: User,
+      as: "author",
+      attributes: ["id", "name", "email"],
+    },
+  ],
+  separate: true, // Fetches replies in a separate query per parent for better performance
+  order: [["createdAt", "ASC"]],
+};
+
+// Include structure for posts with comments and nested replies
+const includePostAuthor = {
+  model: User,
+  as: "author",
+  attributes: ["id", "name", "email"],
+};
+
+const includePostComments = {
+  model: Comment,
+  as: "comments",
+  include: [includeCommentAuthor, includeCommentReplies],
+  separate: true, // Fetches comments in a separate query for better performance
+  order: [["createdAt", "DESC"]],
+  where: { parentId: null }, // Only top-level comments (not replies)
+};
 
 
-  /*
-  URL: POST /users/register (body: name, email, phone, password)
-  Response: 201 Created on success or 422 if email/phone already registered
-  Business logic: Registers a new user after ensuring unique email/phone
-  */
-  export async function signUp(req, res) {
-    const { email, password, name, phone } = req.body;
-    try {
-      const user = await User.findOne({
-        where: { [Op.or]: [{ phone }, { email }] }, //[op.or] used to check multiple parameters (or means either phone or email, in case of and it would be both email and phone no)
+/**
+ * Gets paginated list of all users.
+ * @param {Object} req.query - The query parameters for pagination.
+ * @param {number} [req.query.page=1] - The page number to retrieve.
+ * @param {number} [req.query.limit=20] - The number of users per page (max 100).
+ * @returns {Object} Paginated list of users with metadata.
+ * @throws {500} If there's an error during the retrieval process.
+ */
+export async function list(req, res) {
+  const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+  const limit = Math.min(parseInt(req.query.limit, 10) || 20, 100);
+  const offset = (page - 1) * limit;
+
+  try {
+    const { rows, count } = await User.findAndCountAll({
+      attributes: ["id", "name", "email", "phone", "status"],
+      order: [["createdAt", "DESC"]],
+      limit,
+      offset,
+    });
+
+    return res.status(200).send({
+      users: rows,
+      meta: {
+        total: count,
+        page,
+        limit,
+        totalPages: Math.ceil(count / limit),
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    return res
+      .status(500)
+      .send({ message: "Unable to fetch users at this time" });
+  }
+}
+
+/**
+ * Gets all posts for a specific user with nested comments and replies.
+ * @param {string} req.params.id - The userId of the posts to retrieve.
+ * @param {Object} req.query - The query parameters for pagination.
+ * @param {number} [req.query.page=1] - The page number to retrieve.
+ * @param {number} [req.query.limit=10] - The number of posts per page (max 100).
+ * @returns {Object} User information and paginated posts with nested comments.
+ * @throws {400} If the user id is invalid.
+ * @throws {404} If the user is not found.
+ * @throws {500} If there's an error during the retrieval process.
+ */
+export async function getUserPostsWithComments(req, res) {
+  const requestedUserId = Number(req.params.id);
+
+  if (Number.isNaN(requestedUserId)) {
+    return res.status(400).send({ message: "Invalid user id" });
+  }
+
+  const page = Math.max(parseInt(req.query.page, 10) || 1, 1); // reads page from query string, converts it into INT, ensures page is at least 1 (no zero or negative page numbers).
+  const limit = Math.min(parseInt(req.query.limit, 10) || 10, 100); // // reads Limit from query string, converts it into INT, ensures page is at least 1 (no zero or negative page numbers).
+  const offset = (page - 1) * limit; //offset tells the database how many rows to skip before returning results.
+
+  try {
+    const user = await User.findByPk(requestedUserId, {
+      attributes: ["id", "name", "email"],
+    });
+    if (!user) {
+      return res.status(404).send({ message: "User not found" });
+    }
+
+    const { rows, count } = await Post.findAndCountAll({
+      where: { userId: requestedUserId },
+      include: [includePostAuthor, includePostComments],
+      order: [["createdAt", "DESC"]],
+      limit,
+      offset,
+    });
+
+    return res.status(200).send({
+      user,
+      posts: rows,
+      meta: {
+        total: count,
+        page,
+        limit,
+        totalPages: Math.ceil(count / limit),
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    return res
+      .status(500)
+      .send({ message: "Unable to fetch posts for this user" });
+  }
+}
+
+/**
+ * Updates a user's profile information.
+ * @param {string} req.params.id - The ID of the user to update.
+ * @param {Object} req.body - The request body containing updated user data.
+ * @param {string} [req.body.name] - The new name of the user.
+ * @param {string} [req.body.email] - The new email address of the user.
+ * @param {string} [req.body.phone] - The new phone number of the user.
+ * @param {string} [req.body.password] - The new password for the user account.
+ * @param {Object} req.user - The authenticated user from JWT token.
+ * @returns {Object} The updated user information with 200 status code.
+ * @throws {400} If the user id is invalid.
+ * @throws {403} If the user is trying to update another user's profile.
+ * @throws {404} If the user is not found.
+ * @throws {422} If the email or phone already exists for another user.
+ * @throws {500} If there's an error during the update process.
+ */
+export async function update(req, res) {
+  const requestedUserId = Number(req.params.id);
+
+  if (Number.isNaN(requestedUserId)) {
+    return res.status(400).send({ message: "Invalid user id" });
+  }
+
+  // Check if the authenticated user is trying to update their own profile
+  if (requestedUserId !== req.user.id) {
+    return res
+      .status(403)
+      .send({ message: "You can only update your own profile" });
+  }
+
+  try {
+    const user = await User.findByPk(requestedUserId);
+    if (!user) {
+      return res.status(404).send({ message: "User not found" });
+    }
+
+    const { name, email, phone, password } = req.body;
+    const updateData = {};
+
+    // Only update fields that are provided
+    if (name !== undefined) updateData.name = name;
+    if (email !== undefined) {
+      // Check if email already exists for another user
+      const existingUser = await User.findOne({
+        where: {
+          email,
+          id: { [Op.ne]: requestedUserId }, // Not equal to current user id
+        },
       });
-      if (user) {
+      if (existingUser) {
         return res
-          .status(422) //Unprocessable Entity
-          .send({ message: "User with that email or phone already exists" });
+          .status(422)
+          .send({ message: "Email already exists for another user" });
       }
-      //Model instance
-      //does build + save for you, so the row is created in the database (async).
-      await User.create({
-        name,
-        email,
-        password,
-        phone,
-      });
-      return res.status(201).send({ message: "Account created successfully" });
-    } catch (e) {
-      console.log(e);
-      return res.status(500).send({
-        message:
-          "Could not perform operation at this time, kindly try again later.",
-      });
+      updateData.email = email;
     }
-  };
-
-  /*
-  URL: POST /users/login (body: email|phone, password)
-  Response: 200 OK with JWT token and user profile, 401 on invalid credentials
-  Business logic: Authenticates a user, records login metadata, and issues a JWT
-  */
- export async function signIn(req, res) {
-    const { email, phone, password } = req.body;
-
-    if (!password || (!email && !phone)) {
-      return res.status(400).send({
-        message:
-          "Please provide your password and either email or phone number",
-      });
-    }
-
-    try {
-      const user = await User.findOne({
-        where: email ? { email } : { phone },
-      });
-
-      if (!user) {
-        return res.status(401).send({ message: "Invalid credentials" });
-      }
-
-      if (user.password !== password) {
-        return res.status(401).send({ message: "Invalid credentials" });
-      }
-
-      await user.update({
-        last_login_at: new Date(),
-        last_ip_address: req.ip,
-      });
-
-      // Generate JWT token
-      const token = jwt.sign(
-        { userId: user.id, email: user.email },
-        process.env.JWT_SECRET,
-        { expiresIn: "24h" }
-      );
-      const { id, name, email: userEmail, phone } = user;
-      return res.status(200).send({
-        message: "Signed in successfully",
-        token,
-        user: {
-          id,
-          name,
-          email: userEmail,
+    if (phone !== undefined) {
+      // Check if phone already exists for another user
+      const existingUser = await User.findOne({
+        where: {
           phone,
+          id: { [Op.ne]: requestedUserId }, // Not equal to current user id
         },
       });
-    } catch (e) {
-      console.log(e);
-      return res.status(500).send({
-        message:
-          "Could not perform operation at this time, kindly try again later.",
-      });
-    }
-  };
-
-  /*
-  URL: GET /users?page=<page>&limit=<limit>
-  Response: 200 OK with paginated list of users (excluding passwords)
-  Business logic: Lists all users for public consumption with pagination
-  */
-  export async function list(req, res) {
-    const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
-    const limit = Math.min(parseInt(req.query.limit, 10) || 20, 100);
-    const offset = (page - 1) * limit;
-
-    try {
-      const { rows, count } = await User.findAndCountAll({
-        attributes: ["id", "name", "email", "phone", "status"],
-        order: [["createdAt", "DESC"]],
-        limit,
-        offset,
-      });
-
-      return res.status(200).send({
-        data: rows,
-        meta: {
-          total: count,
-          page,
-          limit,
-          totalPages: Math.ceil(count / limit),
-        },
-      });
-    } catch (error) {
-      console.error(error);
-      return res
-        .status(500)
-        .send({ message: "Unable to fetch users at this time" });
-    }
-  };
-
-  /*
-  URL: GET /users/:id/posts?page=<page>&limit=<limit>
-  Response: 200 OK with user info plus paginated posts + comments + sub-comments
-  Business logic: Returns all posts for a given user along with nested discussion threads
-  */
- export async function getUserPostsWithComments(req, res) {
-    const requestedUserId = Number(req.params.id);
-
-    if (Number.isNaN(requestedUserId)) {
-      return res.status(400).send({ message: "Invalid user id" });
-    }
-
-    const page = Math.max(parseInt(req.query.page, 10) || 1, 1); // reads page from query string, converts it into INT, ensures page is at least 1 (no zero or negative page numbers).
-    const limit = Math.min(parseInt(req.query.limit, 10) || 10, 100); // // reads Limit from query string, converts it into INT, ensures page is at least 1 (no zero or negative page numbers).
-    const offset = (page - 1) * limit; //offset tells the database how many rows to skip before returning results.
-
-    try {
-      const user = await User.findByPk(requestedUserId, {
-        attributes: ["id", "name", "email"],
-      });
-      if (!user) {
-        return res.status(404).send({ message: "User not found" });
+      if (existingUser) {
+        return res
+          .status(422)
+          .send({ message: "Phone number already exists for another user" });
       }
-
-      const { rows, count } = await Post.findAndCountAll({
-        where: { userId: requestedUserId },
-        include: [
-          {
-            model: Comment,
-            as: "comments",
-            include: [
-              {
-                model: User,
-                as: "author",
-                attributes: ["id", "name", "email"],
-              },
-              {
-                model: SubComment,
-                as: "subComments",
-                include: [
-                  {
-                    model: User,
-                    as: "author",
-                    attributes: ["id", "name", "email"],
-                  },
-                ],
-              },
-            ],
-            order: [["createdAt", "DESC"]],
-          },
-        ],
-        order: [["createdAt", "DESC"]],
-        limit,
-        offset,
-      });
-
-      return res.status(200).send({
-        user,
-        data: rows,
-        meta: {
-          total: count,
-          page,
-          limit,
-          totalPages: Math.ceil(count / limit),
-        },
-      });
-    } catch (error) {
-      console.error(error);
-      return res
-        .status(500)
-        .send({ message: "Unable to fetch posts for this user" });
+      updateData.phone = phone;
     }
-  };
+    if (password !== undefined) updateData.password = password;
+
+    // If no fields to update
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).send({ message: "No fields provided to update" });
+    }
+
+    await user.update(updateData);
+
+    // Reload user to get updated data
+    await user.reload();
+
+    // Return user data without password
+    const { id, name: userName, email: userEmail, phone: userPhone, status } = user;
+    return res.status(200).send({
+      message: "User updated successfully",
+      user: {
+        id,
+        name: userName,
+        email: userEmail,
+        phone: userPhone,
+        status,
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    return res
+      .status(500)
+      .send({ message: "Unable to update user at this time" });
+  }
+}
+
+/**
+ * Deletes a user account and all associated data (posts, comments).
+ * @param {string} req.params.id - The ID of the user to delete.
+ * @param {Object} req.user - The authenticated user from JWT token.
+ * @returns {Object} Success message with 200 status code.
+ * @throws {400} If the user id is invalid.
+ * @throws {403} If the user is trying to delete another user's account.
+ * @throws {404} If the user is not found.
+ * @throws {500} If there's an error during the deletion process.
+ */
+export async function remove(req, res) {
+  const requestedUserId = Number(req.params.id);
+
+  if (Number.isNaN(requestedUserId)) {
+    return res.status(400).send({ message: "Invalid user id" });
+  }
+
+  // Check if the authenticated user is trying to delete their own account
+  if (requestedUserId !== req.user.id) {
+    return res
+      .status(403)
+      .send({ message: "You can only delete your own account" });
+  }
+
+  try {
+    const user = await User.findByPk(requestedUserId);
+    if (!user) {
+      return res.status(404).send({ message: "User not found" });
+    }
+
+    // Delete user (cascade will handle posts and comments)
+    await user.destroy();
+
+    return res.status(200).send({
+      message: "User account deleted successfully",
+    });
+  } catch (error) {
+    console.error(error);
+    return res
+      .status(500)
+      .send({ message: "Unable to delete user at this time" });
+  }
+}

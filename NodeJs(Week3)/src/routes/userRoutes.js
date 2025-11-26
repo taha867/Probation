@@ -1,11 +1,18 @@
 import { Router } from "express";
-import { signUp, signIn, list, getUserPostsWithComments } from "../controllers/userController.js";
+import {
+  list,
+  getUserPostsWithComments,
+  update,
+  remove,
+} from "../controllers/userController.js";
+import { authenticateToken } from "../middleware/authMiddleware.js";
 
 const router = Router();
 
-router.post("/register", signUp);
-router.post("/login", signIn);
+
 router.get("/", list);
 router.get("/:id/posts", getUserPostsWithComments);
+router.put("/:id", authenticateToken, update);
+router.delete("/:id", authenticateToken, remove);
 
 export default router;

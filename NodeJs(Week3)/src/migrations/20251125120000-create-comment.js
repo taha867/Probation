@@ -31,6 +31,16 @@ export default {
         onDelete: "CASCADE",
         onUpdate: "CASCADE",
       },
+      parentId: {
+        allowNull: true,
+        type: Sequelize.INTEGER,
+        references: {
+          model: "Comments",
+          key: "id",
+        },
+        onDelete: "CASCADE",
+        onUpdate: "CASCADE",
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,

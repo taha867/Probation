@@ -1,14 +1,14 @@
 import userController from "./userRoutes.js";
 import postRoutes from "./postRoutes.js";
 import commentRoutes from "./commentRoutes.js";
-import subCommentRoutes from "./subCommentRoutes.js";
+import authRoutes from "./authRoutes.js";
 
 export default (app) => {
  
   app.use("/posts", postRoutes);
   app.use("/users", userController);
   app.use("/comments", commentRoutes);
-  app.use("/subComments", subCommentRoutes);
+  app.use("/auth", authRoutes);
 
   // Create a catch-all route for testing the installation.
   app.use((req, res) => {

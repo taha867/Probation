@@ -1,4 +1,5 @@
 import { Model } from "sequelize";
+import bcrypt from "bcrypt";
 
 const PROTECTED_ATTRIBUTES = ["password"];
 
@@ -63,12 +64,27 @@ export default (sequelize, DataTypes) => {
       password: DataTypes.STRING,
       status: DataTypes.STRING,
       last_login_at: DataTypes.DATE,
-      last_ip_address: DataTypes.STRING,
     },
     {
       // Other model options go here
       sequelize, // We need to pass the connection instance
       modelName: "User", // We need to choose the model name
+      hooks: {
+        // Hash password before creating a new user
+        beforeCreate: async (user) => {
+          if (user.password) {
+            const saltRounds = 10;
+            user.password = await bcrypt.hash(user.password, saltRounds);
+          }
+        },
+        // Hash password before updating if password field is being changed
+        beforeUpdate: async (user) => {
+          if (user.changed("password") && user.password) {
+            const saltRounds = 10; //how many times bcrypt will process and rehash the password internally.
+            user.password = await bcrypt.hash(user.password, saltRounds);
+          }
+        },
+      },
     }
   );
   return User; // if not returned we will get undefined
