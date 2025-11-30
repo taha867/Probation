@@ -22,21 +22,7 @@ const db = {};
 // Setup Sequelize instance
 let sequelize;
 try {
-  // Check for connection string first (Vercel Postgres uses POSTGRES_URL)
-  const connectionString = process.env.POSTGRES_URL || process.env.DATABASE_URL;
-  
-  if (connectionString) {
-    sequelize = new Sequelize(connectionString, {
-      ...config,
-      dialect: "postgres",
-      dialectOptions: {
-        ssl: {
-          require: true,
-          rejectUnauthorized: false,
-        },
-      },
-    });
-  } else if (config.use_env_variable) {
+  if (config.use_env_variable) {
     sequelize = new Sequelize(process.env[config.use_env_variable], config);
   } else {
     sequelize = new Sequelize(

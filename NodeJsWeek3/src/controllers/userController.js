@@ -51,9 +51,10 @@ const includePostComments = {
  * @throws {500} If there's an error during the retrieval process.
  */
 export async function list(req, res) {
-  const page = req.query.page || 1; // Already validated by Joi
-  const limit = req.query.limit || 20; // Already validated by Joi
-  const offset = (page - 1) * limit;
+  const {page, limit} = req.query;
+  const pages = parseInt(page, 10) || 1;
+  const limits = parseInt(limit, 10) || 10;
+  const offset = (pages - 1) * limits;
 
   try {
     const { rows, count } = await User.findAndCountAll({
@@ -92,10 +93,11 @@ export async function list(req, res) {
  * @throws {500} If there's an error during the retrieval process.
  */
 export async function getUserPostsWithComments(req, res) {
-  const requestedUserId = req.params.id; // Already validated by Joi
-  const page = req.query.page || 1; // Already validated by Joi
-  const limit = req.query.limit || 10; // Already validated by Joi
-  const offset = (page - 1) * limit;
+  const {id: requestedUserId} = req.params;
+  const {page, limit} = req.query;
+  const pages = parseInt(page, 10) || 1;
+  const limits = parseInt(limit, 10) || 10;
+  const offset = (pages - 1) * limits;
 
   try {
     const user = await User.findByPk(requestedUserId, {
@@ -148,7 +150,7 @@ export async function getUserPostsWithComments(req, res) {
  * @throws {500} If there's an error during the update process.
  */
 export async function update(req, res) {
-  const requestedUserId = req.params.id; // Already validated by Joi
+  const {id : requestedUserId} = req.params;
 
   // Check if the authenticated user is trying to update their own profile
   if (requestedUserId !== req.user.id) {
@@ -238,7 +240,7 @@ export async function update(req, res) {
  * @throws {500} If there's an error during the deletion process.
  */
 export async function remove(req, res) {
-  const requestedUserId = req.params.id; // Already validated by Joi
+  const {id : requestedUserId} = req.params;
 
   // Check if the authenticated user is trying to delete their own account
   if (requestedUserId !== req.user.id) {

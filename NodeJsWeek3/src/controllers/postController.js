@@ -77,8 +77,9 @@ export async function create(req, res) {
  * @throws {500} If there's an error during the retrieval process.
  */
 export async function list(req, res) {
-  const page = req.query.page || 1; // Already validated by Joi
-  const limit = req.query.limit || 10; // Already validated by Joi
+  const page = parseInt(req.query.page, 10) || 1;
+  const limit = parseInt(req.query.limit, 10) || 10;
+
   const offset = (page - 1) * limit;
   const { search, userId } = req.query; // Already validated by Joi
 
@@ -155,9 +156,9 @@ export async function get(req, res) {
  * @throws {500} If there's an error during the retrieval process.
  */
 export async function listForPost(req, res) {
-  const postId = req.params.postId; // Already validated by Joi
-  const page = req.query.page || 1; // Already validated by Joi
-  const limit = req.query.limit || 10; // Already validated by Joi
+  const {postId} = req.params;
+  const page = parseInt(req.query.page, 10) || 1;
+  const limit = parseInt(req.query.limit, 10) || 10;
   const offset = (page - 1) * limit;
 
   try {

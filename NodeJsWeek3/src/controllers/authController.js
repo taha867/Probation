@@ -127,7 +127,8 @@ export async function signIn(req, res) {
  */
 export async function signOut(req, res) {
   try {
-    const user = await User.findByPk(req.user.id);
+    const {id: authUser} = req.user;
+    const user = await User.findByPk(authUser);
 
     if (!user) {
       return res.status(httpStatus.notFound).send({ message: errorMessages.userNotFound });
