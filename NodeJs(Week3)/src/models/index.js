@@ -4,6 +4,11 @@ import Sequelize from "sequelize";
 import { fileURLToPath } from "url";
 import enVariables from "../../config.js";
 
+// Explicitly import pg to ensure it's loaded before Sequelize tries to use it
+// This is required for PostgreSQL dialect
+// If pg is not installed, this import will fail with a clear error
+import "pg";
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -16,15 +21,21 @@ const db = {};
 
 // Setup Sequelize instance
 let sequelize;
-if (config.use_env_variable) {
-  sequelize = new Sequelize(process.env[config.use_env_variable], config);
-} else {
-  sequelize = new Sequelize(
-    config.database,
-    config.username,
-    config.password,
-    config
-  );
+try {
+  if (config.use_env_variable) {
+    sequelize = new Sequelize(process.env[config.use_env_variable], config);
+  } else {
+    sequelize = new Sequelize(
+      config.database,
+      config.username,
+      config.password,
+      config
+    );
+  }
+} catch (sequelizeError) {
+  console.error('Failed to initialize Sequelize:', sequelizeError);
+  // Re-throw to prevent silent failures
+  throw sequelizeError;
 }
 
 // Load all model files dynamically using import()
