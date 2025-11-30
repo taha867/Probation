@@ -1,5 +1,6 @@
 import { Op } from "sequelize";
 import model from "../models/index.js";
+import { httpStatus, errorMessages } from "../utils/constants.js";
 
 const { Comment, Post, User } = model;
 
@@ -32,7 +33,7 @@ const findPostOr404 = async (id, res) => {
   });
 
   if (!post) {
-    res.status(404).send({ message: "Post not found" });
+    res.status(httpStatus.notFound).send({ message: errorMessages.postNotFound });
     return null;
   }
 
@@ -51,23 +52,17 @@ const findPostOr404 = async (id, res) => {
  * @throws {500} If there's an error during the creation process.
  */
 export async function create(req, res) {
-  const { title, body, status } = req.body;
+  const { title, body, status } = req.body; // Already validated by Joi
   const { id: userId } = req.user; // Get userId from authenticated user
-
-  if (!title || !body) {
-    return res
-      .status(400)
-      .send({ message: "title and body are required fields" });
-  }
 
   try {
     const post = await Post.create({ title, body, userId, status });
-    return res.status(201).send(post);
+    return res.status(httpStatus.created).send(post);
   } catch (error) {
     console.error(error);
     return res
-      .status(500)
-      .send({ message: "Unable to create post at this time" });
+      .status(httpStatus.internalServerError)
+      .send({ message: errorMessages.unableToCreatePost });
   }
 }
 
@@ -76,25 +71,25 @@ export async function create(req, res) {
  * @param {Object} req.query - The query parameters for pagination and filtering.
  * @param {number} [req.query.page=1] - The page number to retrieve.
  * @param {number} [req.query.limit=10] - The number of posts per page (max 100).
- * @param {string} [req.query.q] - Search query to filter posts by title or body.
+ * @param {string} [req.query.search] - Search query to filter posts by title or body.
  * @param {number} [req.query.userId] - Filter posts by specific user ID.
  * @returns {Object} Paginated list of posts with metadata.
  * @throws {500} If there's an error during the retrieval process.
  */
 export async function list(req, res) {
-  const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
-  const limit = Math.min(parseInt(req.query.limit, 10) || 10, 100);
+  const page = req.query.page || 1; // Already validated by Joi
+  const limit = req.query.limit || 10; // Already validated by Joi
   const offset = (page - 1) * limit;
-  const { q, userId } = req.query;
+  const { search, userId } = req.query; // Already validated by Joi
 
   const where = {};
   if (userId) {
     where.userId = userId;
   }
-  if (q) {
+  if (search) {
     where[Op.or] = [
-      { title: { [Op.iLike]: `%${q}%` } }, //contains the search text anywhere
-      { body: { [Op.iLike]: `%${q}%` } },
+      { title: { [Op.iLike]: `%${search}%` } }, //contains the search text anywhere
+      { body: { [Op.iLike]: `%${search}%` } },
     ];
   }
 
@@ -109,7 +104,7 @@ export async function list(req, res) {
       offset,
     });
 
-    return res.status(200).send({
+    return res.status(httpStatus.ok).send({
       data: rows,
       meta: {
         total: count,
@@ -121,8 +116,8 @@ export async function list(req, res) {
   } catch (error) {
     console.error(error);
     return res
-      .status(500)
-      .send({ message: "Unable to fetch posts at this time" });
+      .status(httpStatus.internalServerError)
+      .send({ message: errorMessages.unableToFetchPosts });
   }
 }
 
@@ -135,15 +130,16 @@ export async function list(req, res) {
  */
 export async function get(req, res) {
   try {
-    const post = await findPostOr404(req.params.id, res);
+    const {id} = req.params;
+    const post = await findPostOr404(id, res);
     if (!post) return;
 
-    return res.status(200).send(post);
+    return res.status(httpStatus.ok).send(post);
   } catch (error) {
     console.error(error);
     return res
-      .status(500)
-      .send({ message: "Unable to fetch the requested post" });
+      .status(httpStatus.internalServerError)
+      .send({ message: errorMessages.unableToFetchPost });
   }
 }
 
@@ -159,19 +155,15 @@ export async function get(req, res) {
  * @throws {500} If there's an error during the retrieval process.
  */
 export async function listForPost(req, res) {
-  const postId = Number(req.params.postId);
-  if (Number.isNaN(postId)) {
-    return res.status(400).send({ message: "Invalid post id" });
-  }
-
-  const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
-  const limit = Math.min(parseInt(req.query.limit, 10) || 10, 100);
+  const postId = req.params.postId; // Already validated by Joi
+  const page = req.query.page || 1; // Already validated by Joi
+  const limit = req.query.limit || 10; // Already validated by Joi
   const offset = (page - 1) * limit;
 
   try {
     const postExists = await Post.findByPk(postId);
     if (!postExists) {
-      return res.status(404).send({ message: "Post not found" });
+      return res.status(httpStatus.notFound).send({ message: errorMessages.postNotFound });
     }
 
     const { rows, count } = await Comment.findAndCountAll({
@@ -182,7 +174,7 @@ export async function listForPost(req, res) {
       offset,
     });
 
-    return res.status(200).send({
+    return res.status(httpStatus.ok).send({
       post: postExists,
       comments: rows,
       meta: {
@@ -195,8 +187,8 @@ export async function listForPost(req, res) {
   } catch (error) {
     console.error(error);
     return res
-      .status(500)
-      .send({ message: "Unable to fetch comments for this post" });
+      .status(httpStatus.internalServerError)
+      .send({ message: errorMessages.unableToFetchPostComments });
   }
 }
 
@@ -215,25 +207,27 @@ export async function listForPost(req, res) {
  */
 export async function update(req, res) {
   try {
-    const post = await findPostOr404(req.params.id, res);
+    const {id: postId} = req.params;
+    const {id: userId} = req.user;
+    const post = await findPostOr404(postId, res);
     if (!post) return;
 
     // Check if the authenticated user owns this post
-    if (post.userId !== req.user.id) {
+    if (post.userId !== userId) {
       return res
-        .status(403)
-        .send({ message: "You can only update your own posts" });
+        .status(httpStatus.forbidden)
+        .send({ message: errorMessages.cannotUpdateOtherPost });
     }
 
     const { title, body, status } = req.body;
     await post.update({ title, body, status });
 
-    return res.status(200).send(post);
+    return res.status(httpStatus.ok).send(post);
   } catch (error) {
     console.error(error);
     return res
-      .status(500)
-      .send({ message: "Unable to update the requested post" });
+      .status(httpStatus.internalServerError)
+      .send({ message: errorMessages.unableToUpdatePost });
   }
 }
 
@@ -248,22 +242,23 @@ export async function update(req, res) {
  */
 export async function remove(req, res) {
   try {
+    const {id: userId} = req.user;
     const post = await findPostOr404(req.params.id, res);
     if (!post) return;
 
     // Check if the authenticated user owns this post
-    if (post.userId !== req.user.id) {
+    if (post.userId !== userId) {
       return res
-        .status(403)
-        .send({ message: "You can only delete your own posts" });
+        .status(httpStatus.forbidden)
+        .send({ message: errorMessages.cannotDeleteOtherPost });
     }
 
     await post.destroy();
-    return res.status(204).send();
+    return res.status(httpStatus.noContent).send();
   } catch (error) {
     console.error(error);
     return res
-      .status(500)
-      .send({ message: "Unable to delete the requested post" });
+      .status(httpStatus.internalServerError)
+      .send({ message: errorMessages.unableToDeletePost });
   }
 }

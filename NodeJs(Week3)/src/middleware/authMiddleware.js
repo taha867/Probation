@@ -1,7 +1,5 @@
 import jwt from "jsonwebtoken";
-import model from "../models/index.js";
-
-const { User } = model;
+import { httpStatus, errorMessages } from "../utils/constants.js";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -13,27 +11,28 @@ export const authenticateToken = async (req, res, next) => {
     const token = authHeader && authHeader.split(" ")[1]; // Bearer TOKEN (xyz123token, This extracts the token only.)
 
     if (!token) {
-      return res.status(401).send({ message: "Access token is required" });
+      return res.status(httpStatus.unauthorized).send({ message: errorMessages.accessTokenRequired });
     }
 
     const decoded = jwt.verify(token, JWT_SECRET);
-    const user = await User.findByPk(decoded.userId);//Find the user in database, Because, Token may be valid BUT user might be deleted If no user exists: reject
-
-    if (!user) {
-      return res.status(401).send({ message: "Invalid token - user not found" });
+    
+    // Verify this is an access token, not a refresh token
+    if (decoded.type !== "access") {
+      return res.status(httpStatus.unauthorized).send({ message: errorMessages.invalidToken });
     }
-
-    req.user = user; // Attach user to request object
+    
+    // Store only userId in req.user (optimized - no database query)
+    req.user = { id: decoded.userId };
     next();
   } catch (error) {
     if (error.name === "JsonWebTokenError") {
-      return res.status(401).send({ message: "Invalid token" });
+      return res.status(httpStatus.unauthorized).send({ message: errorMessages.invalidToken });
     }
     if (error.name === "TokenExpiredError") {
-      return res.status(401).send({ message: "Token expired" });
+      return res.status(httpStatus.unauthorized).send({ message: errorMessages.accessTokenExpired });
     }
     console.error("Auth middleware error:", error);
-    return res.status(500).send({ message: "Authentication failed" });
+    return res.status(httpStatus.internalServerError).send({ message: errorMessages.authenticationFailed });
   }
 };
 

@@ -2,45 +2,10 @@ import { Op } from "sequelize";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import model from "../models/index.js";
+import { httpStatus, successMessages, errorMessages, userStatus } from "../utils/constants.js";
 
-const { User, Post, Comment } = model;
+const { User } = model;
 
-// Include structure for comments with nested replies
-const includeCommentAuthor = {
-  model: User,
-  as: "author",
-  attributes: ["id", "name", "email"],
-};
-
-const includeCommentReplies = {
-  model: Comment,
-  as: "replies",
-  include: [
-    {
-      model: User,
-      as: "author",
-      attributes: ["id", "name", "email"],
-    },
-  ],
-  separate: true, // Fetches replies in a separate query per parent for better performance
-  order: [["createdAt", "ASC"]],
-};
-
-// Include structure for posts with comments and nested replies
-const includePostAuthor = {
-  model: User,
-  as: "author",
-  attributes: ["id", "name", "email"],
-};
-
-const includePostComments = {
-  model: Comment,
-  as: "comments",
-  include: [includeCommentAuthor, includeCommentReplies],
-  separate: true, // Fetches comments in a separate query for better performance
-  order: [["createdAt", "DESC"]],
-  where: { parentId: null }, // Only top-level comments (not replies)
-};
 /**
  * Registers a new user account.
  * @param {Object} req.body - The request body containing user registration data.
@@ -60,8 +25,8 @@ export async function signUp(req, res) {
     });
     if (user) {
       return res
-        .status(422) //Unprocessable Entity
-        .send({ message: "User with that email or phone already exists" });
+        .status(httpStatus.unprocessableEntity)
+        .send({ message: errorMessages.userAlreadyExists });
     }
     //Model instance
     //does build + save for you, so the row is created in the database (async).
@@ -70,14 +35,13 @@ export async function signUp(req, res) {
       email,
       password,
       phone,
-      status: "logged out",
+      status: userStatus.loggedOut,
     });
-    return res.status(201).send({ message: "Account created successfully" });
+    return res.status(httpStatus.created).send({ message: successMessages.accountCreated });
   } catch (e) {
     console.log(e);
-    return res.status(500).send({
-      message:
-        "Could not perform operation at this time, kindly try again later.",
+    return res.status(httpStatus.internalServerError).send({
+      message: errorMessages.operationFailed,
     });
   }
 }
@@ -96,46 +60,48 @@ export async function signUp(req, res) {
 export async function signIn(req, res) {
   const { email, phone, password } = req.body;
 
-  if (!password || (!email && !phone)) {
-    return res.status(400).send({
-      message: "Please provide your password and either email or phone number",
-    });
-  }
-
   try {
     const user = await User.findOne({
       where: email ? { email } : { phone },
     });
 
     if (!user) {
-      return res.status(401).send({ message: "Invalid credentials" });
+      return res.status(httpStatus.unauthorized).send({ message: errorMessages.invalidCredentials });
     }
 
     // Compare provided password with hashed password in database
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      return res.status(401).send({ message: "Invalid credentials" });
+      return res.status(httpStatus.unauthorized).send({ message: errorMessages.invalidCredentials });
     }
 
     await user.update({
-      status: "logged in",
+      status: userStatus.loggedIn,
       last_login_at: new Date(),
-      last_ip_address: req.ip,
     });
 
-    // Reload user to get updated status
+    // Reload user to get updated status and tokenVersion
     await user.reload();
 
-    // Generate JWT token
-    const token = jwt.sign(
-      { userId: user.id, email: user.email },
+    // Generate Access Token (short-lived: 15 minutes)
+    const accessToken = jwt.sign(
+      { userId: user.id, email: user.email, type: "access" },
       process.env.JWT_SECRET,
-      { expiresIn: "24h" }
+      { expiresIn: "15m" }
     );
+
+    // Generate Refresh Token (long-lived: 7 days)
+    const refreshToken = jwt.sign(
+      { userId: user.id, tokenVersion: user.tokenVersion, type: "refresh" },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
     const { id, name, email: userEmail, phone, status } = user;
-    return res.status(200).send({
-      message: "Signed in successfully",
-      token,
+    return res.status(httpStatus.ok).send({
+      message: successMessages.signedIn,
+      accessToken,
+      refreshToken,
       user: {
         id,
         name,
@@ -146,9 +112,8 @@ export async function signIn(req, res) {
     });
   } catch (e) {
     console.log(e);
-    return res.status(500).send({
-      message:
-        "Could not perform operation at this time, kindly try again later.",
+    return res.status(httpStatus.internalServerError).send({
+      message: errorMessages.operationFailed,
     });
   }
 }
@@ -165,21 +130,206 @@ export async function signOut(req, res) {
     const user = await User.findByPk(req.user.id);
 
     if (!user) {
-      return res.status(404).send({ message: "User not found" });
+      return res.status(httpStatus.notFound).send({ message: errorMessages.userNotFound });
     }
 
+    // Increment tokenVersion to invalidate all existing refresh tokens
     await user.update({
-      status: "logged out",
+      status: userStatus.loggedOut,
+      tokenVersion: user.tokenVersion + 1,
     });
 
-    return res.status(200).send({
-      message: "Logged out successfully",
+    return res.status(httpStatus.ok).send({
+      message: successMessages.loggedOut,
     });
   } catch (error) {
     console.error(error);
-    return res.status(500).send({
-      message:
-        "Could not perform operation at this time, kindly try again later.",
+    return res.status(httpStatus.internalServerError).send({
+      message: errorMessages.operationFailed,
+    });
+  }
+}
+
+/**
+ * Refreshes an access token using a valid refresh token.
+ * @param {Object} req.body - The request body containing refresh token.
+ * @param {string} req.body.refreshToken - The refresh token.
+ * @returns {Object} New access token and optionally new refresh token with 200 status code.
+ * @throws {400} If refreshToken is missing.
+ * @throws {401} If refresh token is invalid, expired, or revoked.
+ * @throws {404} If user is not found.
+ * @throws {500} If there's an error during the refresh process.
+ */
+export async function refreshToken(req, res) {
+  const { refreshToken } = req.body;
+
+  if (!refreshToken) {
+    return res.status(httpStatus.badRequest).send({
+      message: errorMessages.refreshTokenRequired,
+    });
+  }
+
+  try {
+    // Verify and decode the refresh token
+    let decoded;
+    try {
+      decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
+    } catch (error) {
+      if (error.name === "TokenExpiredError") {
+        return res.status(httpStatus.unauthorized).send({
+          message: errorMessages.refreshTokenExpired,
+        });
+      }
+      return res.status(httpStatus.unauthorized).send({
+        message: errorMessages.invalidRefreshToken,
+      });
+    }
+
+    // Check if token is a refresh token
+    if (decoded.type !== "refresh") {
+      return res.status(httpStatus.unauthorized).send({
+        message: errorMessages.invalidRefreshToken,
+      });
+    }
+
+    // Find user by userId from token
+    const user = await User.findByPk(decoded.userId);
+
+    if (!user) {
+      return res.status(httpStatus.notFound).send({
+        message: errorMessages.userNotFound,
+      });
+    }
+
+    // Check if token version matches (token is not revoked)
+    if (user.tokenVersion !== decoded.tokenVersion) {
+      return res.status(httpStatus.unauthorized).send({
+        message: errorMessages.invalidRefreshToken,
+      });
+    }
+
+    // Generate new Access Token
+    const newAccessToken = jwt.sign(
+      { userId: user.id, email: user.email, type: "access" },
+      process.env.JWT_SECRET,
+      { expiresIn: "15m" }
+    );
+
+    return res.status(httpStatus.ok).send({
+      message: successMessages.tokenRefreshed,
+      accessToken: newAccessToken,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(httpStatus.internalServerError).send({
+      message: errorMessages.operationFailed,
+    });
+  }
+}
+
+/**
+ * Generates a password reset token and sends it to the user's email.
+ * @param {Object} req.body - The request body containing user email.
+ * @param {string} req.body.email - The email address of the user.
+ * @returns {Object} Success message with reset token (for testing) with 200 status code.
+ * @throws {400} If email is missing.
+ * @throws {404} If user with the provided email is not found.
+ * @throws {500} If there's an error during the process.
+ */
+export async function forgotPassword(req, res) {
+  const { email } = req.body;
+
+  try {
+    const user = await User.findOne({ where: { email } });
+
+    if (!user) {
+      // Don't reveal if email exists or not for security reasons
+      // Return success message even if user doesn't exist
+      return res.status(httpStatus.ok).send({
+        message: successMessages.resetTokenSent,
+      });
+    }
+
+    // Generate password reset token (expires in 1 hour)
+    const resetToken = jwt.sign(
+      { userId: user.id, type: "password_reset" },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+
+    // In production, send email with reset link
+    // For now, return token in response for testing
+    
+    return res.status(httpStatus.ok).send({
+      message: successMessages.resetTokenSent,
+      // Only return token in development for testing
+      resetToken: resetToken,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(httpStatus.internalServerError).send({
+      message: errorMessages.operationFailed,
+    });
+  }
+}
+
+/**
+ * Resets user password using a valid reset token.
+ * @param {Object} req.body - The request body containing reset token and new password.
+ * @param {string} req.body.token - The password reset token.
+ * @param {string} req.body.newPassword - The new password for the user account.
+ * @param {string} req.body.confirmPassword - For password validation.
+ * @returns {Object} Success message with 200 status code.
+ * @throws {400} If token or newPassword is missing.
+ * @throws {401} If reset token is invalid or expired.
+ * @throws {404} If user is not found.
+ * @throws {500} If there's an error during the reset process.
+ */
+export async function resetPassword(req, res) {
+  const { token, newPassword } = req.body;
+
+  try {
+    // Verify and decode the reset token
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (error) {
+      if (error.name === "TokenExpiredError") {
+        return res.status(httpStatus.unauthorized).send({
+          message: errorMessages.resetTokenExpired,
+        });
+      }
+      return res.status(httpStatus.unauthorized).send({
+        message: errorMessages.invalidResetToken,
+      });
+    }
+
+    // Check if token is a password reset token
+    if (decoded.type !== "password_reset") {
+      return res.status(httpStatus.unauthorized).send({
+        message: errorMessages.invalidResetToken,
+      });
+    }
+
+    // Find user by userId from token
+    const user = await User.findByPk(decoded.userId);
+
+    if (!user) {
+      return res.status(httpStatus.notFound).send({
+        message: errorMessages.userNotFound,
+      });
+    }
+
+    // Update password (bcrypt hook will hash it automatically)
+    await user.update({ password: newPassword });
+
+    return res.status(httpStatus.ok).send({
+      message: successMessages.passwordReset,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(httpStatus.internalServerError).send({
+      message: errorMessages.operationFailed,
     });
   }
 }

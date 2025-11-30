@@ -64,6 +64,11 @@ export default (sequelize, DataTypes) => {
       password: DataTypes.STRING,
       status: DataTypes.STRING,
       last_login_at: DataTypes.DATE,
+      tokenVersion: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+        allowNull: false,
+      },
     },
     {
       // Other model options go here

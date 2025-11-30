@@ -1,5 +1,6 @@
 import { Op } from "sequelize";
 import model from "../models/index.js";
+import { httpStatus, successMessages, errorMessages } from "../utils/constants.js";
 
 const { User, Post, Comment } = model;
 
@@ -50,8 +51,8 @@ const includePostComments = {
  * @throws {500} If there's an error during the retrieval process.
  */
 export async function list(req, res) {
-  const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
-  const limit = Math.min(parseInt(req.query.limit, 10) || 20, 100);
+  const page = req.query.page || 1; // Already validated by Joi
+  const limit = req.query.limit || 20; // Already validated by Joi
   const offset = (page - 1) * limit;
 
   try {
@@ -62,7 +63,7 @@ export async function list(req, res) {
       offset,
     });
 
-    return res.status(200).send({
+    return res.status(httpStatus.ok).send({
       users: rows,
       meta: {
         total: count,
@@ -74,8 +75,8 @@ export async function list(req, res) {
   } catch (error) {
     console.error(error);
     return res
-      .status(500)
-      .send({ message: "Unable to fetch users at this time" });
+      .status(httpStatus.internalServerError)
+      .send({ message: errorMessages.unableToFetchUsers });
   }
 }
 
@@ -91,22 +92,17 @@ export async function list(req, res) {
  * @throws {500} If there's an error during the retrieval process.
  */
 export async function getUserPostsWithComments(req, res) {
-  const requestedUserId = Number(req.params.id);
-
-  if (Number.isNaN(requestedUserId)) {
-    return res.status(400).send({ message: "Invalid user id" });
-  }
-
-  const page = Math.max(parseInt(req.query.page, 10) || 1, 1); // reads page from query string, converts it into INT, ensures page is at least 1 (no zero or negative page numbers).
-  const limit = Math.min(parseInt(req.query.limit, 10) || 10, 100); // // reads Limit from query string, converts it into INT, ensures page is at least 1 (no zero or negative page numbers).
-  const offset = (page - 1) * limit; //offset tells the database how many rows to skip before returning results.
+  const requestedUserId = req.params.id; // Already validated by Joi
+  const page = req.query.page || 1; // Already validated by Joi
+  const limit = req.query.limit || 10; // Already validated by Joi
+  const offset = (page - 1) * limit;
 
   try {
     const user = await User.findByPk(requestedUserId, {
       attributes: ["id", "name", "email"],
     });
     if (!user) {
-      return res.status(404).send({ message: "User not found" });
+      return res.status(httpStatus.notFound).send({ message: errorMessages.userNotFound });
     }
 
     const { rows, count } = await Post.findAndCountAll({
@@ -117,7 +113,7 @@ export async function getUserPostsWithComments(req, res) {
       offset,
     });
 
-    return res.status(200).send({
+    return res.status(httpStatus.ok).send({
       user,
       posts: rows,
       meta: {
@@ -130,8 +126,8 @@ export async function getUserPostsWithComments(req, res) {
   } catch (error) {
     console.error(error);
     return res
-      .status(500)
-      .send({ message: "Unable to fetch posts for this user" });
+      .status(httpStatus.internalServerError)
+      .send({ message: errorMessages.unableToFetchUserPosts });
   }
 }
 
@@ -152,23 +148,19 @@ export async function getUserPostsWithComments(req, res) {
  * @throws {500} If there's an error during the update process.
  */
 export async function update(req, res) {
-  const requestedUserId = Number(req.params.id);
-
-  if (Number.isNaN(requestedUserId)) {
-    return res.status(400).send({ message: "Invalid user id" });
-  }
+  const requestedUserId = req.params.id; // Already validated by Joi
 
   // Check if the authenticated user is trying to update their own profile
   if (requestedUserId !== req.user.id) {
     return res
-      .status(403)
-      .send({ message: "You can only update your own profile" });
+      .status(httpStatus.forbidden)
+      .send({ message: errorMessages.cannotUpdateOtherUser });
   }
 
   try {
     const user = await User.findByPk(requestedUserId);
     if (!user) {
-      return res.status(404).send({ message: "User not found" });
+      return res.status(httpStatus.notFound).send({ message: errorMessages.userNotFound });
     }
 
     const { name, email, phone, password } = req.body;
@@ -186,8 +178,8 @@ export async function update(req, res) {
       });
       if (existingUser) {
         return res
-          .status(422)
-          .send({ message: "Email already exists for another user" });
+          .status(httpStatus.unprocessableEntity)
+          .send({ message: errorMessages.emailAlreadyExists });
       }
       updateData.email = email;
     }
@@ -201,17 +193,14 @@ export async function update(req, res) {
       });
       if (existingUser) {
         return res
-          .status(422)
-          .send({ message: "Phone number already exists for another user" });
+          .status(httpStatus.unprocessableEntity)
+          .send({ message: errorMessages.phoneAlreadyExists });
       }
       updateData.phone = phone;
     }
     if (password !== undefined) updateData.password = password;
 
-    // If no fields to update
-    if (Object.keys(updateData).length === 0) {
-      return res.status(400).send({ message: "No fields provided to update" });
-    }
+    // Validation ensures at least one field is provided (handled by Joi)
 
     await user.update(updateData);
 
@@ -220,8 +209,8 @@ export async function update(req, res) {
 
     // Return user data without password
     const { id, name: userName, email: userEmail, phone: userPhone, status } = user;
-    return res.status(200).send({
-      message: "User updated successfully",
+    return res.status(httpStatus.ok).send({
+      message: successMessages.userUpdated,
       user: {
         id,
         name: userName,
@@ -233,8 +222,8 @@ export async function update(req, res) {
   } catch (error) {
     console.error(error);
     return res
-      .status(500)
-      .send({ message: "Unable to update user at this time" });
+      .status(httpStatus.internalServerError)
+      .send({ message: errorMessages.unableToUpdateUser });
   }
 }
 
@@ -249,35 +238,31 @@ export async function update(req, res) {
  * @throws {500} If there's an error during the deletion process.
  */
 export async function remove(req, res) {
-  const requestedUserId = Number(req.params.id);
-
-  if (Number.isNaN(requestedUserId)) {
-    return res.status(400).send({ message: "Invalid user id" });
-  }
+  const requestedUserId = req.params.id; // Already validated by Joi
 
   // Check if the authenticated user is trying to delete their own account
   if (requestedUserId !== req.user.id) {
     return res
-      .status(403)
-      .send({ message: "You can only delete your own account" });
+      .status(httpStatus.forbidden)
+      .send({ message: errorMessages.cannotDeleteOtherUser });
   }
 
   try {
     const user = await User.findByPk(requestedUserId);
     if (!user) {
-      return res.status(404).send({ message: "User not found" });
+      return res.status(httpStatus.notFound).send({ message: errorMessages.userNotFound });
     }
 
     // Delete user (cascade will handle posts and comments)
     await user.destroy();
 
-    return res.status(200).send({
-      message: "User account deleted successfully",
+    return res.status(httpStatus.ok).send({
+      message: successMessages.userDeleted,
     });
   } catch (error) {
     console.error(error);
     return res
-      .status(500)
-      .send({ message: "Unable to delete user at this time" });
+      .status(httpStatus.internalServerError)
+      .send({ message: errorMessages.unableToDeleteUser });
   }
 }
