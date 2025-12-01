@@ -36,7 +36,9 @@ const findCommentOr404 = async (id, res) => {
   });
 
   if (!comment) {
-    res.status(httpStatus.notFound).send({ message: errorMessages.commentNotFound });
+    res
+      .status(httpStatus.NOT_FOUND)
+      .send({ message: errorMessages.commentNotFound });
     return null;
   }
 
@@ -57,7 +59,7 @@ const findCommentOr404 = async (id, res) => {
  */
 export async function create(req, res) {
   const { body, postId, parentId } = req.body; // Already validated by Joi
-  const userId = req.user.id;
+  const { id: userId } = req.user;
 
   try {
     // If parentId is provided, validate it and get postId from parent
@@ -65,14 +67,18 @@ export async function create(req, res) {
     if (parentId) {
       const parentComment = await Comment.findByPk(parentId);
       if (!parentComment) {
-        return res.status(httpStatus.notFound).send({ message: errorMessages.parentCommentNotFound });
+        return res
+          .status(httpStatus.NOT_FOUND)
+          .send({ message: errorMessages.parentCommentNotFound });
       }
       finalPostId = parentComment.postId;
     } else {
       // Validate post exists
       const post = await Post.findByPk(postId);
       if (!post) {
-        return res.status(httpStatus.notFound).send({ message: errorMessages.postNotFound });
+        return res
+          .status(httpStatus.NOT_FOUND)
+          .send({ message: errorMessages.postNotFound });
       }
     }
 
@@ -85,11 +91,11 @@ export async function create(req, res) {
     const createdComment = await Comment.findByPk(comment.id, {
       include: [includeAuthor, includePost],
     });
-    return res.status(httpStatus.created).send(createdComment);
+    return res.status(httpStatus.CREATED).send(createdComment);
   } catch (error) {
     console.error(error);
     return res
-      .status(httpStatus.internalServerError)
+      .status(httpStatus.INTERNAL_SERVER_ERROR)
       .send({ message: errorMessages.unableToCreateComment });
   }
 }
@@ -111,11 +117,11 @@ export async function list(req, res) {
       include: [includeAuthor, includePost, includeReplies],
       order: [["createdAt", "DESC"]],
     });
-    return res.status(httpStatus.ok).send(comments);
+    return res.status(httpStatus.OK).send(comments);
   } catch (error) {
     console.error(error);
     return res
-      .status(httpStatus.internalServerError)
+      .status(httpStatus.INTERNAL_SERVER_ERROR)
       .send({ message: errorMessages.unableToFetchComments });
   }
 }
@@ -129,14 +135,15 @@ export async function list(req, res) {
  */
 export async function get(req, res) {
   try {
-    const comment = await findCommentOr404(req.params.id, res);
+    const { id } = req.params;
+    const comment = await findCommentOr404(id, res);
     if (!comment) return;
 
-    return res.status(httpStatus.ok).send(comment);
+    return res.status(httpStatus.OK).send(comment);
   } catch (error) {
     console.error(error);
     return res
-      .status(httpStatus.internalServerError)
+      .status(httpStatus.INTERNAL_SERVER_ERROR)
       .send({ message: errorMessages.unableToFetchComment });
   }
 }
@@ -155,23 +162,24 @@ export async function get(req, res) {
  */
 export async function update(req, res) {
   try {
-    const comment = await findCommentOr404(req.params.id, res);
+    const { id } = req.params;
+    const comment = await findCommentOr404(id, res);
     if (!comment) return;
-    const {id: userId} = req.user;
+    const { id: userId } = req.user;
     if (comment.userId !== userId) {
       return res
-        .status(httpStatus.forbidden)
+        .status(httpStatus.FORBIDDEN)
         .send({ message: errorMessages.cannotUpdateOtherComment });
     }
 
     const { body } = req.body; // Already validated by Joi
 
     await comment.update({ body });
-    return res.status(httpStatus.ok).send(comment);
+    return res.status(httpStatus.OK).send(comment);
   } catch (error) {
     console.error(error);
     return res
-      .status(httpStatus.internalServerError)
+      .status(httpStatus.INTERNAL_SERVER_ERROR)
       .send({ message: errorMessages.unableToUpdateComment });
   }
 }
@@ -187,21 +195,22 @@ export async function update(req, res) {
  */
 export async function remove(req, res) {
   try {
-    const comment = await findCommentOr404(req.params.id, res);
+    const { id } = req.params;
+    const comment = await findCommentOr404(id, res);
     if (!comment) return;
-    const {id: userId} = req.user;
+    const { id: userId } = req.user;
     if (comment.userId !== userId) {
       return res
-        .status(httpStatus.forbidden)
+        .status(httpStatus.FORBIDDEN)
         .send({ message: errorMessages.cannotDeleteOtherComment });
     }
 
     await comment.destroy();
-    return res.status(httpStatus.noContent).send();
+    return res.status(httpStatus.NO_CONTENT).send();
   } catch (error) {
     console.error(error);
     return res
-      .status(httpStatus.internalServerError)
+      .status(httpStatus.INTERNAL_SERVER_ERROR)
       .send({ message: errorMessages.unableToDeleteComment });
   }
 }

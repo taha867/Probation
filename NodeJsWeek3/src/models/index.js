@@ -4,11 +4,6 @@ import Sequelize from "sequelize";
 import { fileURLToPath } from "url";
 import enVariables from "../../config.js";
 
-// Explicitly import pg to ensure it's loaded before Sequelize tries to use it
-// This is required for PostgreSQL dialect
-// If pg is not installed, this import will fail with a clear error
-import "pg";
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 

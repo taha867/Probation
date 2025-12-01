@@ -1,6 +1,10 @@
 import { Op } from "sequelize";
 import model from "../models/index.js";
-import { httpStatus, successMessages, errorMessages } from "../utils/constants.js";
+import {
+  httpStatus,
+  successMessages,
+  errorMessages,
+} from "../utils/constants.js";
 
 const { User, Post, Comment } = model;
 
@@ -41,7 +45,6 @@ const includePostComments = {
   where: { parentId: null }, // Only top-level comments (not replies)
 };
 
-
 /**
  * Gets paginated list of all users.
  * @param {Object} req.query - The query parameters for pagination.
@@ -51,10 +54,9 @@ const includePostComments = {
  * @throws {500} If there's an error during the retrieval process.
  */
 export async function list(req, res) {
-  const {page, limit} = req.query;
-  const pages = parseInt(page, 10) || 1;
-  const limits = parseInt(limit, 10) || 10;
-  const offset = (pages - 1) * limits;
+  const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+  const limit = Math.min(parseInt(req.query.limit, 10) || 20, 100);
+  const offset = (page - 1) * limit;
 
   try {
     const { rows, count } = await User.findAndCountAll({
@@ -64,7 +66,7 @@ export async function list(req, res) {
       offset,
     });
 
-    return res.status(httpStatus.OK).send({
+    return res.status(httpStatus.ok).send({
       users: rows,
       meta: {
         total: count,
@@ -76,7 +78,7 @@ export async function list(req, res) {
   } catch (error) {
     console.error(error);
     return res
-      .status(httpStatus.INTERNAL_SERVER_ERROR)
+      .status(httpStatus.internalServerError)
       .send({ message: errorMessages.unableToFetchUsers });
   }
 }
@@ -93,18 +95,26 @@ export async function list(req, res) {
  * @throws {500} If there's an error during the retrieval process.
  */
 export async function getUserPostsWithComments(req, res) {
-  const {id: requestedUserId} = req.params;
-  const {page, limit} = req.query;
-  const pages = parseInt(page, 10) || 1;
-  const limits = parseInt(limit, 10) || 10;
-  const offset = (pages - 1) * limits;
+  const requestedUserId = Number(req.params.id);
+
+  if (Number.isNaN(requestedUserId)) {
+    return res
+      .status(httpStatus.badRequest)
+      .send({ message: errorMessages.invalidUserId });
+  }
+
+  const page = Math.max(parseInt(req.query.page, 10) || 1, 1); // reads page from query string, converts it into INT, ensures page is at least 1 (no zero or negative page numbers).
+  const limit = Math.min(parseInt(req.query.limit, 10) || 10, 100); // // reads Limit from query string, converts it into INT, ensures page is at least 1 (no zero or negative page numbers).
+  const offset = (page - 1) * limit; //offset tells the database how many rows to skip before returning results.
 
   try {
     const user = await User.findByPk(requestedUserId, {
       attributes: ["id", "name", "email"],
     });
     if (!user) {
-      return res.status(httpStatus.NOT_FOUND).send({ message: errorMessages.userNotFound });
+      return res
+        .status(httpStatus.notFound)
+        .send({ message: errorMessages.userNotFound });
     }
 
     const { rows, count } = await Post.findAndCountAll({
@@ -115,7 +125,7 @@ export async function getUserPostsWithComments(req, res) {
       offset,
     });
 
-    return res.status(httpStatus.OK).send({
+    return res.status(httpStatus.ok).send({
       user,
       posts: rows,
       meta: {
@@ -128,7 +138,7 @@ export async function getUserPostsWithComments(req, res) {
   } catch (error) {
     console.error(error);
     return res
-      .status(httpStatus.INTERNAL_SERVER_ERROR)
+      .status(httpStatus.internalServerError)
       .send({ message: errorMessages.unableToFetchUserPosts });
   }
 }
@@ -150,19 +160,27 @@ export async function getUserPostsWithComments(req, res) {
  * @throws {500} If there's an error during the update process.
  */
 export async function update(req, res) {
-  const {id : requestedUserId} = req.params;
-  const {id: authUser} = req.user;
-  // Check if the authenticated user is trying to update their own profile
-  if (requestedUserId !== authUser) {
+  const requestedUserId = Number(req.params.id);
+
+  if (Number.isNaN(requestedUserId)) {
     return res
-      .status(httpStatus.FORBIDDEN)
+      .status(httpStatus.badRequest)
+      .send({ message: errorMessages.invalidUserId });
+  }
+
+  // Check if the authenticated user is trying to update their own profile
+  if (requestedUserId !== req.user.id) {
+    return res
+      .status(httpStatus.forbidden)
       .send({ message: errorMessages.cannotUpdateOtherUser });
   }
 
   try {
     const user = await User.findByPk(requestedUserId);
     if (!user) {
-      return res.status(httpStatus.NOT_FOUND).send({ message: errorMessages.userNotFound });
+      return res
+        .status(httpStatus.notFound)
+        .send({ message: errorMessages.userNotFound });
     }
 
     const { name, email, phone, password } = req.body;
@@ -180,7 +198,7 @@ export async function update(req, res) {
       });
       if (existingUser) {
         return res
-          .status(httpStatus.UNPROCESSABLE_ENTITY)
+          .status(httpStatus.unprocessableEntity)
           .send({ message: errorMessages.emailAlreadyExists });
       }
       updateData.email = email;
@@ -195,14 +213,19 @@ export async function update(req, res) {
       });
       if (existingUser) {
         return res
-          .status(httpStatus.UNPROCESSABLE_ENTITY)
+          .status(httpStatus.unprocessableEntity)
           .send({ message: errorMessages.phoneAlreadyExists });
       }
       updateData.phone = phone;
     }
     if (password !== undefined) updateData.password = password;
 
-    // Validation ensures at least one field is provided (handled by Joi)
+    // If no fields to update
+    if (Object.keys(updateData).length === 0) {
+      return res
+        .status(httpStatus.badRequest)
+        .send({ message: errorMessages.noFieldsToUpdate });
+    }
 
     await user.update(updateData);
 
@@ -210,8 +233,14 @@ export async function update(req, res) {
     await user.reload();
 
     // Return user data without password
-    const { id, name: userName, email: userEmail, phone: userPhone, status } = user;
-    return res.status(httpStatus.OK).send({
+    const {
+      id,
+      name: userName,
+      email: userEmail,
+      phone: userPhone,
+      status,
+    } = user;
+    return res.status(httpStatus.ok).send({
       message: successMessages.userUpdated,
       user: {
         id,
@@ -224,7 +253,7 @@ export async function update(req, res) {
   } catch (error) {
     console.error(error);
     return res
-      .status(httpStatus.INTERNAL_SERVER_ERROR)
+      .status(httpStatus.internalServerError)
       .send({ message: errorMessages.unableToUpdateUser });
   }
 }
@@ -240,31 +269,39 @@ export async function update(req, res) {
  * @throws {500} If there's an error during the deletion process.
  */
 export async function remove(req, res) {
-  const {id : requestedUserId} = req.params;
-  const {id: authUser} = req.user;
-  // Check if the authenticated user is trying to delete their own account
-  if (requestedUserId !== authUser) {
+  const requestedUserId = Number(req.params.id);
+
+  if (Number.isNaN(requestedUserId)) {
     return res
-      .status(httpStatus.FORBIDDEN)
+      .status(httpStatus.badRequest)
+      .send({ message: errorMessages.invalidUserId });
+  }
+
+  // Check if the authenticated user is trying to delete their own account
+  if (requestedUserId !== req.user.id) {
+    return res
+      .status(httpStatus.forbidden)
       .send({ message: errorMessages.cannotDeleteOtherUser });
   }
 
   try {
     const user = await User.findByPk(requestedUserId);
     if (!user) {
-      return res.status(httpStatus.NOT_FOUND).send({ message: errorMessages.userNotFound });
+      return res
+        .status(httpStatus.notFound)
+        .send({ message: errorMessages.userNotFound });
     }
 
     // Delete user (cascade will handle posts and comments)
     await user.destroy();
 
-    return res.status(httpStatus.OK).send({
+    return res.status(httpStatus.ok).send({
       message: successMessages.userDeleted,
     });
   } catch (error) {
     console.error(error);
     return res
-      .status(httpStatus.INTERNAL_SERVER_ERROR)
+      .status(httpStatus.internalServerError)
       .send({ message: errorMessages.unableToDeleteUser });
   }
 }

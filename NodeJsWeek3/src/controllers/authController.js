@@ -2,7 +2,12 @@ import { Op } from "sequelize";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import model from "../models/index.js";
-import { httpStatus, successMessages, errorMessages, userStatus } from "../utils/constants.js";
+import {
+  httpStatus,
+  successMessages,
+  errorMessages,
+  userStatus,
+} from "../utils/constants.js";
 
 const { User } = model;
 
@@ -23,11 +28,13 @@ export async function signUp(req, res) {
     const user = await User.findOne({
       where: { [Op.or]: [{ phone }, { email }] }, //[op.or] used to check multiple parameters (or means either phone or email, in case of and it would be both email and phone no)
     });
+    
     if (user) {
       return res
-        .status(httpStatus.unprocessableEntity)
+        .status(httpStatus.UNPROCESSABLE_ENTITY)
         .send({ message: errorMessages.userAlreadyExists });
     }
+
     //Model instance
     //does build + save for you, so the row is created in the database (async).
     await User.create({
@@ -37,10 +44,13 @@ export async function signUp(req, res) {
       phone,
       status: userStatus.loggedOut,
     });
-    return res.status(httpStatus.created).send({ message: successMessages.accountCreated });
+
+    return res
+      .status(httpStatus.OK)
+      .send({ message: successMessages.accountCreated });
   } catch (e) {
     console.log(e);
-    return res.status(httpStatus.internalServerError).send({
+    return res.status(httpStatus.INTERNAL_SERVER_ERROR).send({
       message: errorMessages.operationFailed,
     });
   }
@@ -66,13 +76,17 @@ export async function signIn(req, res) {
     });
 
     if (!user) {
-      return res.status(httpStatus.unauthorized).send({ message: errorMessages.invalidCredentials });
+      return res
+        .status(httpStatus.UNAUTHORIZED)
+        .send({ message: errorMessages.invalidCredentials });
     }
 
     // Compare provided password with hashed password in database
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      return res.status(httpStatus.unauthorized).send({ message: errorMessages.invalidCredentials });
+      return res
+        .status(httpStatus.UNAUTHORIZED)
+        .send({ message: errorMessages.invalidCredentials });
     }
 
     await user.update({
@@ -98,7 +112,7 @@ export async function signIn(req, res) {
     );
 
     const { id, name, email: userEmail, phone, status } = user;
-    return res.status(httpStatus.ok).send({
+    return res.status(httpStatus.OK).send({
       message: successMessages.signedIn,
       accessToken,
       refreshToken,
@@ -112,7 +126,7 @@ export async function signIn(req, res) {
     });
   } catch (e) {
     console.log(e);
-    return res.status(httpStatus.internalServerError).send({
+    return res.status(httpStatus.INTERNAL_SERVER_ERROR).send({
       message: errorMessages.operationFailed,
     });
   }
@@ -127,11 +141,13 @@ export async function signIn(req, res) {
  */
 export async function signOut(req, res) {
   try {
-    const {id: authUser} = req.user;
+    const { id: authUser } = req.user;
     const user = await User.findByPk(authUser);
 
     if (!user) {
-      return res.status(httpStatus.notFound).send({ message: errorMessages.userNotFound });
+      return res
+        .status(httpStatus.NOT_FOUND)
+        .send({ message: errorMessages.userNotFound });
     }
 
     // Increment tokenVersion to invalidate all existing refresh tokens
@@ -140,12 +156,12 @@ export async function signOut(req, res) {
       tokenVersion: user.tokenVersion + 1,
     });
 
-    return res.status(httpStatus.ok).send({
+    return res.status(httpStatus.OK).send({
       message: successMessages.loggedOut,
     });
   } catch (error) {
     console.error(error);
-    return res.status(httpStatus.internalServerError).send({
+    return res.status(httpStatus.INTERNAL_SERVER_ERROR).send({
       message: errorMessages.operationFailed,
     });
   }
@@ -165,7 +181,7 @@ export async function refreshToken(req, res) {
   const { refreshToken } = req.body;
 
   if (!refreshToken) {
-    return res.status(httpStatus.badRequest).send({
+    return res.status(httpStatus.BAD_REQUEST).send({
       message: errorMessages.refreshTokenRequired,
     });
   }
@@ -177,18 +193,18 @@ export async function refreshToken(req, res) {
       decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
     } catch (error) {
       if (error.name === "TokenExpiredError") {
-        return res.status(httpStatus.unauthorized).send({
+        return res.status(httpStatus.UNAUTHORIZED).send({
           message: errorMessages.refreshTokenExpired,
         });
       }
-      return res.status(httpStatus.unauthorized).send({
+      return res.status(httpStatus.UNAUTHORIZED).send({
         message: errorMessages.invalidRefreshToken,
       });
     }
 
     // Check if token is a refresh token
     if (decoded.type !== "refresh") {
-      return res.status(httpStatus.unauthorized).send({
+      return res.status(httpStatus.UNAUTHORIZED).send({
         message: errorMessages.invalidRefreshToken,
       });
     }
@@ -197,14 +213,14 @@ export async function refreshToken(req, res) {
     const user = await User.findByPk(decoded.userId);
 
     if (!user) {
-      return res.status(httpStatus.notFound).send({
+      return res.status(httpStatus.NOT_FOUND).send({
         message: errorMessages.userNotFound,
       });
     }
 
     // Check if token version matches (token is not revoked)
     if (user.tokenVersion !== decoded.tokenVersion) {
-      return res.status(httpStatus.unauthorized).send({
+      return res.status(httpStatus.UNAUTHORIZED).send({
         message: errorMessages.invalidRefreshToken,
       });
     }
@@ -216,13 +232,13 @@ export async function refreshToken(req, res) {
       { expiresIn: "15m" }
     );
 
-    return res.status(httpStatus.ok).send({
+    return res.status(httpStatus.OK).send({
       message: successMessages.tokenRefreshed,
       accessToken: newAccessToken,
     });
   } catch (error) {
     console.error(error);
-    return res.status(httpStatus.internalServerError).send({
+    return res.status(httpStatus.INTERNAL_SERVER_ERROR).send({
       message: errorMessages.operationFailed,
     });
   }
@@ -244,9 +260,7 @@ export async function forgotPassword(req, res) {
     const user = await User.findOne({ where: { email } });
 
     if (!user) {
-      // Don't reveal if email exists or not for security reasons
-      // Return success message even if user doesn't exist
-      return res.status(httpStatus.ok).send({
+      return res.status(httpStatus.OK).send({
         message: successMessages.resetTokenSent,
       });
     }
@@ -258,17 +272,14 @@ export async function forgotPassword(req, res) {
       { expiresIn: "1h" }
     );
 
-    // In production, send email with reset link
-    // For now, return token in response for testing
-    
-    return res.status(httpStatus.ok).send({
+    return res.status(httpStatus.OK).send({
       message: successMessages.resetTokenSent,
       // Only return token in development for testing
       resetToken: resetToken,
     });
   } catch (error) {
     console.error(error);
-    return res.status(httpStatus.internalServerError).send({
+    return res.status(httpStatus.INTERNAL_SERVER_ERROR).send({
       message: errorMessages.operationFailed,
     });
   }
@@ -296,18 +307,18 @@ export async function resetPassword(req, res) {
       decoded = jwt.verify(token, process.env.JWT_SECRET);
     } catch (error) {
       if (error.name === "TokenExpiredError") {
-        return res.status(httpStatus.unauthorized).send({
+        return res.status(httpStatus.UNAUTHORIZED).send({
           message: errorMessages.resetTokenExpired,
         });
       }
-      return res.status(httpStatus.unauthorized).send({
+      return res.status(httpStatus.UNAUTHORIZED).send({
         message: errorMessages.invalidResetToken,
       });
     }
 
     // Check if token is a password reset token
     if (decoded.type !== "password_reset") {
-      return res.status(httpStatus.unauthorized).send({
+      return res.status(httpStatus.UNAUTHORIZED).send({
         message: errorMessages.invalidResetToken,
       });
     }
@@ -316,7 +327,7 @@ export async function resetPassword(req, res) {
     const user = await User.findByPk(decoded.userId);
 
     if (!user) {
-      return res.status(httpStatus.notFound).send({
+      return res.status(httpStatus.NOT_FOUND).send({
         message: errorMessages.userNotFound,
       });
     }
@@ -324,12 +335,12 @@ export async function resetPassword(req, res) {
     // Update password (bcrypt hook will hash it automatically)
     await user.update({ password: newPassword });
 
-    return res.status(httpStatus.ok).send({
+    return res.status(httpStatus.OK).send({
       message: successMessages.passwordReset,
     });
   } catch (error) {
     console.error(error);
-    return res.status(httpStatus.internalServerError).send({
+    return res.status(httpStatus.INTERNAL_SERVER_ERROR).send({
       message: errorMessages.operationFailed,
     });
   }

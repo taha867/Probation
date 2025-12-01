@@ -7,12 +7,12 @@ import { httpStatus, errorMessages } from "../utils/constants.js";
  * @param {string} property - Property to validate (body, query, params)
  * @returns {Function} Express middleware function
  */
+//You can validate:  body, query, params, property defaults to "body"
 export const validate = (schema, property = "body") => {
   return (req, res, next) => {
     const { error, value } = schema.validate(req[property], {
       abortEarly: false, // Return all errors, not just the first one
       stripUnknown: true, // Remove unknown properties
-      convert: false, // Convert types (e.g., string to number)
     });
 
     if (error) {
@@ -21,28 +21,14 @@ export const validate = (schema, property = "body") => {
         message: detail.message,
       }));
 
-      return res.status(httpStatus.BAD_REQUEST).send({
+      return res.status(httpStatus.badRequest).send({
         message: "Validation error",
         errors,
       });
     }
 
     // Replace req[property] with validated and sanitized value
-    // For body, we can replace directly
-    if (property === "body") {
-      req[property] = value;
-    } else {
-      // For query and params, update properties individually
-      //req.query and req.params are objects that other parts of Express might hold references to.
-      // Reassigning the whole object (req.query = value) could break those references.
-      const target = req[property];
-      for (const key in value) {
-        if (Object.prototype.hasOwnProperty.call(value, key)) {
-          target[key] = value[key];
-        }
-      }
-    }
-
+    req[property] = value;
     next();
   };
 };

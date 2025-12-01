@@ -33,7 +33,9 @@ const findPostOr404 = async (id, res) => {
   });
 
   if (!post) {
-    res.status(httpStatus.NOT_FOUND).send({ message: errorMessages.postNotFound });
+    res
+      .status(httpStatus.notFound)
+      .send({ message: errorMessages.postNotFound });
     return null;
   }
 
@@ -52,16 +54,22 @@ const findPostOr404 = async (id, res) => {
  * @throws {500} If there's an error during the creation process.
  */
 export async function create(req, res) {
-  const { title, body, status } = req.body; // Already validated by Joi
+  const { title, body, status } = req.body;
   const { id: userId } = req.user; // Get userId from authenticated user
+
+  if (!title || !body) {
+    return res
+      .status(httpStatus.badRequest)
+      .send({ message: errorMessages.titleBodyRequired });
+  }
 
   try {
     const post = await Post.create({ title, body, userId, status });
-    return res.status(httpStatus.CREATED).send(post);
+    return res.status(httpStatus.created).send(post);
   } catch (error) {
     console.error(error);
     return res
-      .status(httpStatus.INTERNAL_SERVER_ERROR)
+      .status(httpStatus.internalServerError)
       .send({ message: errorMessages.unableToCreatePost });
   }
 }
@@ -77,11 +85,10 @@ export async function create(req, res) {
  * @throws {500} If there's an error during the retrieval process.
  */
 export async function list(req, res) {
-  const page = parseInt(req.query.page, 10) || 1;
-  const limit = parseInt(req.query.limit, 10) || 10;
-
+  const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+  const limit = Math.min(parseInt(req.query.limit, 10) || 10, 100);
   const offset = (page - 1) * limit;
-  const { search, userId } = req.query; // Already validated by Joi
+  const { search, userId } = req.query;
 
   const where = {};
   if (userId) {
@@ -105,7 +112,7 @@ export async function list(req, res) {
       offset,
     });
 
-    return res.status(httpStatus.OK).send({
+    return res.status(httpStatus.ok).send({
       data: rows,
       meta: {
         total: count,
@@ -117,7 +124,7 @@ export async function list(req, res) {
   } catch (error) {
     console.error(error);
     return res
-      .status(httpStatus.INTERNAL_SERVER_ERROR)
+      .status(httpStatus.internalServerError)
       .send({ message: errorMessages.unableToFetchPosts });
   }
 }
@@ -131,15 +138,15 @@ export async function list(req, res) {
  */
 export async function get(req, res) {
   try {
-    const {id} = req.params;
+    const { id } = req.params;
     const post = await findPostOr404(id, res);
     if (!post) return;
 
-    return res.status(httpStatus.OK).send(post);
+    return res.status(httpStatus.ok).send(post);
   } catch (error) {
     console.error(error);
     return res
-      .status(httpStatus.INTERNAL_SERVER_ERROR)
+      .status(httpStatus.internalServerError)
       .send({ message: errorMessages.unableToFetchPost });
   }
 }
@@ -156,16 +163,23 @@ export async function get(req, res) {
  * @throws {500} If there's an error during the retrieval process.
  */
 export async function listForPost(req, res) {
-  const {id: postId} = req.params;
-  const {page, limit} = req.query;
-  const pages = parseInt(page, 10) || 1;
-  const limits = parseInt(limit, 10) || 10;
-  const offset = (pages - 1) * limits;
+  const postId = Number(req.params.postId);
+  if (Number.isNaN(postId)) {
+    return res
+      .status(httpStatus.badRequest)
+      .send({ message: errorMessages.invalidPostId });
+  }
+
+  const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+  const limit = Math.min(parseInt(req.query.limit, 10) || 10, 100);
+  const offset = (page - 1) * limit;
 
   try {
     const postExists = await Post.findByPk(postId);
     if (!postExists) {
-      return res.status(httpStatus.NOT_FOUND).send({ message: errorMessages.postNotFound });
+      return res
+        .status(httpStatus.notFound)
+        .send({ message: errorMessages.postNotFound });
     }
 
     const { rows, count } = await Comment.findAndCountAll({
@@ -176,7 +190,7 @@ export async function listForPost(req, res) {
       offset,
     });
 
-    return res.status(httpStatus.OK).send({
+    return res.status(httpStatus.ok).send({
       post: postExists,
       comments: rows,
       meta: {
@@ -189,7 +203,7 @@ export async function listForPost(req, res) {
   } catch (error) {
     console.error(error);
     return res
-      .status(httpStatus.INTERNAL_SERVER_ERROR)
+      .status(httpStatus.internalServerError)
       .send({ message: errorMessages.unableToFetchPostComments });
   }
 }
@@ -209,26 +223,26 @@ export async function listForPost(req, res) {
  */
 export async function update(req, res) {
   try {
-    const {id: postId} = req.params;
-    const {id: userId} = req.user;
+    const { id: postId } = req.params;
+    const { id: userId } = req.user;
     const post = await findPostOr404(postId, res);
     if (!post) return;
 
     // Check if the authenticated user owns this post
     if (post.userId !== userId) {
       return res
-        .status(httpStatus.FORBIDDEN)
+        .status(httpStatus.forbidden)
         .send({ message: errorMessages.cannotUpdateOtherPost });
     }
 
     const { title, body, status } = req.body;
     await post.update({ title, body, status });
 
-    return res.status(httpStatus.OK).send(post);
+    return res.status(httpStatus.ok).send(post);
   } catch (error) {
     console.error(error);
     return res
-      .status(httpStatus.INTERNAL_SERVER_ERROR)
+      .status(httpStatus.internalServerError)
       .send({ message: errorMessages.unableToUpdatePost });
   }
 }
@@ -244,23 +258,23 @@ export async function update(req, res) {
  */
 export async function remove(req, res) {
   try {
-    const {id: userId} = req.user;
+    const { id: userId } = req.user;
     const post = await findPostOr404(req.params.id, res);
     if (!post) return;
 
     // Check if the authenticated user owns this post
     if (post.userId !== userId) {
       return res
-        .status(httpStatus.FORBIDDEN)
+        .status(httpStatus.forbidden)
         .send({ message: errorMessages.cannotDeleteOtherPost });
     }
 
     await post.destroy();
-    return res.status(httpStatus.NO_CONTENT).send();
+    return res.status(httpStatus.noContent).send();
   } catch (error) {
     console.error(error);
     return res
-      .status(httpStatus.INTERNAL_SERVER_ERROR)
+      .status(httpStatus.internalServerError)
       .send({ message: errorMessages.unableToDeletePost });
   }
 }

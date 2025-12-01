@@ -11,14 +11,14 @@ export const authenticateToken = async (req, res, next) => {
     const token = authHeader && authHeader.split(" ")[1]; // Bearer TOKEN (xyz123token, This extracts the token only.)
 
     if (!token) {
-      return res.status(httpStatus.unauthorized).send({ message: errorMessages.accessTokenRequired });
+      return res.status(httpStatus.UNAUTHORIZED).send({ message: errorMessages.accessTokenRequired });
     }
 
     const decoded = jwt.verify(token, JWT_SECRET);
     
     // Verify this is an access token, not a refresh token
     if (decoded.type !== "access") {
-      return res.status(httpStatus.unauthorized).send({ message: errorMessages.invalidToken });
+      return res.status(httpStatus.UNAUTHORIZED).send({ message: errorMessages.invalidToken });
     }
     
     // Store only userId in req.user (optimized - no database query)
@@ -26,13 +26,13 @@ export const authenticateToken = async (req, res, next) => {
     next();
   } catch (error) {
     if (error.name === "JsonWebTokenError") {
-      return res.status(httpStatus.unauthorized).send({ message: errorMessages.invalidToken });
+      return res.status(httpStatus.UNAUTHORIZED).send({ message: errorMessages.invalidToken });
     }
     if (error.name === "TokenExpiredError") {
-      return res.status(httpStatus.unauthorized).send({ message: errorMessages.accessTokenExpired });
+      return res.status(httpStatus.UNAUTHORIZED).send({ message: errorMessages.accessTokenExpired });
     }
     console.error("Auth middleware error:", error);
-    return res.status(httpStatus.internalServerError).send({ message: errorMessages.authenticationFailed });
+    return res.status(httpStatus.INTERNAL_SERVER_ERROR).send({ message: errorMessages.authenticationFailed });
   }
 };
 
