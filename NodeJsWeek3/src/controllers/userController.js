@@ -1,46 +1,17 @@
-import { Op } from "sequelize";
-import model from "../models/index.js";
 import { httpStatus, successMessages, errorMessages } from "../utils/constants.js";
-
-const { User, Post, Comment } = model;
-
-// Include structure for comments with nested replies
-const includeCommentAuthor = {
-  model: User,
-  as: "author",
-  attributes: ["id", "name", "email"],
-};
-
-const includeCommentReplies = {
-  model: Comment,
-  as: "replies",
-  include: [
-    {
-      model: User,
-      as: "author",
-      attributes: ["id", "name", "email"],
-    },
-  ],
-  separate: true, // Fetches replies in a separate query per parent for better performance
-  order: [["createdAt", "ASC"]],
-};
-
-// Include structure for posts with comments and nested replies
-const includePostAuthor = {
-  model: User,
-  as: "author",
-  attributes: ["id", "name", "email"],
-};
-
-const includePostComments = {
-  model: Comment,
-  as: "comments",
-  include: [includeCommentAuthor, includeCommentReplies],
-  separate: true, // Fetches comments in a separate query for better performance
-  order: [["createdAt", "DESC"]],
-  where: { parentId: null }, // Only top-level comments (not replies)
-};
-
+import { validateRequest } from "../middleware/validationMiddleware.js";
+import {
+  getUserPostsQuerySchema,
+  updateUserSchema,
+  userIdParamSchema,
+  listUsersQuerySchema,
+} from "../validations/userValidation.js";
+import {
+  listUsers,
+  getUserPostsWithComments,
+  updateUserForSelf,
+  deleteUserForSelf,
+} from "../services/userService.js";
 
 /**
  * Gets paginated list of all users.
@@ -51,18 +22,13 @@ const includePostComments = {
  * @throws {500} If there's an error during the retrieval process.
  */
 export async function list(req, res) {
-  const {page, limit} = req.query;
-  const pages = parseInt(page, 10) || 1;
-  const limits = parseInt(limit, 10) || 10;
-  const offset = (pages - 1) * limits;
+  const validatedQuery = validateRequest(listUsersQuerySchema, req.query, res);
+  if (!validatedQuery) return;
+  const page = parseInt(validatedQuery.page ?? 1, 10) || 1;
+  const limit = parseInt(validatedQuery.limit ?? 10, 10) || 10;
 
   try {
-    const { rows, count } = await User.findAndCountAll({
-      attributes: ["id", "name", "email", "phone", "status"],
-      order: [["createdAt", "DESC"]],
-      limit,
-      offset,
-    });
+    const { rows, count } = await listUsers({ page, limit });
 
     return res.status(httpStatus.OK).send({
       users: rows,
@@ -92,39 +58,30 @@ export async function list(req, res) {
  * @throws {404} If the user is not found.
  * @throws {500} If there's an error during the retrieval process.
  */
-export async function getUserPostsWithComments(req, res) {
-  const {id: requestedUserId} = req.params;
-  const {page, limit} = req.query;
-  const pages = parseInt(page, 10) || 1;
-  const limits = parseInt(limit, 10) || 10;
-  const offset = (pages - 1) * limits;
+export async function getUserPostsWithComment(req, res) {
+  const validatedParams = validateRequest(userIdParamSchema, req.params, res);
+  if (!validatedParams) return;
+  const { id: requestedUserId } = validatedParams;
+
+  const validatedQuery = validateRequest(getUserPostsQuerySchema, req.query, res);
+  if (!validatedQuery) return;
+  const page = parseInt(validatedQuery.page ?? 1, 10) || 1;
+  const limit = parseInt(validatedQuery.limit ?? 10, 10) || 10;
 
   try {
-    const user = await User.findByPk(requestedUserId, {
-      attributes: ["id", "name", "email"],
+    const result = await getUserPostsWithComments({
+      userId: requestedUserId,
+      page,
+      limit,
     });
-    if (!user) {
-      return res.status(httpStatus.NOT_FOUND).send({ message: errorMessages.userNotFound });
+
+    if (!result.user) {
+      return res
+        .status(httpStatus.NOT_FOUND)
+        .send({ message: errorMessages.userNotFound });
     }
 
-    const { rows, count } = await Post.findAndCountAll({
-      where: { userId: requestedUserId },
-      include: [includePostAuthor, includePostComments],
-      order: [["createdAt", "DESC"]],
-      limit,
-      offset,
-    });
-
-    return res.status(httpStatus.OK).send({
-      user,
-      posts: rows,
-      meta: {
-        total: count,
-        page,
-        limit,
-        totalPages: Math.ceil(count / limit),
-      },
-    });
+    return res.status(httpStatus.OK).send(result);
   } catch (error) {
     console.error(error);
     return res
@@ -150,66 +107,43 @@ export async function getUserPostsWithComments(req, res) {
  * @throws {500} If there's an error during the update process.
  */
 export async function update(req, res) {
-  const {id : requestedUserId} = req.params;
+  const validatedParams = validateRequest(userIdParamSchema, req.params, res);
+  if (!validatedParams) return;
+  const { id: requestedUserId } = validatedParams;
   const {id: authUser} = req.user;
-  // Check if the authenticated user is trying to update their own profile
-  if (requestedUserId !== authUser) {
-    return res
-      .status(httpStatus.FORBIDDEN)
-      .send({ message: errorMessages.cannotUpdateOtherUser });
-  }
-
   try {
-    const user = await User.findByPk(requestedUserId);
-    if (!user) {
-      return res.status(httpStatus.NOT_FOUND).send({ message: errorMessages.userNotFound });
-    }
+    const updateBody = validateRequest(updateUserSchema, req.body, res);
+    if (!updateBody) return;
+    const result = await updateUserForSelf({
+      requestedUserId,
+      authUserId: authUser,
+      data: updateBody,
+    });
 
-    const { name, email, phone, password } = req.body;
-    const updateData = {};
-
-    // Only update fields that are provided
-    if (name !== undefined) updateData.name = name;
-    if (email !== undefined) {
-      // Check if email already exists for another user
-      const existingUser = await User.findOne({
-        where: {
-          email,
-          id: { [Op.ne]: requestedUserId }, // Not equal to current user id
-        },
-      });
-      if (existingUser) {
+    if (!result.ok) {
+      if (result.reason === "FORBIDDEN") {
+        return res
+          .status(httpStatus.FORBIDDEN)
+          .send({ message: errorMessages.cannotUpdateOtherUser });
+      }
+      if (result.reason === "NOT_FOUND") {
+        return res
+          .status(httpStatus.NOT_FOUND)
+          .send({ message: errorMessages.userNotFound });
+      }
+      if (result.reason === "EMAIL_EXISTS") {
         return res
           .status(httpStatus.UNPROCESSABLE_ENTITY)
           .send({ message: errorMessages.emailAlreadyExists });
       }
-      updateData.email = email;
-    }
-    if (phone !== undefined) {
-      // Check if phone already exists for another user
-      const existingUser = await User.findOne({
-        where: {
-          phone,
-          id: { [Op.ne]: requestedUserId }, // Not equal to current user id
-        },
-      });
-      if (existingUser) {
+      if (result.reason === "PHONE_EXISTS") {
         return res
           .status(httpStatus.UNPROCESSABLE_ENTITY)
           .send({ message: errorMessages.phoneAlreadyExists });
       }
-      updateData.phone = phone;
     }
-    if (password !== undefined) updateData.password = password;
 
-    // Validation ensures at least one field is provided (handled by Joi)
-
-    await user.update(updateData);
-
-    // Reload user to get updated data
-    await user.reload();
-
-    // Return user data without password
+    const { user } = result;
     const { id, name: userName, email: userEmail, phone: userPhone, status } = user;
     return res.status(httpStatus.OK).send({
       message: successMessages.userUpdated,
@@ -240,23 +174,28 @@ export async function update(req, res) {
  * @throws {500} If there's an error during the deletion process.
  */
 export async function remove(req, res) {
-  const {id : requestedUserId} = req.params;
+  const validatedParams = validateRequest(userIdParamSchema, req.params, res);
+  if (!validatedParams) return;
+  const { id: requestedUserId } = validatedParams;
   const {id: authUser} = req.user;
-  // Check if the authenticated user is trying to delete their own account
-  if (requestedUserId !== authUser) {
-    return res
-      .status(httpStatus.FORBIDDEN)
-      .send({ message: errorMessages.cannotDeleteOtherUser });
-  }
-
   try {
-    const user = await User.findByPk(requestedUserId);
-    if (!user) {
-      return res.status(httpStatus.NOT_FOUND).send({ message: errorMessages.userNotFound });
-    }
+    const result = await deleteUserForSelf({
+      requestedUserId,
+      authUserId: authUser,
+    });
 
-    // Delete user (cascade will handle posts and comments)
-    await user.destroy();
+    if (!result.ok) {
+      if (result.reason === "FORBIDDEN") {
+        return res
+          .status(httpStatus.FORBIDDEN)
+          .send({ message: errorMessages.cannotDeleteOtherUser });
+      }
+      if (result.reason === "NOT_FOUND") {
+        return res
+          .status(httpStatus.NOT_FOUND)
+          .send({ message: errorMessages.userNotFound });
+      }
+    }
 
     return res.status(httpStatus.OK).send({
       message: successMessages.userDeleted,

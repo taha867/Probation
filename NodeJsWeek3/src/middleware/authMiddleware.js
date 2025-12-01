@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import rateLimit from "express-rate-limit";
 import { httpStatus, errorMessages } from "../utils/constants.js";
 
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -35,6 +36,20 @@ export const authenticateToken = async (req, res, next) => {
     return res.status(httpStatus.INTERNAL_SERVER_ERROR).send({ message: errorMessages.authenticationFailed });
   }
 };
+
+// Limit login attempts to mitigate brute-force attacks
+// 5 attempts per minute per IP → after that, return 429
+export const loginRateLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    return res.status(httpStatus.TOO_MANY_REQUESTS).json({
+      message: errorMessages.tooManyRequests,
+    });
+  },
+});
 
 export default authenticateToken;
 

@@ -83,7 +83,9 @@ export const errorMessages = {
   unableToDeleteComment: "Unable to delete the requested comment",
 
   // General Errors
-  operationFailed: "Could not perform operation at this time, kindly try again later.",
+  operationFailed:
+    "Could not perform operation at this time, kindly try again later.",
+  tooManyRequests: "Too many requests, please try again later",
   routeNotFound: "Route not found",
 };
 

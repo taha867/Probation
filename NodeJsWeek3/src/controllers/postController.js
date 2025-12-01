@@ -1,44 +1,20 @@
-import { Op } from "sequelize";
-import model from "../models/index.js";
 import { httpStatus, errorMessages } from "../utils/constants.js";
-
-const { Comment, Post, User } = model;
-
-const includeAuthor = {
-  model: User,
-  as: "author",
-  attributes: ["id", "name", "email"],
-};
-
-const includeReplies = {
-  model: Comment,
-  as: "replies",
-  include: [
-    {
-      model: User,
-      as: "author",
-      attributes: ["id", "name", "email"],
-    },
-  ],
-  separate: true, //tells Sequelize to fetch replies in a separate query per parent —
-  // this ensures replies arrays are ordered reliably and avoids giant JOIN result processing.
-  order: [["createdAt", "ASC"]],
-};
-
-const findPostOr404 = async (id, res) => {
-  const post = await Post.findByPk(id, {
-    include: [
-      { model: User, as: "author", attributes: ["id", "name", "email"] },
-    ],
-  });
-
-  if (!post) {
-    res.status(httpStatus.NOT_FOUND).send({ message: errorMessages.postNotFound });
-    return null;
-  }
-
-  return post;
-};
+import { validateRequest } from "../middleware/validationMiddleware.js";
+import {
+  createPostSchema,
+  updatePostSchema,
+  listPostsQuerySchema,
+  postIdParamSchema,
+  postIdParamForCommentsSchema,
+} from "../validations/postValidation.js";
+import {
+  createPost,
+  listPosts,
+  findPostWithAuthor,
+  getPostWithComments,
+  updatePostForUser,
+  deletePostForUser,
+} from "../services/postService.js";
 
 /**
  * Creates a new post.
@@ -52,11 +28,13 @@ const findPostOr404 = async (id, res) => {
  * @throws {500} If there's an error during the creation process.
  */
 export async function create(req, res) {
-  const { title, body, status } = req.body; // Already validated by Joi
+  const validatedBody = validateRequest(createPostSchema, req.body, res);
+  if (!validatedBody) return;
+  const { title, body, status } = validatedBody; // Already validated by Joi
   const { id: userId } = req.user; // Get userId from authenticated user
 
   try {
-    const post = await Post.create({ title, body, userId, status });
+    const post = await createPost({ title, body, status, userId });
     return res.status(httpStatus.CREATED).send(post);
   } catch (error) {
     console.error(error);
@@ -77,32 +55,19 @@ export async function create(req, res) {
  * @throws {500} If there's an error during the retrieval process.
  */
 export async function list(req, res) {
-  const page = parseInt(req.query.page, 10) || 1;
-  const limit = parseInt(req.query.limit, 10) || 10;
+  const validatedQuery = validateRequest(listPostsQuerySchema, req.query, res);
+  if (!validatedQuery) return;
 
-  const offset = (page - 1) * limit;
-  const { search, userId } = req.query; // Already validated by Joi
-
-  const where = {};
-  if (userId) {
-    where.userId = userId;
-  }
-  if (search) {
-    where[Op.or] = [
-      { title: { [Op.iLike]: `%${search}%` } }, //contains the search text anywhere
-      { body: { [Op.iLike]: `%${search}%` } },
-    ];
-  }
+  const page = parseInt(validatedQuery.page ?? 1, 10) || 1;
+  const limit = parseInt(validatedQuery.limit ?? 10, 10) || 10;
+  const { search, userId } = validatedQuery; // Already validated by Joi
 
   try {
-    const { rows, count } = await Post.findAndCountAll({
-      where, //applies the filters that we built above
-      include: [
-        { model: User, as: "author", attributes: ["id", "name", "email"] },
-      ],
-      order: [["createdAt", "DESC"]],
+    const { rows, count } = await listPosts({
+      page,
       limit,
-      offset,
+      search,
+      userId,
     });
 
     return res.status(httpStatus.OK).send({
@@ -118,7 +83,7 @@ export async function list(req, res) {
     console.error(error);
     return res
       .status(httpStatus.INTERNAL_SERVER_ERROR)
-      .send({ message: errorMessages.unableToFetchPosts });
+      .send({ message: errorMessages.unableToFetchPost });
   }
 }
 
@@ -131,9 +96,15 @@ export async function list(req, res) {
  */
 export async function get(req, res) {
   try {
-    const {id} = req.params;
-    const post = await findPostOr404(id, res);
-    if (!post) return;
+    const validatedParams = validateRequest(postIdParamSchema, req.params, res);
+    if (!validatedParams) return;
+    const { id } = validatedParams;
+    const post = await findPostWithAuthor(id);
+    if (!post) {
+      return res
+        .status(httpStatus.NOT_FOUND)
+        .send({ message: errorMessages.postNotFound });
+    }
 
     return res.status(httpStatus.OK).send(post);
   } catch (error) {
@@ -156,35 +127,36 @@ export async function get(req, res) {
  * @throws {500} If there's an error during the retrieval process.
  */
 export async function listForPost(req, res) {
-  const {id: postId} = req.params;
-  const {page, limit} = req.query;
-  const pages = parseInt(page, 10) || 1;
-  const limits = parseInt(limit, 10) || 10;
-  const offset = (pages - 1) * limits;
+  const validatedParams = validateRequest(
+    postIdParamForCommentsSchema,
+    req.params,
+    res
+  );
+  if (!validatedParams) return;
+  const { postId } = validatedParams;
+
+  const validatedQuery = validateRequest(listPostsQuerySchema, req.query, res);
+  if (!validatedQuery) return;
+  const page = parseInt(validatedQuery.page ?? 1, 10) || 1;
+  const limit = parseInt(validatedQuery.limit ?? 10, 10) || 10;
 
   try {
-    const postExists = await Post.findByPk(postId);
-    if (!postExists) {
-      return res.status(httpStatus.NOT_FOUND).send({ message: errorMessages.postNotFound });
-    }
-
-    const { rows, count } = await Comment.findAndCountAll({
-      where: { postId, parentId: null }, // Only top-level comments
-      include: [includeAuthor, includeReplies],
-      order: [["createdAt", "DESC"]],
+    const { post, comments, meta } = await getPostWithComments({
+      postId,
+      page,
       limit,
-      offset,
     });
 
+    if (!post) {
+      return res
+        .status(httpStatus.NOT_FOUND)
+        .send({ message: errorMessages.postNotFound });
+    }
+
     return res.status(httpStatus.OK).send({
-      post: postExists,
-      comments: rows,
-      meta: {
-        total: count,
-        page,
-        limit,
-        totalPages: Math.ceil(count / limit),
-      },
+      post,
+      comments,
+      meta,
     });
   } catch (error) {
     console.error(error);
@@ -209,22 +181,33 @@ export async function listForPost(req, res) {
  */
 export async function update(req, res) {
   try {
-    const {id: postId} = req.params;
+    const validatedParams = validateRequest(postIdParamSchema, req.params, res);
+    if (!validatedParams) return;
+    const { id: postId } = validatedParams;
     const {id: userId} = req.user;
-    const post = await findPostOr404(postId, res);
-    if (!post) return;
+    const validatedBody = validateRequest(updatePostSchema, req.body, res);
+    if (!validatedBody) return;
+    const { title, body, status } = validatedBody;
+    const result = await updatePostForUser({
+      postId,
+      userId,
+      data: { title, body, status },
+    });
 
-    // Check if the authenticated user owns this post
-    if (post.userId !== userId) {
-      return res
-        .status(httpStatus.FORBIDDEN)
-        .send({ message: errorMessages.cannotUpdateOtherPost });
+    if (!result.ok) {
+      if (result.reason === "NOT_FOUND") {
+        return res
+          .status(httpStatus.NOT_FOUND)
+          .send({ message: errorMessages.postNotFound });
+      }
+      if (result.reason === "FORBIDDEN") {
+        return res
+          .status(httpStatus.FORBIDDEN)
+          .send({ message: errorMessages.cannotUpdateOtherPost });
+      }
     }
 
-    const { title, body, status } = req.body;
-    await post.update({ title, body, status });
-
-    return res.status(httpStatus.OK).send(post);
+    return res.status(httpStatus.OK).send(result.post);
   } catch (error) {
     console.error(error);
     return res
@@ -245,17 +228,24 @@ export async function update(req, res) {
 export async function remove(req, res) {
   try {
     const {id: userId} = req.user;
-    const post = await findPostOr404(req.params.id, res);
-    if (!post) return;
+    const validatedParams = validateRequest(postIdParamSchema, req.params, res);
+    if (!validatedParams) return;
+    const { id } = validatedParams;
+    const result = await deletePostForUser({ postId: id, userId });
 
-    // Check if the authenticated user owns this post
-    if (post.userId !== userId) {
-      return res
-        .status(httpStatus.FORBIDDEN)
-        .send({ message: errorMessages.cannotDeleteOtherPost });
+    if (!result.ok) {
+      if (result.reason === "NOT_FOUND") {
+        return res
+          .status(httpStatus.NOT_FOUND)
+          .send({ message: errorMessages.postNotFound });
+      }
+      if (result.reason === "FORBIDDEN") {
+        return res
+          .status(httpStatus.FORBIDDEN)
+          .send({ message: errorMessages.cannotDeleteOtherPost });
+      }
     }
 
-    await post.destroy();
     return res.status(httpStatus.NO_CONTENT).send();
   } catch (error) {
     console.error(error);

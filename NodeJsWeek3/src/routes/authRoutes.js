@@ -7,23 +7,18 @@ import {
   resetPassword,
   refreshToken,
 } from "../controllers/authController.js";
-import { authenticateToken } from "../middleware/authMiddleware.js";
-import { validate } from "../middleware/validationMiddleware.js";
 import {
-  signUpSchema,
-  signInSchema,
-  forgotPasswordSchema,
-  resetPasswordSchema,
-  refreshTokenSchema,
-} from "../validations/authValidation.js";
+  authenticateToken,
+  loginRateLimiter,
+} from "../middleware/authMiddleware.js";
 
 const router = Router();
 
-router.post("/register", validate(signUpSchema), signUp);
-router.post("/login", validate(signInSchema), signIn);
+router.post("/register", signUp);
+router.post("/login", loginRateLimiter, signIn);
 router.post("/logout", authenticateToken, signOut);
-router.post("/forgotPassword", validate(forgotPasswordSchema), forgotPassword);
-router.post("/resetPassword", validate(resetPasswordSchema), resetPassword);
-router.post("/refreshToken", validate(refreshTokenSchema), refreshToken);
+router.post("/forgotPassword", forgotPassword);
+router.post("/resetPassword", resetPassword);
+router.post("/refreshToken", refreshToken);
 
 export default router;

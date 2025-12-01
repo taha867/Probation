@@ -1,15 +1,24 @@
-import { Op } from "sequelize";
-import jwt from "jsonwebtoken";
-import bcrypt from "bcrypt";
-import model from "../models/index.js";
 import {
   httpStatus,
   successMessages,
   errorMessages,
-  userStatus,
 } from "../utils/constants.js";
-
-const { User } = model;
+import { validateRequest } from "../middleware/validationMiddleware.js";
+import {
+  signUpSchema,
+  signInSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
+  refreshTokenSchema,
+} from "../validations/authValidation.js";
+import {
+  registerUser,
+  authenticateUser,
+  logoutUser,
+  verifyAndRefreshToken,
+  createPasswordResetToken,
+  resetUserPassword,
+} from "../services/authService.js";
 
 /**
  * Registers a new user account.
@@ -23,27 +32,16 @@ const { User } = model;
  * @throws {500} If there's an error during the registration process.
  */
 export async function signUp(req, res) {
-  const { email, password, name, phone } = req.body;
+  const validatedBody = validateRequest(signUpSchema, req.body, res);
+  if (!validatedBody) return;
+  const { email, password, name, phone } = validatedBody;
   try {
-    const user = await User.findOne({
-      where: { [Op.or]: [{ phone }, { email }] }, //[op.or] used to check multiple parameters (or means either phone or email, in case of and it would be both email and phone no)
-    });
-    
-    if (user) {
+    const result = await registerUser({ name, email, phone, password });
+    if (!result.ok && result.reason === "USER_ALREADY_EXISTS") {
       return res
         .status(httpStatus.UNPROCESSABLE_ENTITY)
         .send({ message: errorMessages.userAlreadyExists });
     }
-
-    //Model instance
-    //does build + save for you, so the row is created in the database (async).
-    await User.create({
-      name,
-      email,
-      password,
-      phone,
-      status: userStatus.loggedOut,
-    });
 
     return res
       .status(httpStatus.OK)
@@ -68,50 +66,20 @@ export async function signUp(req, res) {
  * @throws {500} If there's an error during the authentication process.
  */
 export async function signIn(req, res) {
-  const { email, phone, password } = req.body;
+  const validatedBody = validateRequest(signInSchema, req.body, res);
+  if (!validatedBody) return;
+  const { email, phone, password } = validatedBody;
 
   try {
-    const user = await User.findOne({
-      where: email ? { email } : { phone },
-    });
-
-    if (!user) {
+    const result = await authenticateUser({ email, phone, password });
+    if (!result.ok && result.reason === "INVALID_CREDENTIALS") {
       return res
         .status(httpStatus.UNAUTHORIZED)
         .send({ message: errorMessages.invalidCredentials });
     }
 
-    // Compare provided password with hashed password in database
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      return res
-        .status(httpStatus.UNAUTHORIZED)
-        .send({ message: errorMessages.invalidCredentials });
-    }
-
-    await user.update({
-      status: userStatus.loggedIn,
-      last_login_at: new Date(),
-    });
-
-    // Reload user to get updated status and tokenVersion
-    await user.reload();
-
-    // Generate Access Token (short-lived: 15 minutes)
-    const accessToken = jwt.sign(
-      { userId: user.id, email: user.email, type: "access" },
-      process.env.JWT_SECRET,
-      { expiresIn: "15m" }
-    );
-
-    // Generate Refresh Token (long-lived: 7 days)
-    const refreshToken = jwt.sign(
-      { userId: user.id, tokenVersion: user.tokenVersion, type: "refresh" },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
-    );
-
-    const { id, name, email: userEmail, phone, status } = user;
+    const { user, accessToken, refreshToken } = result;
+    const { id, name, email: userEmail, phone: userPhone, status } = user;
     return res.status(httpStatus.OK).send({
       message: successMessages.signedIn,
       accessToken,
@@ -120,7 +88,7 @@ export async function signIn(req, res) {
         id,
         name,
         email: userEmail,
-        phone,
+        phone: userPhone,
         status,
       },
     });
@@ -142,19 +110,12 @@ export async function signIn(req, res) {
 export async function signOut(req, res) {
   try {
     const { id: authUser } = req.user;
-    const user = await User.findByPk(authUser);
-
-    if (!user) {
+    const result = await logoutUser(authUser);
+    if (!result.ok && result.reason === "USER_NOT_FOUND") {
       return res
         .status(httpStatus.NOT_FOUND)
         .send({ message: errorMessages.userNotFound });
     }
-
-    // Increment tokenVersion to invalidate all existing refresh tokens
-    await user.update({
-      status: userStatus.loggedOut,
-      tokenVersion: user.tokenVersion + 1,
-    });
 
     return res.status(httpStatus.OK).send({
       message: successMessages.loggedOut,
@@ -178,23 +139,22 @@ export async function signOut(req, res) {
  * @throws {500} If there's an error during the refresh process.
  */
 export async function refreshToken(req, res) {
-  const { refreshToken } = req.body;
-
-  if (!refreshToken) {
-    return res.status(httpStatus.BAD_REQUEST).send({
-      message: errorMessages.refreshTokenRequired,
-    });
-  }
+  const validatedBody = validateRequest(refreshTokenSchema, req.body, res);
+  if (!validatedBody) return;
+  const { refreshToken } = validatedBody;
 
   try {
-    // Verify and decode the refresh token
-    let decoded;
-    try {
-      decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
-    } catch (error) {
-      if (error.name === "TokenExpiredError") {
+    const result = await verifyAndRefreshToken(refreshToken);
+
+    if (!result.ok) {
+      if (result.reason === "REFRESH_TOKEN_EXPIRED") {
         return res.status(httpStatus.UNAUTHORIZED).send({
           message: errorMessages.refreshTokenExpired,
+        });
+      }
+      if (result.reason === "USER_NOT_FOUND") {
+        return res.status(httpStatus.NOT_FOUND).send({
+          message: errorMessages.userNotFound,
         });
       }
       return res.status(httpStatus.UNAUTHORIZED).send({
@@ -202,39 +162,9 @@ export async function refreshToken(req, res) {
       });
     }
 
-    // Check if token is a refresh token
-    if (decoded.type !== "refresh") {
-      return res.status(httpStatus.UNAUTHORIZED).send({
-        message: errorMessages.invalidRefreshToken,
-      });
-    }
-
-    // Find user by userId from token
-    const user = await User.findByPk(decoded.userId);
-
-    if (!user) {
-      return res.status(httpStatus.NOT_FOUND).send({
-        message: errorMessages.userNotFound,
-      });
-    }
-
-    // Check if token version matches (token is not revoked)
-    if (user.tokenVersion !== decoded.tokenVersion) {
-      return res.status(httpStatus.UNAUTHORIZED).send({
-        message: errorMessages.invalidRefreshToken,
-      });
-    }
-
-    // Generate new Access Token
-    const newAccessToken = jwt.sign(
-      { userId: user.id, email: user.email, type: "access" },
-      process.env.JWT_SECRET,
-      { expiresIn: "15m" }
-    );
-
     return res.status(httpStatus.OK).send({
       message: successMessages.tokenRefreshed,
-      accessToken: newAccessToken,
+      accessToken: result.accessToken,
     });
   } catch (error) {
     console.error(error);
@@ -254,28 +184,16 @@ export async function refreshToken(req, res) {
  * @throws {500} If there's an error during the process.
  */
 export async function forgotPassword(req, res) {
-  const { email } = req.body;
+  const validatedBody = validateRequest(forgotPasswordSchema, req.body, res);
+  if (!validatedBody) return;
+  const { email } = validatedBody;
 
   try {
-    const user = await User.findOne({ where: { email } });
-
-    if (!user) {
-      return res.status(httpStatus.OK).send({
-        message: successMessages.resetTokenSent,
-      });
-    }
-
-    // Generate password reset token (expires in 1 hour)
-    const resetToken = jwt.sign(
-      { userId: user.id, type: "password_reset" },
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" }
-    );
+    const result = await createPasswordResetToken(email);
 
     return res.status(httpStatus.OK).send({
       message: successMessages.resetTokenSent,
-      // Only return token in development for testing
-      resetToken: resetToken,
+      resetToken: result.resetToken ?? undefined,
     });
   } catch (error) {
     console.error(error);
@@ -298,42 +216,30 @@ export async function forgotPassword(req, res) {
  * @throws {500} If there's an error during the reset process.
  */
 export async function resetPassword(req, res) {
-  const { token, newPassword } = req.body;
+  const validatedBody = validateRequest(resetPasswordSchema, req.body, res);
+  if (!validatedBody) return;
+  const { token, newPassword } = validatedBody;
 
   try {
-    // Verify and decode the reset token
-    let decoded;
-    try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET);
-    } catch (error) {
-      if (error.name === "TokenExpiredError") {
+    const result = await resetUserPassword(token, newPassword);
+
+    if (!result.ok) {
+      if (result.reason === "RESET_TOKEN_EXPIRED") {
         return res.status(httpStatus.UNAUTHORIZED).send({
           message: errorMessages.resetTokenExpired,
         });
       }
-      return res.status(httpStatus.UNAUTHORIZED).send({
-        message: errorMessages.invalidResetToken,
-      });
+      if (result.reason === "RESET_TOKEN_INVALID") {
+        return res.status(httpStatus.UNAUTHORIZED).send({
+          message: errorMessages.invalidResetToken,
+        });
+      }
+      if (result.reason === "USER_NOT_FOUND") {
+        return res.status(httpStatus.NOT_FOUND).send({
+          message: errorMessages.userNotFound,
+        });
+      }
     }
-
-    // Check if token is a password reset token
-    if (decoded.type !== "password_reset") {
-      return res.status(httpStatus.UNAUTHORIZED).send({
-        message: errorMessages.invalidResetToken,
-      });
-    }
-
-    // Find user by userId from token
-    const user = await User.findByPk(decoded.userId);
-
-    if (!user) {
-      return res.status(httpStatus.NOT_FOUND).send({
-        message: errorMessages.userNotFound,
-      });
-    }
-
-    // Update password (bcrypt hook will hash it automatically)
-    await user.update({ password: newPassword });
 
     return res.status(httpStatus.OK).send({
       message: successMessages.passwordReset,

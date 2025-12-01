@@ -1,49 +1,18 @@
-import model from "../models/index.js";
 import { httpStatus, errorMessages } from "../utils/constants.js";
-
-const { Comment, Post, User } = model;
-
-const includeAuthor = {
-  model: User,
-  as: "author",
-  attributes: ["id", "name", "email"],
-};
-
-const includePost = {
-  model: Post,
-  as: "post",
-  attributes: ["id", "title"],
-};
-
-// Recursive function to load nested replies
-const includeReplies = {
-  model: Comment,
-  as: "replies",
-  include: [
-    {
-      model: User,
-      as: "author",
-      attributes: ["id", "name", "email"],
-    },
-  ],
-  separate: true, // Load replies in separate query for better performance
-  order: [["createdAt", "ASC"]],
-};
-
-const findCommentOr404 = async (id, res) => {
-  const comment = await Comment.findByPk(id, {
-    include: [includeAuthor, includePost, includeReplies],
-  });
-
-  if (!comment) {
-    res
-      .status(httpStatus.NOT_FOUND)
-      .send({ message: errorMessages.commentNotFound });
-    return null;
-  }
-
-  return comment;
-};
+import { validateRequest } from "../middleware/validationMiddleware.js";
+import {
+  createCommentSchema,
+  updateCommentSchema,
+  listCommentsQuerySchema,
+  commentIdParamSchema,
+} from "../validations/commentValidation.js";
+import {
+  createCommentOrReply,
+  listTopLevelComments,
+  findCommentWithRelations,
+  updateCommentForUser,
+  deleteCommentForUser,
+} from "../services/commentService.js";
 
 /**
  * Creates a new comment or reply to an existing comment.
@@ -58,40 +27,33 @@ const findCommentOr404 = async (id, res) => {
  * @throws {500} If there's an error during the creation process.
  */
 export async function create(req, res) {
-  const { body, postId, parentId } = req.body; // Already validated by Joi
+  const validatedBody = validateRequest(createCommentSchema, req.body, res);
+  if (!validatedBody) return;
+  const { body, postId, parentId } = validatedBody; // Already validated by Joi
   const { id: userId } = req.user;
 
   try {
-    // If parentId is provided, validate it and get postId from parent
-    let finalPostId = postId;
-    if (parentId) {
-      const parentComment = await Comment.findByPk(parentId);
-      if (!parentComment) {
+    const result = await createCommentOrReply({
+      body,
+      postId,
+      parentId,
+      userId,
+    });
+
+    if (!result.ok) {
+      if (result.reason === "PARENT_NOT_FOUND") {
         return res
           .status(httpStatus.NOT_FOUND)
           .send({ message: errorMessages.parentCommentNotFound });
       }
-      finalPostId = parentComment.postId;
-    } else {
-      // Validate post exists
-      const post = await Post.findByPk(postId);
-      if (!post) {
+      if (result.reason === "POST_NOT_FOUND") {
         return res
           .status(httpStatus.NOT_FOUND)
           .send({ message: errorMessages.postNotFound });
       }
     }
 
-    const comment = await Comment.create({
-      body,
-      postId: finalPostId,
-      userId,
-      parentId,
-    });
-    const createdComment = await Comment.findByPk(comment.id, {
-      include: [includeAuthor, includePost],
-    });
-    return res.status(httpStatus.CREATED).send(createdComment);
+    return res.status(httpStatus.CREATED).send(result.comment);
   } catch (error) {
     console.error(error);
     return res
@@ -108,15 +70,12 @@ export async function create(req, res) {
  * @throws {500} If there's an error during the retrieval process.
  */
 export async function list(req, res) {
-  const { postId } = req.query;
-  const where = postId ? { postId } : undefined;
+  const validatedQuery = validateRequest(listCommentsQuerySchema, req.query, res);
+  if (!validatedQuery) return;
+  const { postId } = validatedQuery;
 
   try {
-    const comments = await Comment.findAll({
-      where: { ...where, parentId: null }, // Only top-level comments
-      include: [includeAuthor, includePost, includeReplies],
-      order: [["createdAt", "DESC"]],
-    });
+    const comments = await listTopLevelComments({ postId });
     return res.status(httpStatus.OK).send(comments);
   } catch (error) {
     console.error(error);
@@ -135,9 +94,15 @@ export async function list(req, res) {
  */
 export async function get(req, res) {
   try {
-    const { id } = req.params;
-    const comment = await findCommentOr404(id, res);
-    if (!comment) return;
+    const validatedParams = validateRequest(commentIdParamSchema, req.params, res);
+    if (!validatedParams) return;
+    const { id } = validatedParams;
+    const comment = await findCommentWithRelations(id);
+    if (!comment) {
+      return res
+        .status(httpStatus.NOT_FOUND)
+        .send({ message: errorMessages.commentNotFound });
+    }
 
     return res.status(httpStatus.OK).send(comment);
   } catch (error) {
@@ -162,20 +127,29 @@ export async function get(req, res) {
  */
 export async function update(req, res) {
   try {
-    const { id } = req.params;
-    const comment = await findCommentOr404(id, res);
-    if (!comment) return;
+    const validatedParams = validateRequest(commentIdParamSchema, req.params, res);
+    if (!validatedParams) return;
+    const { id } = validatedParams;
     const { id: userId } = req.user;
-    if (comment.userId !== userId) {
-      return res
-        .status(httpStatus.FORBIDDEN)
-        .send({ message: errorMessages.cannotUpdateOtherComment });
+    const validatedBody = validateRequest(updateCommentSchema, req.body, res);
+    if (!validatedBody) return;
+    const { body } = validatedBody; // Already validated by Joi
+    const result = await updateCommentForUser({ id, userId, body });
+
+    if (!result.ok) {
+      if (result.reason === "NOT_FOUND") {
+        return res
+          .status(httpStatus.NOT_FOUND)
+          .send({ message: errorMessages.commentNotFound });
+      }
+      if (result.reason === "FORBIDDEN") {
+        return res
+          .status(httpStatus.FORBIDDEN)
+          .send({ message: errorMessages.cannotUpdateOtherComment });
+      }
     }
 
-    const { body } = req.body; // Already validated by Joi
-
-    await comment.update({ body });
-    return res.status(httpStatus.OK).send(comment);
+    return res.status(httpStatus.OK).send(result.comment);
   } catch (error) {
     console.error(error);
     return res
@@ -195,17 +169,25 @@ export async function update(req, res) {
  */
 export async function remove(req, res) {
   try {
-    const { id } = req.params;
-    const comment = await findCommentOr404(id, res);
-    if (!comment) return;
+    const validatedParams = validateRequest(commentIdParamSchema, req.params, res);
+    if (!validatedParams) return;
+    const { id } = validatedParams;
     const { id: userId } = req.user;
-    if (comment.userId !== userId) {
-      return res
-        .status(httpStatus.FORBIDDEN)
-        .send({ message: errorMessages.cannotDeleteOtherComment });
+    const result = await deleteCommentForUser({ id, userId });
+
+    if (!result.ok) {
+      if (result.reason === "NOT_FOUND") {
+        return res
+          .status(httpStatus.NOT_FOUND)
+          .send({ message: errorMessages.commentNotFound });
+      }
+      if (result.reason === "FORBIDDEN") {
+        return res
+          .status(httpStatus.FORBIDDEN)
+          .send({ message: errorMessages.cannotDeleteOtherComment });
+      }
     }
 
-    await comment.destroy();
     return res.status(httpStatus.NO_CONTENT).send();
   } catch (error) {
     console.error(error);

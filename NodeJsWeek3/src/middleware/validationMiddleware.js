@@ -1,48 +1,34 @@
+import { httpStatus } from "../utils/constants.js";
 import Joi from "joi";
-import { httpStatus, errorMessages } from "../utils/constants.js";
 
 /**
- * Validation middleware factory
- * @param {Joi.Schema} schema - Joi validation schema
- * @param {string} property - Property to validate (body, query, params)
- * @returns {Function} Express middleware function
+ * Validates arbitrary request data using a Joi schema.
+ * Controllers can call this helper directly 
+ * @param {Joi.Schema} schema
+ * @param {Object} payload
+ * @param {Object} res - Express response (used to send validation errors)
+ * @returns {Object|null} - Sanitized values or null when validation fails
  */
-export const validate = (schema, property = "body") => {
-  return (req, res, next) => {
-    const { error, value } = schema.validate(req[property], {
-      abortEarly: false, // Return all errors, not just the first one
-      stripUnknown: true, // Remove unknown properties
-      convert: false, // Convert types (e.g., string to number)
+export const validateRequest = (schema, payload, res) => {
+  const { error, value } = schema.validate(payload, {
+    abortEarly: false,   // Return all errors, not just the first one
+    stripUnknown: false, // Do NOT silently drop unknown properties
+    allowUnknown: false, // Treat any extra fields as validation errors
+    convert: false       // Prevent Joi from converting types
+  });
+
+  if (error) {
+    const errors = error.details.map((detail) => ({
+      field: detail.path.join("."),
+      message: detail.message,
+    }));
+
+    res.status(httpStatus.BAD_REQUEST).send({
+      message: "Validation error",
+      errors,
     });
+    return null;
+  }
 
-    if (error) {
-      const errors = error.details.map((detail) => ({
-        field: detail.path.join("."),
-        message: detail.message,
-      }));
-
-      return res.status(httpStatus.BAD_REQUEST).send({
-        message: "Validation error",
-        errors,
-      });
-    }
-
-    // Replace req[property] with validated and sanitized value
-    // For body, we can replace directly
-    if (property === "body") {
-      req[property] = value;
-    } else {
-      // For query and params, update properties individually
-      //req.query and req.params are objects that other parts of Express might hold references to.
-      // Reassigning the whole object (req.query = value) could break those references.
-      const target = req[property];
-      for (const key in value) {
-        if (Object.prototype.hasOwnProperty.call(value, key)) {
-          target[key] = value[key];
-        }
-      }
-    }
-
-    next();
-  };
+  return value;
 };
