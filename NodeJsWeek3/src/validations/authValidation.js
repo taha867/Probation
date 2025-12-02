@@ -1,34 +1,29 @@
 import Joi from "joi";
+import {
+  baseEmailSchema,
+  basePasswordSchema,
+  basePhoneSchema,
+  baseNameSchema,
+} from "./commonSchemas.js";
 
-// Common validation patterns using Joi defaults
-const emailSchema = Joi.string().email().required();
+// Common validation patterns using shared base schemas
+const emailSchema = baseEmailSchema.required();
 
-const passwordSchema = Joi.string().min(8).required();
+const passwordSchema = basePasswordSchema.required();
 
-const phoneSchema = Joi.string()
-  .pattern(/^\+?[0-9]{10,15}$/)
-  .required()
-  .messages({
-    "string.pattern.base": "Phone number must be 10 to 15 digits",
-  });
+const phoneSchema = basePhoneSchema.required().messages({
+  "string.pattern.base": "Phone number must be 10 to 15 digits",
+});
 
 // For login, phone should be optional (either email OR phone)
-const loginPhoneSchema = Joi.string()
-  .pattern(/^\+?[0-9]{10,15}$/)
-  .optional()
-  .messages({
-    "string.pattern.base": "Phone number must be 10 to 15 digits",
-  });
+const loginPhoneSchema = basePhoneSchema.optional().messages({
+  "string.pattern.base": "Phone number must be 10 to 15 digits",
+});
 
 // Name validation: only letters (a-z, A-Z) and spaces
-const nameSchema = Joi.string()
-  .min(2)
-  .max(100)
-  .pattern(/^[A-Za-z\s]+$/)
-  .required()
-  .messages({
-    "string.pattern.base": "Name must contain only letters and spaces",
-  });
+const nameSchema = baseNameSchema.required().messages({
+  "string.pattern.base": "Name must contain only letters and spaces",
+});
 
 // Auth validation schemas
 export const signUpSchema = Joi.object({

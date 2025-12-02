@@ -1,5 +1,7 @@
 import Joi from "joi";
 
+// Shared building blocks for many schemas
+
 export const idParamSchema = (entityName = "ID") =>
   Joi.object({
     id: Joi.number().integer().positive().required().messages({
@@ -34,4 +36,16 @@ export const paginationQuerySchema = ({
       }),
   });
 
+// Common field schemas (as in authValidation)
+export const baseEmailSchema = Joi.string().email();
+
+export const basePasswordSchema = Joi.string().min(8);
+
+export const basePhoneSchema = Joi.string().pattern(/^\+?[0-9]{10,15}$/);
+
+// Name: only letters and spaces, 2–100 chars
+export const baseNameSchema = Joi.string()
+  .min(2)
+  .max(100)
+  .pattern(/^[A-Za-z\s]+$/);
 

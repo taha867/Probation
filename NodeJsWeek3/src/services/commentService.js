@@ -61,7 +61,9 @@ export async function listTopLevelComments({ postId }) {
 
   const comments = await Comment.findAll({
     where: { ...where, parentId: null },
-    include: [includeAuthor, includePost, includeReplies],
+    // For listing, include only author and post to avoid complex nested JOIN
+    // Nested replies can be fetched via dedicated endpoints if needed.
+    include: [includeAuthor, includePost],
     order: [["createdAt", "DESC"]],
   });
 
@@ -70,7 +72,9 @@ export async function listTopLevelComments({ postId }) {
 
 export async function findCommentWithRelations(id) {
   return Comment.findByPk(id, {
-    include: [includeAuthor, includePost, includeReplies],
+    // For a single comment, include author and post; replies can be fetched separately if needed.
+    include:[includeReplies],
+    include: [includeAuthor, includePost],
   });
 }
 

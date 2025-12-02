@@ -1,4 +1,4 @@
-import { httpStatus, errorMessages } from "../utils/constants.js";
+import { httpStatus, errorMessages, successMessages } from "../utils/constants.js";
 import { validateRequest } from "../middleware/validationMiddleware.js";
 import {
   createPostSchema,
@@ -55,7 +55,12 @@ export async function create(req, res) {
  * @throws {500} If there's an error during the retrieval process.
  */
 export async function list(req, res) {
-  const validatedQuery = validateRequest(listPostsQuerySchema, req.query, res);
+  const validatedQuery = validateRequest(
+    listPostsQuerySchema,
+    req.query,
+    res,
+    { convert: true }
+  );
   if (!validatedQuery) return;
 
   const page = parseInt(validatedQuery.page ?? 1, 10) || 1;
@@ -96,7 +101,12 @@ export async function list(req, res) {
  */
 export async function get(req, res) {
   try {
-    const validatedParams = validateRequest(postIdParamSchema, req.params, res);
+    const validatedParams = validateRequest(
+      postIdParamSchema,
+      req.params,
+      res,
+      { convert: true }
+    );
     if (!validatedParams) return;
     const { id } = validatedParams;
     const post = await findPostWithAuthor(id);
@@ -130,12 +140,18 @@ export async function listForPost(req, res) {
   const validatedParams = validateRequest(
     postIdParamForCommentsSchema,
     req.params,
-    res
+    res,
+    { convert: true }
   );
   if (!validatedParams) return;
   const { postId } = validatedParams;
 
-  const validatedQuery = validateRequest(listPostsQuerySchema, req.query, res);
+  const validatedQuery = validateRequest(
+    listPostsQuerySchema,
+    req.query,
+    res,
+    { convert: true }
+  );
   if (!validatedQuery) return;
   const page = parseInt(validatedQuery.page ?? 1, 10) || 1;
   const limit = parseInt(validatedQuery.limit ?? 10, 10) || 10;
@@ -181,10 +197,15 @@ export async function listForPost(req, res) {
  */
 export async function update(req, res) {
   try {
-    const validatedParams = validateRequest(postIdParamSchema, req.params, res);
+    const validatedParams = validateRequest(
+      postIdParamSchema,
+      req.params,
+      res,
+      { convert: true }
+    );
     if (!validatedParams) return;
     const { id: postId } = validatedParams;
-    const {id: userId} = req.user;
+    const { id: userId } = req.user;
     const validatedBody = validateRequest(updatePostSchema, req.body, res);
     if (!validatedBody) return;
     const { title, body, status } = validatedBody;
@@ -227,8 +248,13 @@ export async function update(req, res) {
  */
 export async function remove(req, res) {
   try {
-    const {id: userId} = req.user;
-    const validatedParams = validateRequest(postIdParamSchema, req.params, res);
+    const { id: userId } = req.user;
+    const validatedParams = validateRequest(
+      postIdParamSchema,
+      req.params,
+      res,
+      { convert: true }
+    );
     if (!validatedParams) return;
     const { id } = validatedParams;
     const result = await deletePostForUser({ postId: id, userId });
@@ -246,7 +272,10 @@ export async function remove(req, res) {
       }
     }
 
-    return res.status(httpStatus.NO_CONTENT).send();
+    // Return a JSON message so clients can see confirmation
+    return res.status(httpStatus.OK).send({
+      message: successMessages.postDeleted,
+    });
   } catch (error) {
     console.error(error);
     return res

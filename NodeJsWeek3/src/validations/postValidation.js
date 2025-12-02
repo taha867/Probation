@@ -41,10 +41,13 @@ export const createPostSchema = Joi.object({
     .trim()
     .min(1)
     .max(5000)
+    // Disallow angle brackets to reduce XSS risk in body content
+    .pattern(/^[^<>]*$/)
     .required()
     .messages({
       "string.min": "Body must not be empty",
       "string.max": "Body must not exceed 5000 characters",
+      "string.pattern.base": "Body contains invalid characters",
       "any.required": "Body is required",
     }),
   status: Joi.string().valid("draft", "published").optional().default("draft").messages({
@@ -68,10 +71,13 @@ export const updatePostSchema = Joi.object({
     .trim()
     .min(1)
     .max(5000)
+    // Disallow angle brackets to reduce XSS risk in body content
+    .pattern(/^[^<>]*$/)
     .optional()
     .messages({
       "string.min": "Body must not be empty",
       "string.max": "Body must not exceed 5000 characters",
+      "string.pattern.base": "Body contains invalid characters",
     }),
   status: Joi.string().valid("draft", "published").optional().messages({
     "any.only": "Status must be either 'draft' or 'published'",

@@ -6,10 +6,12 @@ export const createCommentSchema = Joi.object({
     .trim()
     .min(1)
     .max(2000)
+    .pattern(/^[^<>]*$/)
     .required()
     .messages({
       "string.min": "Comment body must not be empty",
       "string.max": "Comment body must not exceed 2000 characters",
+      "string.pattern.base": "Comment body contains invalid characters",
       "any.required": "Comment body is required",
     }),
   postId: Joi.number().integer().positive().optional().messages({
@@ -31,10 +33,12 @@ export const updateCommentSchema = Joi.object({
     .trim()
     .min(1)
     .max(2000)
+    .pattern(/^[^<>]*$/)
     .required()
     .messages({
       "string.min": "Comment body must not be empty",
       "string.max": "Comment body must not exceed 2000 characters",
+      "string.pattern.base": "Comment body contains invalid characters",
       "any.required": "Comment body is required",
     }),
 });

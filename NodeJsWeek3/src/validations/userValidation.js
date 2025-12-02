@@ -1,36 +1,25 @@
 import Joi from "joi";
-import { idParamSchema, paginationQuerySchema } from "./commonSchemas.js";
+import {
+  idParamSchema,
+  paginationQuerySchema,
+  baseEmailSchema,
+  basePasswordSchema,
+  basePhoneSchema,
+  baseNameSchema,
+} from "./commonSchemas.js";
 
-// Common patterns
-const emailSchema = Joi.string()
-  .trim()
-  .lowercase()
-  .email()
-  .max(255)
-  .optional()
-  .messages({
-    "string.email": "Please provide a valid email address",
-    "string.max": "Email must not exceed 255 characters",
-  });
+// Common patterns (user-specific variants)
+const emailSchema = baseEmailSchema.optional().messages({
+  "string.email": "Please provide a valid email address",
+});
 
-const phoneSchema = Joi.string()
-  .trim()
-  .max(20)
-  .pattern(/^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{1,9}$/)
-  .optional()
-  .messages({
-    "string.max": "Phone number must not exceed 20 characters",
-    "string.pattern.base": "Please provide a valid phone number",
-  });
+const phoneSchema = basePhoneSchema.optional().messages({
+  "string.pattern.base": "Phone number must be 10 to 15 digits",
+});
 
-const passwordSchema = Joi.string()
-  .min(8)
-  .max(128)
-  .optional()
-  .messages({
-    "string.min": "Password must be at least 8 characters long",
-    "string.max": "Password must not exceed 128 characters",
-  });
+const passwordSchema = basePasswordSchema.optional().messages({
+  "string.min": "Password must be at least 8 characters long",
+});
 
 const userIdSchema = idParamSchema("User ID");
 
@@ -45,15 +34,13 @@ export const listUsersQuerySchema = basePaginationQuerySchema;
 
 export const updateUserSchema = Joi.object({
   name: Joi.string()
-    .trim()
-    .min(2)
-    .max(100)
-    .pattern(/^[\p{L}\p{N}\s'.-]+$/u)
+    // Use shared base name rules (letters and spaces only, 2–100)
+    .concat(baseNameSchema)
     .optional()
     .messages({
       "string.min": "Name must be at least 2 characters long",
       "string.max": "Name must not exceed 100 characters",
-      "string.pattern.base": "Name contains invalid characters",
+      "string.pattern.base": "Name must contain only letters and spaces",
     }),
   email: emailSchema,
   phone: phoneSchema,

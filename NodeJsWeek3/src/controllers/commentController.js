@@ -1,4 +1,4 @@
-import { httpStatus, errorMessages } from "../utils/constants.js";
+import { httpStatus, errorMessages, successMessages } from "../utils/constants.js";
 import { validateRequest } from "../middleware/validationMiddleware.js";
 import {
   createCommentSchema,
@@ -70,7 +70,12 @@ export async function create(req, res) {
  * @throws {500} If there's an error during the retrieval process.
  */
 export async function list(req, res) {
-  const validatedQuery = validateRequest(listCommentsQuerySchema, req.query, res);
+  const validatedQuery = validateRequest(
+    listCommentsQuerySchema,
+    req.query,
+    res,
+    { convert: true }
+  );
   if (!validatedQuery) return;
   const { postId } = validatedQuery;
 
@@ -94,7 +99,12 @@ export async function list(req, res) {
  */
 export async function get(req, res) {
   try {
-    const validatedParams = validateRequest(commentIdParamSchema, req.params, res);
+    const validatedParams = validateRequest(
+      commentIdParamSchema,
+      req.params,
+      res,
+      { convert: true }
+    );
     if (!validatedParams) return;
     const { id } = validatedParams;
     const comment = await findCommentWithRelations(id);
@@ -127,7 +137,12 @@ export async function get(req, res) {
  */
 export async function update(req, res) {
   try {
-    const validatedParams = validateRequest(commentIdParamSchema, req.params, res);
+    const validatedParams = validateRequest(
+      commentIdParamSchema,
+      req.params,
+      res,
+      { convert: true }
+    );
     if (!validatedParams) return;
     const { id } = validatedParams;
     const { id: userId } = req.user;
@@ -169,7 +184,12 @@ export async function update(req, res) {
  */
 export async function remove(req, res) {
   try {
-    const validatedParams = validateRequest(commentIdParamSchema, req.params, res);
+    const validatedParams = validateRequest(
+      commentIdParamSchema,
+      req.params,
+      res,
+      { convert: true }
+    );
     if (!validatedParams) return;
     const { id } = validatedParams;
     const { id: userId } = req.user;
@@ -188,7 +208,9 @@ export async function remove(req, res) {
       }
     }
 
-    return res.status(httpStatus.NO_CONTENT).send();
+    return res.status(httpStatus.OK).send({
+      message: successMessages.postDeleted,
+    });
   } catch (error) {
     console.error(error);
     return res

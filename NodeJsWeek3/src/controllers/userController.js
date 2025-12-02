@@ -22,7 +22,12 @@ import {
  * @throws {500} If there's an error during the retrieval process.
  */
 export async function list(req, res) {
-  const validatedQuery = validateRequest(listUsersQuerySchema, req.query, res);
+  const validatedQuery = validateRequest(
+    listUsersQuerySchema,
+    req.query,
+    res,
+    { convert: true }
+  );
   if (!validatedQuery) return;
   const page = parseInt(validatedQuery.page ?? 1, 10) || 1;
   const limit = parseInt(validatedQuery.limit ?? 10, 10) || 10;
@@ -59,11 +64,21 @@ export async function list(req, res) {
  * @throws {500} If there's an error during the retrieval process.
  */
 export async function getUserPostsWithComment(req, res) {
-  const validatedParams = validateRequest(userIdParamSchema, req.params, res);
+  const validatedParams = validateRequest(
+    userIdParamSchema,
+    req.params,
+    res,
+    { convert: true }
+  );
   if (!validatedParams) return;
   const { id: requestedUserId } = validatedParams;
 
-  const validatedQuery = validateRequest(getUserPostsQuerySchema, req.query, res);
+  const validatedQuery = validateRequest(
+    getUserPostsQuerySchema,
+    req.query,
+    res,
+    { convert: true }
+  );
   if (!validatedQuery) return;
   const page = parseInt(validatedQuery.page ?? 1, 10) || 1;
   const limit = parseInt(validatedQuery.limit ?? 10, 10) || 10;
@@ -107,7 +122,12 @@ export async function getUserPostsWithComment(req, res) {
  * @throws {500} If there's an error during the update process.
  */
 export async function update(req, res) {
-  const validatedParams = validateRequest(userIdParamSchema, req.params, res);
+  const validatedParams = validateRequest(
+    userIdParamSchema,
+    req.params,
+    res,
+    { convert: true }
+  );
   if (!validatedParams) return;
   const { id: requestedUserId } = validatedParams;
   const {id: authUser} = req.user;
@@ -174,7 +194,12 @@ export async function update(req, res) {
  * @throws {500} If there's an error during the deletion process.
  */
 export async function remove(req, res) {
-  const validatedParams = validateRequest(userIdParamSchema, req.params, res);
+  const validatedParams = validateRequest(
+    userIdParamSchema,
+    req.params,
+    res,
+    { convert: true }
+  );
   if (!validatedParams) return;
   const { id: requestedUserId } = validatedParams;
   const {id: authUser} = req.user;

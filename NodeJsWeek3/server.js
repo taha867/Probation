@@ -22,6 +22,6 @@ const App = async () => {
 };
 
 App().catch((error) => {
-  console.error("Failed to start server:", error);
+  res.status(500).json({ error: "Failed to start server" });
   process.exit(1);
 });
