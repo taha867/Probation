@@ -88,10 +88,10 @@ export async function getPostWithComments({ postId, page, limit }) {
 export async function updatePostForUser({ postId, userId, data }) {
   const post = await findPostWithAuthor(postId);
   if (!post) {
-    return { ok: false, reason: "NOT_FOUND" };
+    return { ok: false, reason: "notFound" };
   }
   if (post.userId !== userId) {
-    return { ok: false, reason: "FORBIDDEN" };
+    return { ok: false, reason: "forbidden" };
   }
 
   await post.update(data);
@@ -101,10 +101,10 @@ export async function updatePostForUser({ postId, userId, data }) {
 export async function deletePostForUser({ postId, userId }) {
   const post = await findPostWithAuthor(postId);
   if (!post) {
-    return { ok: false, reason: "NOT_FOUND" };
+    return { ok: false, reason: "notFound" };
   }
   if (post.userId !== userId) {
-    return { ok: false, reason: "FORBIDDEN" };
+    return { ok: false, reason: "forbidden" };
   }
 
   await post.destroy();

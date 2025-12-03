@@ -37,7 +37,7 @@ export async function signUp(req, res) {
   const { email, password, name, phone } = validatedBody;
   try {
     const result = await registerUser({ name, email, phone, password });
-    if (!result.ok && result.reason === "USER_ALREADY_EXISTS") {
+    if (!result.ok && result.reason === "userAlreadyExists") {
       return res
         .status(httpStatus.UNPROCESSABLE_ENTITY)
         .send({ message: errorMessages.userAlreadyExists });
@@ -45,7 +45,7 @@ export async function signUp(req, res) {
 
     return res
       .status(httpStatus.OK)
-      .send({ message: successMessages.accountCreated });
+      .send({ message: successMessages.ACCOUNT_CREATED });
   } catch (e) {
     console.log(e);
     return res.status(httpStatus.INTERNAL_SERVER_ERROR).send({
@@ -72,7 +72,7 @@ export async function signIn(req, res) {
 
   try {
     const result = await authenticateUser({ email, phone, password });
-    if (!result.ok && result.reason === "INVALID_CREDENTIALS") {
+    if (!result.ok && result.reason === "invalidCredentials") {
       return res
         .status(httpStatus.UNAUTHORIZED)
         .send({ message: errorMessages.invalidCredentials });
@@ -111,7 +111,7 @@ export async function signOut(req, res) {
   try {
     const { id: authUser } = req.user;
     const result = await logoutUser(authUser);
-    if (!result.ok && result.reason === "USER_NOT_FOUND") {
+    if (!result.ok && result.reason === "userNotFound") {
       return res
         .status(httpStatus.NOT_FOUND)
         .send({ message: errorMessages.userNotFound });
@@ -147,16 +147,16 @@ export async function refreshToken(req, res) {
     const result = await verifyAndRefreshToken(refreshToken);
 
     if (!result.ok) {
-      if (result.reason === "REFRESH_TOKEN_EXPIRED") {
+      if (result.reason === "refreshTokenExpired") {
         return res.status(httpStatus.UNAUTHORIZED).send({
           message: errorMessages.refreshTokenExpired,
         });
       }
-      if (result.reason === "USER_NOT_FOUND") {
+      if (result.reason === "userNotFound") {
         return res.status(httpStatus.NOT_FOUND).send({
-          message: errorMessages.userNotFound,
-        });
-      }
+        message: errorMessages.userNotFound,
+      });
+    }
       return res.status(httpStatus.UNAUTHORIZED).send({
         message: errorMessages.invalidRefreshToken,
       });
@@ -224,20 +224,20 @@ export async function resetPassword(req, res) {
     const result = await resetUserPassword(token, newPassword);
 
     if (!result.ok) {
-      if (result.reason === "RESET_TOKEN_EXPIRED") {
+      if (result.reason === "resetTokenExpired") {
         return res.status(httpStatus.UNAUTHORIZED).send({
           message: errorMessages.resetTokenExpired,
         });
       }
-      if (result.reason === "RESET_TOKEN_INVALID") {
+      if (result.reason === "resetTokenInvalid") {
         return res.status(httpStatus.UNAUTHORIZED).send({
-          message: errorMessages.invalidResetToken,
-        });
-      }
-      if (result.reason === "USER_NOT_FOUND") {
+        message: errorMessages.invalidResetToken,
+      });
+    }
+      if (result.reason === "userNotFound") {
         return res.status(httpStatus.NOT_FOUND).send({
-          message: errorMessages.userNotFound,
-        });
+        message: errorMessages.userNotFound,
+      });
       }
     }
 

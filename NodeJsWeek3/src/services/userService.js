@@ -85,12 +85,12 @@ export async function getUserPostsWithComments({ userId, page, limit }) {
 
 export async function updateUserForSelf({ requestedUserId, authUserId, data }) {
   if (requestedUserId !== authUserId) {
-    return { ok: false, reason: "FORBIDDEN" };
+    return { ok: false, reason: "forbidden" };
   }
 
   const user = await User.findByPk(requestedUserId);
   if (!user) {
-    return { ok: false, reason: "NOT_FOUND" };
+    return { ok: false, reason: "notFound" };
   }
 
   const { name, email, phone, password } = data;
@@ -105,7 +105,7 @@ export async function updateUserForSelf({ requestedUserId, authUserId, data }) {
       },
     });
     if (existingUser) {
-      return { ok: false, reason: "EMAIL_EXISTS" };
+      return { ok: false, reason: "emailExists" };
     }
     updateData.email = email;
   }
@@ -117,7 +117,7 @@ export async function updateUserForSelf({ requestedUserId, authUserId, data }) {
       },
     });
     if (existingUser) {
-      return { ok: false, reason: "PHONE_EXISTS" };
+      return { ok: false, reason: "phoneExists" };
     }
     updateData.phone = phone;
   }
@@ -141,12 +141,12 @@ export async function updateUserForSelf({ requestedUserId, authUserId, data }) {
 
 export async function deleteUserForSelf({ requestedUserId, authUserId }) {
   if (requestedUserId !== authUserId) {
-    return { ok: false, reason: "FORBIDDEN" };
+    return { ok: false, reason: "forbidden" };
   }
 
   const user = await User.findByPk(requestedUserId);
   if (!user) {
-    return { ok: false, reason: "NOT_FOUND" };
+    return { ok: false, reason: "notFound" };
   }
 
   await user.destroy();

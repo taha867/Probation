@@ -141,22 +141,22 @@ export async function update(req, res) {
     });
 
     if (!result.ok) {
-      if (result.reason === "FORBIDDEN") {
-        return res
+      if (result.reason === "forbidden") {
+    return res
           .status(httpStatus.FORBIDDEN)
-          .send({ message: errorMessages.cannotUpdateOtherUser });
-      }
-      if (result.reason === "NOT_FOUND") {
+      .send({ message: errorMessages.cannotUpdateOtherUser });
+  }
+      if (result.reason === "notFound") {
         return res
           .status(httpStatus.NOT_FOUND)
           .send({ message: errorMessages.userNotFound });
-      }
-      if (result.reason === "EMAIL_EXISTS") {
+    }
+      if (result.reason === "emailExists") {
         return res
           .status(httpStatus.UNPROCESSABLE_ENTITY)
           .send({ message: errorMessages.emailAlreadyExists });
       }
-      if (result.reason === "PHONE_EXISTS") {
+      if (result.reason === "phoneExists") {
         return res
           .status(httpStatus.UNPROCESSABLE_ENTITY)
           .send({ message: errorMessages.phoneAlreadyExists });
@@ -210,16 +210,16 @@ export async function remove(req, res) {
     });
 
     if (!result.ok) {
-      if (result.reason === "FORBIDDEN") {
-        return res
+      if (result.reason === "forbidden") {
+    return res
           .status(httpStatus.FORBIDDEN)
-          .send({ message: errorMessages.cannotDeleteOtherUser });
-      }
-      if (result.reason === "NOT_FOUND") {
+      .send({ message: errorMessages.cannotDeleteOtherUser });
+  }
+      if (result.reason === "notFound") {
         return res
           .status(httpStatus.NOT_FOUND)
           .send({ message: errorMessages.userNotFound });
-      }
+    }
     }
 
     return res.status(httpStatus.OK).send({

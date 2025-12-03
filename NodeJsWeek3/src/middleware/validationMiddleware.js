@@ -15,18 +15,18 @@ export const validateRequest = (schema, payload, res, options = {}) => {
     stripUnknown: false, // Do NOT silently drop unknown properties
     allowUnknown: false, // Treat any extra fields as validation errors
     convert: options.convert ?? false, // Default false; can be enabled per call
-  });
+    });
 
-  if (error) {
-    const errors = error.details.map((detail) => ({
-      field: detail.path.join("."),
-      message: detail.message,
-    }));
+    if (error) {
+      const errors = error.details.map((detail) => ({
+        field: detail.path.join("."),
+        message: detail.message,
+      }));
 
     res.status(httpStatus.BAD_REQUEST).send({
-      message: "Validation error",
-      errors,
-    });
+        message: "Validation error",
+        errors,
+      });
     return null;
   }
 

@@ -40,13 +40,13 @@ export async function create(req, res) {
       userId,
     });
 
-    if (!result.ok) {
-      if (result.reason === "PARENT_NOT_FOUND") {
+      if (!result.ok) {
+        if (result.reason === "parentNotFound") {
         return res
           .status(httpStatus.NOT_FOUND)
           .send({ message: errorMessages.parentCommentNotFound });
       }
-      if (result.reason === "POST_NOT_FOUND") {
+        if (result.reason === "postNotFound") {
         return res
           .status(httpStatus.NOT_FOUND)
           .send({ message: errorMessages.postNotFound });
@@ -81,7 +81,7 @@ export async function list(req, res) {
 
   try {
     const comments = await listTopLevelComments({ postId });
-    return res.status(httpStatus.OK).send(comments);
+    return res.status(httpStatus.OK).send({data:comments});
   } catch (error) {
     console.error(error);
     return res
@@ -151,13 +151,13 @@ export async function update(req, res) {
     const { body } = validatedBody; // Already validated by Joi
     const result = await updateCommentForUser({ id, userId, body });
 
-    if (!result.ok) {
-      if (result.reason === "NOT_FOUND") {
+      if (!result.ok) {
+        if (result.reason === "notFound") {
         return res
           .status(httpStatus.NOT_FOUND)
           .send({ message: errorMessages.commentNotFound });
       }
-      if (result.reason === "FORBIDDEN") {
+        if (result.reason === "forbidden") {
         return res
           .status(httpStatus.FORBIDDEN)
           .send({ message: errorMessages.cannotUpdateOtherComment });
@@ -195,13 +195,13 @@ export async function remove(req, res) {
     const { id: userId } = req.user;
     const result = await deleteCommentForUser({ id, userId });
 
-    if (!result.ok) {
-      if (result.reason === "NOT_FOUND") {
+      if (!result.ok) {
+        if (result.reason === "notFound") {
         return res
           .status(httpStatus.NOT_FOUND)
           .send({ message: errorMessages.commentNotFound });
       }
-      if (result.reason === "FORBIDDEN") {
+        if (result.reason === "forbidden") {
         return res
           .status(httpStatus.FORBIDDEN)
           .send({ message: errorMessages.cannotDeleteOtherComment });

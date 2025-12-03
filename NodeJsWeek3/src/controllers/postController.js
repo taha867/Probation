@@ -153,8 +153,8 @@ export async function listForPost(req, res) {
     { convert: true }
   );
   if (!validatedQuery) return;
-  const page = parseInt(validatedQuery.page ?? 1, 10) || 1;
-  const limit = parseInt(validatedQuery.limit ?? 10, 10) || 10;
+  const page = validatedQuery.page|| 1;
+  const limit = validatedQuery.limit || 10;
 
   try {
     const { post, comments, meta } = await getPostWithComments({
@@ -216,15 +216,15 @@ export async function update(req, res) {
     });
 
     if (!result.ok) {
-      if (result.reason === "NOT_FOUND") {
+      if (result.reason === "notFound") {
         return res
           .status(httpStatus.NOT_FOUND)
           .send({ message: errorMessages.postNotFound });
       }
-      if (result.reason === "FORBIDDEN") {
-        return res
+      if (result.reason === "forbidden") {
+      return res
           .status(httpStatus.FORBIDDEN)
-          .send({ message: errorMessages.cannotUpdateOtherPost });
+        .send({ message: errorMessages.cannotUpdateOtherPost });
       }
     }
 
@@ -260,16 +260,16 @@ export async function remove(req, res) {
     const result = await deletePostForUser({ postId: id, userId });
 
     if (!result.ok) {
-      if (result.reason === "NOT_FOUND") {
+      if (result.reason === "notFound") {
         return res
           .status(httpStatus.NOT_FOUND)
           .send({ message: errorMessages.postNotFound });
       }
-      if (result.reason === "FORBIDDEN") {
-        return res
+      if (result.reason === "forbidden") {
+      return res
           .status(httpStatus.FORBIDDEN)
-          .send({ message: errorMessages.cannotDeleteOtherPost });
-      }
+        .send({ message: errorMessages.cannotDeleteOtherPost });
+    }
     }
 
     // Return a JSON message so clients can see confirmation

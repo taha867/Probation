@@ -10,9 +10,12 @@ export async function registerUser({ name, email, phone, password }) {
   const existing = await User.findOne({
     where: { [Op.or]: [{ phone }, { email }] },
   });
+  console.log(existing)
   if (existing) {
-    return { ok: false, reason: "USER_ALREADY_EXISTS" };
+    return { ok: false, reason: "userAlreadyExists" };
+    //throw new Error("userAlreadyExists");
   }
+  
 
   await User.create({
     name,
@@ -30,13 +33,18 @@ export async function authenticateUser({ email, phone, password }) {
     where: email ? { email } : { phone },
   });
   if (!user) {
-    return { ok: false, reason: "INVALID_CREDENTIALS" };
+    return { ok: false, reason: "invalidCredentials" };
   }
 
   const isPasswordValid = await bcrypt.compare(password, user.password);
   if (!isPasswordValid) {
-    return { ok: false, reason: "INVALID_CREDENTIALS" };
+    return { ok: false, reason: "invalidCredentials" };
   }
+
+  // const  [_, updatedUser] = await user.update({
+  //   status: userStatus.loggedIn,
+  //   last_login_at: new Date(),
+  // });
 
   await user.update({
     status: userStatus.loggedIn,
@@ -74,7 +82,7 @@ export async function authenticateUser({ email, phone, password }) {
 export async function logoutUser(userId) {
   const user = await User.findByPk(userId);
   if (!user) {
-    return { ok: false, reason: "USER_NOT_FOUND" };
+    return { ok: false, reason: "userNotFound" };
   }
 
   await user.update({
@@ -91,22 +99,22 @@ export async function verifyAndRefreshToken(refreshToken) {
     decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
   } catch (error) {
     if (error.name === "TokenExpiredError") {
-      return { ok: false, reason: "REFRESH_TOKEN_EXPIRED" };
+      return { ok: false, reason: "refreshTokenExpired" };
     }
-    return { ok: false, reason: "REFRESH_TOKEN_INVALID" };
+    return { ok: false, reason: "refreshTokenInvalid" };
   }
 
   if (decoded.type !== "refresh") {
-    return { ok: false, reason: "REFRESH_TOKEN_INVALID" };
+    return { ok: false, reason: "refreshTokenInvalid" };
   }
 
   const user = await User.findByPk(decoded.userId);
   if (!user) {
-    return { ok: false, reason: "USER_NOT_FOUND" };
+    return { ok: false, reason: "userNotFound" };
   }
 
   if (user.tokenVersion !== decoded.tokenVersion) {
-    return { ok: false, reason: "REFRESH_TOKEN_INVALID" };
+    return { ok: false, reason: "refreshTokenInvalid" };
   }
 
   const accessToken = jwt.sign(
@@ -143,18 +151,18 @@ export async function resetUserPassword(token, newPassword) {
     decoded = jwt.verify(token, process.env.JWT_SECRET);
   } catch (error) {
     if (error.name === "TokenExpiredError") {
-      return { ok: false, reason: "RESET_TOKEN_EXPIRED" };
+      return { ok: false, reason: "resetTokenExpired" };
     }
-    return { ok: false, reason: "RESET_TOKEN_INVALID" };
+    return { ok: false, reason: "resetTokenInvalid" };
   }
 
   if (decoded.type !== "password_reset") {
-    return { ok: false, reason: "RESET_TOKEN_INVALID" };
+    return { ok: false, reason: "resetTokenInvalid" };
   }
 
   const user = await User.findByPk(decoded.userId);
   if (!user) {
-    return { ok: false, reason: "USER_NOT_FOUND" };
+    return { ok: false, reason: "userNotFound" };
   }
 
   await user.update({ password: newPassword });

@@ -34,7 +34,7 @@ export const signUpSchema = Joi.object({
 });
 
 export const signInSchema = Joi.object({
-  email: Joi.string().email().optional(),
+  email: baseEmailSchema.optional(),
   phone: loginPhoneSchema,
   password: passwordSchema,
 }).or("email", "phone");

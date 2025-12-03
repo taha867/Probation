@@ -29,13 +29,13 @@ export async function createCommentOrReply({ body, postId, parentId, userId }) {
   if (parentId) {
     const parentComment = await Comment.findByPk(parentId);
     if (!parentComment) {
-      return { ok: false, reason: "PARENT_NOT_FOUND" };
+      return { ok: false, reason: "parentNotFound" };
     }
     finalPostId = parentComment.postId;
   } else {
     const post = await Post.findByPk(postId);
     if (!post) {
-      return { ok: false, reason: "POST_NOT_FOUND" };
+      return { ok: false, reason: "postNotFound" };
     }
   }
 
@@ -81,10 +81,10 @@ export async function findCommentWithRelations(id) {
 export async function updateCommentForUser({ id, userId, body }) {
   const comment = await Comment.findByPk(id);
   if (!comment) {
-    return { ok: false, reason: "NOT_FOUND" };
+    return { ok: false, reason: "notFound" };
   }
   if (comment.userId !== userId) {
-    return { ok: false, reason: "FORBIDDEN" };
+    return { ok: false, reason: "forbidden" };
   }
 
   await comment.update({ body });
@@ -95,10 +95,10 @@ export async function updateCommentForUser({ id, userId, body }) {
 export async function deleteCommentForUser({ id, userId }) {
   const comment = await Comment.findByPk(id);
   if (!comment) {
-    return { ok: false, reason: "NOT_FOUND" };
+    return { ok: false, reason: "notFound" };
   }
   if (comment.userId !== userId) {
-    return { ok: false, reason: "FORBIDDEN" };
+    return { ok: false, reason: "forbidden" };
   }
 
   await comment.destroy();

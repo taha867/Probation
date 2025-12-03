@@ -117,12 +117,12 @@ Services expose pure JS functions that encapsulate all DB operations and domain 
 
 - `registerUser({ name, email, phone, password })`:
   - Checks DB for existing email/phone.
-  - Returns `{ ok: false, reason: "USER_ALREADY_EXISTS" }` or `{ ok: true }`.
+  - Returns `{ ok: false, reason: "userAlreadyExists" }` or `{ ok: true }`.
 - `authenticateUser({ email, phone, password })`:
   - Loads user by email/phone, verifies password via bcrypt.
   - Updates `status` and `last_login_at`.
   - Issues access and refresh JWTs.
-  - Returns `{ ok: true, user, accessToken, refreshToken }` or `{ ok: false, reason: "INVALID_CREDENTIALS" }`.
+  - Returns `{ ok: true, user, accessToken, refreshToken }` or `{ ok: false, reason: "invalidCredentials" }`.
 - `logoutUser`, `verifyAndRefreshToken`, `createPasswordResetToken`, `resetUserPassword`:
   - Handle logout, token refresh, and password reset flows in a structured way.
 

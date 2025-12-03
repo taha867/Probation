@@ -5,7 +5,7 @@ export const httpStatus = StatusCodes;
 
 // Success Messages
 export const successMessages = {
-  accountCreated: "Account created successfully",
+  ACCOUNT_CREATED: "Account created successfully",
   signedIn: "Signed in successfully",
   loggedOut: "Logged out successfully",
   userUpdated: "User updated successfully",

@@ -38,10 +38,10 @@ export const updateUserSchema = Joi.object({
     .concat(baseNameSchema)
     .optional()
     .messages({
-      "string.min": "Name must be at least 2 characters long",
-      "string.max": "Name must not exceed 100 characters",
+    "string.min": "Name must be at least 2 characters long",
+    "string.max": "Name must not exceed 100 characters",
       "string.pattern.base": "Name must contain only letters and spaces",
-    }),
+  }),
   email: emailSchema,
   phone: phoneSchema,
   password: passwordSchema,

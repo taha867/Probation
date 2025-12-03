@@ -32,11 +32,11 @@ export const createPostSchema = Joi.object({
     .pattern(/^[^<>]*$/)
     .required()
     .messages({
-      "string.min": "Title must not be empty",
-      "string.max": "Title must not exceed 200 characters",
+    "string.min": "Title must not be empty",
+    "string.max": "Title must not exceed 200 characters",
       "string.pattern.base": "Title contains invalid characters",
-      "any.required": "Title is required",
-    }),
+    "any.required": "Title is required",
+  }),
   body: Joi.string()
     .trim()
     .min(1)
@@ -45,11 +45,11 @@ export const createPostSchema = Joi.object({
     .pattern(/^[^<>]*$/)
     .required()
     .messages({
-      "string.min": "Body must not be empty",
+    "string.min": "Body must not be empty",
       "string.max": "Body must not exceed 5000 characters",
       "string.pattern.base": "Body contains invalid characters",
-      "any.required": "Body is required",
-    }),
+    "any.required": "Body is required",
+  }),
   status: Joi.string().valid("draft", "published").optional().default("draft").messages({
     "any.only": "Status must be either 'draft' or 'published'",
   }),
@@ -63,10 +63,10 @@ export const updatePostSchema = Joi.object({
     .pattern(/^[^<>]*$/)
     .optional()
     .messages({
-      "string.min": "Title must not be empty",
-      "string.max": "Title must not exceed 200 characters",
+    "string.min": "Title must not be empty",
+    "string.max": "Title must not exceed 200 characters",
       "string.pattern.base": "Title contains invalid characters",
-    }),
+  }),
   body: Joi.string()
     .trim()
     .min(1)
@@ -75,10 +75,10 @@ export const updatePostSchema = Joi.object({
     .pattern(/^[^<>]*$/)
     .optional()
     .messages({
-      "string.min": "Body must not be empty",
+    "string.min": "Body must not be empty",
       "string.max": "Body must not exceed 5000 characters",
       "string.pattern.base": "Body contains invalid characters",
-    }),
+  }),
   status: Joi.string().valid("draft", "published").optional().messages({
     "any.only": "Status must be either 'draft' or 'published'",
   }),
