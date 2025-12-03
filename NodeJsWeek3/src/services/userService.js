@@ -1,156 +1,160 @@
 import { Op } from "sequelize";
-import model from "../models/index.js";
+import models from "../models/index.js";
+import { httpStatus } from "../utils/constants.js";
+import { AppError } from "../utils/errors.js";
+import { buildPaginationMeta, getPaginationParams } from "../utils/pagination.js";
 
-const { User, Post, Comment } = model;
-
-export async function listUsers({ page, limit }) {
-  const offset = (page - 1) * limit;
-
-  const { rows, count } = await User.findAndCountAll({
-    attributes: ["id", "name", "email", "phone", "status"],
-    order: [["createdAt", "DESC"]],
-    limit,
-    offset,
-  });
-
-  return { rows, count, page, limit };
-}
-
-export async function findUserById(id) {
-  return User.findByPk(id, {
-    attributes: ["id", "name", "email"],
-  });
-}
-
-export async function getUserPostsWithComments({ userId, page, limit }) {
-  const offset = (page - 1) * limit;
-
-  const user = await findUserById(userId);
-  if (!user) {
-    return { user: null, posts: [], meta: null };
+export class UserService {
+  constructor(models) {
+    this.User = models.User;
+    this.Post = models.Post;
+    this.Comment = models.Comment;
   }
 
-  const { rows, count } = await Post.findAndCountAll({
-    where: { userId },
-    include: [
-      {
-        model: User,
-        as: "author",
-        attributes: ["id", "name", "email"],
-      },
-      {
-        model: Comment,
-        as: "comments",
-        include: [
-          {
-            model: User,
-            as: "author",
-            attributes: ["id", "name", "email"],
-          },
-          {
-            model: Comment,
-            as: "replies",
-            include: [
-              {
-                model: User,
-                as: "author",
-                attributes: ["id", "name", "email"],
-              },
-            ],
-            separate: true,
-            order: [["createdAt", "ASC"]],
-          },
-        ],
-        separate: true,
-        order: [["createdAt", "DESC"]],
-        where: { parentId: null },
-      },
-    ],
-    order: [["createdAt", "DESC"]],
-    limit,
-    offset,
-  });
+  async listUsers({ page, limit }) {
+    const { offset } = getPaginationParams({ page, limit });
 
-  return {
-    user,
-    posts: rows,
-    meta: {
-      total: count,
-      page,
+    const { rows, count } = await this.User.findAndCountAll({
+      attributes: ["id", "name", "email", "phone", "status"],
+      order: [["createdAt", "DESC"]],
       limit,
-      totalPages: Math.ceil(count / limit),
-    },
-  };
-}
-
-export async function updateUserForSelf({ requestedUserId, authUserId, data }) {
-  if (requestedUserId !== authUserId) {
-    return { ok: false, reason: "forbidden" };
-  }
-
-  const user = await User.findByPk(requestedUserId);
-  if (!user) {
-    return { ok: false, reason: "notFound" };
-  }
-
-  const { name, email, phone, password } = data;
-  const updateData = {};
-
-  if (name !== undefined) updateData.name = name;
-  if (email !== undefined) {
-    const existingUser = await User.findOne({
-      where: {
-        email,
-        id: { [Op.ne]: requestedUserId },
-      },
+      offset,
     });
-    if (existingUser) {
-      return { ok: false, reason: "emailExists" };
-    }
-    updateData.email = email;
+
+    return { rows, count, page, limit };
   }
-  if (phone !== undefined) {
-    const existingUser = await User.findOne({
-      where: {
-        phone,
-        id: { [Op.ne]: requestedUserId },
-      },
+
+  async findUserById(id) {
+    return this.User.findByPk(id, {
+      attributes: ["id", "name", "email"],
     });
-    if (existingUser) {
-      return { ok: false, reason: "phoneExists" };
+  }
+
+  async getUserPostsWithComments({ userId, page, limit }) {
+    const { offset } = getPaginationParams({ page, limit });
+
+    const user = await this.findUserById(userId);
+    if (!user) {
+      return { user: null, posts: [], meta: null };
     }
-    updateData.phone = phone;
+
+    const { rows, count } = await this.Post.findAndCountAll({
+      where: { userId },
+      include: [
+        {
+          model: this.User,
+          as: "author",
+          attributes: ["id", "name", "email"],
+        },
+        {
+          model: this.Comment,
+          as: "comments",
+          include: [
+            {
+              model: this.User,
+              as: "author",
+              attributes: ["id", "name", "email"],
+            },
+            {
+              model: this.Comment,
+              as: "replies",
+              include: [
+                {
+                  model: this.User,
+                  as: "author",
+                  attributes: ["id", "name", "email"],
+                },
+              ],
+              separate: true,
+              order: [["createdAt", "ASC"]],
+            },
+          ],
+          separate: true,
+          order: [["createdAt", "DESC"]],
+          where: { parentId: null },
+        },
+      ],
+      order: [["createdAt", "DESC"]],
+      limit,
+      offset,
+    });
+
+    return {
+      user,
+      posts: rows,
+      meta: buildPaginationMeta({ total: count, page, limit }),
+    };
   }
-  if (password !== undefined) updateData.password = password;
 
-  await user.update(updateData);
-  await user.reload();
+  async updateUserForSelf({ requestedUserId, authUserId, data }) {
+    if (requestedUserId !== authUserId) {
+      throw new AppError("CANNOT_UPDATE_OTHER_USER", httpStatus.FORBIDDEN);
+    }
 
-  const { id, name: userName, email: userEmail, phone: userPhone, status } = user;
-  return {
-    ok: true,
-    user: {
-      id,
-      name: userName,
-      email: userEmail,
-      phone: userPhone,
-      status,
-    },
-  };
+    const user = await this.User.findByPk(requestedUserId);
+    if (!user) {
+      throw new AppError("USER_NOT_FOUND", httpStatus.NOT_FOUND);
+    }
+
+    const { name, email, phone, password } = data;
+    const updateData = {};
+
+    if (name !== undefined) updateData.name = name;
+    if (email !== undefined) {
+      const existingUser = await this.User.findOne({
+        where: {
+          email,
+          id: { [Op.ne]: requestedUserId },
+        },
+      });
+      if (existingUser) {
+        throw new AppError("EMAIL_ALREADY_EXISTS", httpStatus.UNPROCESSABLE_ENTITY);
+      }
+      updateData.email = email;
+    }
+    if (phone !== undefined) {
+      const existingUser = await this.User.findOne({
+        where: {
+          phone,
+          id: { [Op.ne]: requestedUserId },
+        },
+      });
+      if (existingUser) {
+        throw new AppError("PHONE_ALREADY_EXISTS", httpStatus.UNPROCESSABLE_ENTITY);
+      }
+      updateData.phone = phone;
+    }
+    if (password !== undefined) updateData.password = password;
+
+    await user.update(updateData);
+
+    const { id, name: userName, email: userEmail, phone: userPhone, status } = user;
+    return {
+      ok: true,
+      user: {
+        id,
+        name: userName,
+        email: userEmail,
+        phone: userPhone,
+        status,
+      },
+    };
+  }
+
+  async deleteUserForSelf({ requestedUserId, authUserId }) {
+    if (requestedUserId !== authUserId) {
+      throw new AppError("CANNOT_DELETE_OTHER_USER", httpStatus.FORBIDDEN);
+    }
+
+    const user = await this.User.findByPk(requestedUserId);
+    if (!user) {
+      throw new AppError("USER_NOT_FOUND", httpStatus.NOT_FOUND);
+    }
+
+    await user.destroy();
+    return { ok: true };
+  }
 }
 
-export async function deleteUserForSelf({ requestedUserId, authUserId }) {
-  if (requestedUserId !== authUserId) {
-    return { ok: false, reason: "forbidden" };
-  }
-
-  const user = await User.findByPk(requestedUserId);
-  if (!user) {
-    return { ok: false, reason: "notFound" };
-  }
-
-  await user.destroy();
-  return { ok: true };
-}
-
+export const userService = new UserService(models);
 

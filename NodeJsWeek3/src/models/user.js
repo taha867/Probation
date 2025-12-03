@@ -1,5 +1,5 @@
 import { Model } from "sequelize";
-import bcrypt from "bcrypt";
+import { hashPassword } from "../utils/bcrypt.js";
 
 const PROTECTED_ATTRIBUTES = ["password"];
 
@@ -78,15 +78,13 @@ export default (sequelize, DataTypes) => {
         // Hash password before creating a new user
         beforeCreate: async (user) => {
           if (user.password) {
-            const saltRounds = 10;
-            user.password = await bcrypt.hash(user.password, saltRounds);
+            user.password = await hashPassword(user.password);
           }
         },
         // Hash password before updating if password field is being changed
         beforeUpdate: async (user) => {
           if (user.changed("password") && user.password) {
-            const saltRounds = 10; //how many times bcrypt will process and rehash the password internally.
-            user.password = await bcrypt.hash(user.password, saltRounds);
+            user.password = await hashPassword(user.password);
           }
         },
       },

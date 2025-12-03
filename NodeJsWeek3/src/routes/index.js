@@ -13,7 +13,9 @@ export default (app) => {
 
   // Create a catch-all route for testing the installation.
   app.use((req, res) => {
-    res.status(httpStatus.NOT_FOUND).json({ message: errorMessages.routeNotFound });
+    res.status(httpStatus.NOT_FOUND).json({
+      data: { message: errorMessages.ROUTE_NOT_FOUND },
+    });
   });
 
 };

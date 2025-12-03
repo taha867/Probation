@@ -1,108 +1,109 @@
-import model from "../models/index.js";
+import models from "../models/index.js";
+import { httpStatus } from "../utils/constants.js";
+import { AppError } from "../utils/errors.js";
 
-const { Comment, Post, User } = model;
+export class CommentService {
+  constructor(models) {
+    this.Comment = models.Comment;
+    this.Post = models.Post;
+    this.User = models.User;
 
-// Shared include definitions to avoid repetition
-const includeAuthor = {
-  model: User,
-  as: "author",
-  attributes: ["id", "name", "email"],
-};
+    this.includeAuthor = {
+      model: this.User,
+      as: "author",
+      attributes: ["id", "name", "email"],
+    };
 
-const includePost = {
-  model: Post,
-  as: "post",
-  attributes: ["id", "title"],
-};
+    this.includePost = {
+      model: this.Post,
+      as: "post",
+      attributes: ["id", "title"],
+    };
 
-const includeReplies = {
-  model: Comment,
-  as: "replies",
-  include: [includeAuthor],
-  separate: true,
-  order: [["createdAt", "ASC"]],
-};
+    this.includeReplies = {
+      model: this.Comment,
+      as: "replies",
+      include: [this.includeAuthor],
+      separate: true,
+      order: [["createdAt", "ASC"]],
+    };
+  }
 
-export async function createCommentOrReply({ body, postId, parentId, userId }) {
-  let finalPostId = postId;
+  async createCommentOrReply({ body, postId, parentId, userId }) {
+    let finalPostId = postId;
 
-  if (parentId) {
-    const parentComment = await Comment.findByPk(parentId);
-    if (!parentComment) {
-      return { ok: false, reason: "parentNotFound" };
+    if (parentId) {
+      const parentComment = await this.Comment.findByPk(parentId);
+      if (!parentComment) {
+        throw new AppError("PARENT_COMMENT_NOT_FOUND", httpStatus.NOT_FOUND);
+      }
+      finalPostId = parentComment.postId;
+    } else {
+      const post = await this.Post.findByPk(postId);
+      if (!post) {
+        throw new AppError("POST_NOT_FOUND", httpStatus.NOT_FOUND);
+      }
     }
-    finalPostId = parentComment.postId;
-  } else {
-    const post = await Post.findByPk(postId);
-    if (!post) {
-      return { ok: false, reason: "postNotFound" };
+
+    const comment = await this.Comment.create({
+      body,
+      postId: finalPostId,
+      userId,
+      parentId,
+    });
+
+    const createdComment = await this.Comment.findByPk(comment.id, {
+      include: [this.includeAuthor, this.includePost],
+    });
+
+    return { ok: true, comment: createdComment };
+  }
+
+  async listTopLevelComments({ postId }) {
+    const where = postId ? { postId } : undefined;
+
+    const comments = await this.Comment.findAll({
+      where: { ...where, parentId: null },
+      include: [this.includeAuthor, this.includePost],
+      order: [["createdAt", "DESC"]],
+    });
+
+    return comments;
+  }
+
+  async findCommentWithRelations(id) {
+    return this.Comment.findByPk(id, {
+      include: [this.includeAuthor, this.includePost, this.includeReplies],
+    });
+  }
+
+  async updateCommentForUser({ id, userId, body }) {
+    const comment = await this.Comment.findByPk(id);
+    if (!comment) {
+      throw new AppError("COMMENT_NOT_FOUND", httpStatus.NOT_FOUND);
     }
+    if (comment.userId !== userId) {
+      throw new AppError("CANNOT_UPDATE_OTHER_COMMENT", httpStatus.FORBIDDEN);
+    }
+
+    await comment.update({ body });
+    const updated = await this.findCommentWithRelations(id);
+    return { ok: true, comment: updated };
   }
 
-  const comment = await Comment.create({
-    body,
-    postId: finalPostId,
-    userId,
-    parentId,
-  });
+  async deleteCommentForUser({ id, userId }) {
+    const comment = await this.Comment.findByPk(id);
+    if (!comment) {
+      throw new AppError("COMMENT_NOT_FOUND", httpStatus.NOT_FOUND);
+    }
+    if (comment.userId !== userId) {
+      throw new AppError("CANNOT_DELETE_OTHER_COMMENT", httpStatus.FORBIDDEN);
+    }
 
-  const createdComment = await Comment.findByPk(comment.id, {
-    include: [
-      { model: User, as: "author", attributes: ["id", "name", "email"] },
-      { model: Post, as: "post", attributes: ["id", "title"] },
-    ],
-  });
-
-  return { ok: true, comment: createdComment };
-}
-
-export async function listTopLevelComments({ postId }) {
-  const where = postId ? { postId } : undefined;
-
-  const comments = await Comment.findAll({
-    where: { ...where, parentId: null },
-    // For listing, include only author and post to avoid complex nested JOIN
-    // Nested replies can be fetched via dedicated endpoints if needed.
-    include: [includeAuthor, includePost],
-    order: [["createdAt", "DESC"]],
-  });
-
-  return comments;
-}
-
-export async function findCommentWithRelations(id) {
-  return Comment.findByPk(id, {
-    // For a single comment, include author and post; replies can be fetched separately if needed.
-    include:[includeReplies],
-    include: [includeAuthor, includePost],
-  });
-}
-
-export async function updateCommentForUser({ id, userId, body }) {
-  const comment = await Comment.findByPk(id);
-  if (!comment) {
-    return { ok: false, reason: "notFound" };
+    await comment.destroy();
+    return { ok: true };
   }
-  if (comment.userId !== userId) {
-    return { ok: false, reason: "forbidden" };
-  }
-
-  await comment.update({ body });
-  const updated = await findCommentWithRelations(id);
-  return { ok: true, comment: updated };
 }
 
-export async function deleteCommentForUser({ id, userId }) {
-  const comment = await Comment.findByPk(id);
-  if (!comment) {
-    return { ok: false, reason: "notFound" };
-  }
-  if (comment.userId !== userId) {
-    return { ok: false, reason: "forbidden" };
-  }
-
-  await comment.destroy();
-  return { ok: true };
-}
-
+export const commentService = new CommentService(models);
 

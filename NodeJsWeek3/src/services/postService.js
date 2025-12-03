@@ -1,114 +1,119 @@
 import { Op } from "sequelize";
-import model from "../models/index.js";
+import models from "../models/index.js";
+import { httpStatus } from "../utils/constants.js";
+import { AppError } from "../utils/errors.js";
+import { getPaginationParams, buildPaginationMeta } from "../utils/pagination.js";
 
-const { Comment, Post, User } = model;
-
-export async function createPost({ title, body, status, userId }) {
-  return Post.create({ title, body, userId, status });
-}
-
-export async function listPosts({ page, limit, search, userId }) {
-  const offset = (page - 1) * limit;
-
-  const where = {};
-  if (userId) {
-    where.userId = userId;
-  }
-  if (search) {
-    where[Op.or] = [
-      { title: { [Op.iLike]: `%${search}%` } },
-      { body: { [Op.iLike]: `%${search}%` } },
-    ];
+export class PostService {
+  constructor(models) {
+    this.Post = models.Post;
+    this.Comment = models.Comment;
+    this.User = models.User;
   }
 
-  const { rows, count } = await Post.findAndCountAll({
-    where,
-    include: [{ model: User, as: "author", attributes: ["id", "name", "email"] }],
-    order: [["createdAt", "DESC"]],
-    limit,
-    offset,
-  });
-
-  return { rows, count, page, limit };
-}
-
-export async function findPostWithAuthor(id) {
-  return Post.findByPk(id, {
-    include: [{ model: User, as: "author", attributes: ["id", "name", "email"] }],
-  });
-}
-
-export async function getPostWithComments({ postId, page, limit }) {
-  const offset = (page - 1) * limit;
-
-  const postExists = await Post.findByPk(postId);
-  if (!postExists) {
-    return { post: null, comments: [], meta: null };
+  async createPost({ title, body, status, userId }) {
+    return this.Post.create({ title, body, userId, status });
   }
 
-  const { rows, count } = await Comment.findAndCountAll({
-    where: { postId, parentId: null },
-    include: [
-      {
-        model: User,
-        as: "author",
-        attributes: ["id", "name", "email"],
-      },
-      {
-        model: Comment,
-        as: "replies",
-        include: [
-          {
-            model: User,
-            as: "author",
-            attributes: ["id", "name", "email"],
-          },
-        ],
-        separate: true,
-        order: [["createdAt", "ASC"]],
-      },
-    ],
-    order: [["createdAt", "DESC"]],
-    limit,
-    offset,
-  });
+  async listPosts({ page, limit, search, userId }) {
+    const { offset } = getPaginationParams({ page, limit });
 
-  return {
-    post: postExists,
-    comments: rows,
-    meta: {
-      total: count,
-      page,
+    const where = {};
+    if (userId) {
+      where.userId = userId;
+    }
+    if (search) {
+      where[Op.or] = [
+        { title: { [Op.iLike]: `%${search}%` } },
+        { body: { [Op.iLike]: `%${search}%` } },
+      ];
+    }
+
+    const { rows, count } = await this.Post.findAndCountAll({
+      where,
+      include: [{ model: this.User, as: "author", attributes: ["id", "name", "email"] }],
+      order: [["createdAt", "DESC"]],
       limit,
-      totalPages: Math.ceil(count / limit),
-    },
-  };
+      offset,
+    });
+
+    return { rows, count, page, limit };
+  }
+
+  async findPostWithAuthor(id) {
+    return this.Post.findByPk(id, {
+      include: [{ model: this.User, as: "author", attributes: ["id", "name", "email"] }],
+    });
+  }
+
+  async getPostWithComments({ postId, page, limit }) {
+    const { offset } = getPaginationParams({ page, limit });
+
+    const postExists = await this.Post.findByPk(postId);
+    if (!postExists) {
+      return { post: null, comments: [], meta: null };
+    }
+
+    const { rows, count } = await this.Comment.findAndCountAll({
+      where: { postId, parentId: null },
+      include: [
+        {
+          model: this.User,
+          as: "author",
+          attributes: ["id", "name", "email"],
+        },
+        {
+          model: this.Comment,
+          as: "replies",
+          include: [
+            {
+              model: this.User,
+              as: "author",
+              attributes: ["id", "name", "email"],
+            },
+          ],
+          separate: true,
+          order: [["createdAt", "ASC"]],
+        },
+      ],
+      order: [["createdAt", "DESC"]],
+      limit,
+      offset,
+    });
+
+    return {
+      post: postExists,
+      comments: rows,
+      meta: buildPaginationMeta({ total: count, page, limit }),
+    };
+  }
+
+  async updatePostForUser({ postId, userId, data }) {
+    const post = await this.findPostWithAuthor(postId);
+    if (!post) {
+      throw new AppError("POST_NOT_FOUND", httpStatus.NOT_FOUND);
+    }
+    if (post.userId !== userId) {
+      throw new AppError("CANNOT_UPDATE_OTHER_POST", httpStatus.FORBIDDEN);
+    }
+
+    await post.update(data);
+    return { ok: true, post };
+  }
+
+  async deletePostForUser({ postId, userId }) {
+    const post = await this.findPostWithAuthor(postId);
+    if (!post) {
+      throw new AppError("POST_NOT_FOUND", httpStatus.NOT_FOUND);
+    }
+    if (post.userId !== userId) {
+      throw new AppError("CANNOT_DELETE_OTHER_POST", httpStatus.FORBIDDEN);
+    }
+
+    await post.destroy();
+    return { ok: true };
+  }
 }
 
-export async function updatePostForUser({ postId, userId, data }) {
-  const post = await findPostWithAuthor(postId);
-  if (!post) {
-    return { ok: false, reason: "notFound" };
-  }
-  if (post.userId !== userId) {
-    return { ok: false, reason: "forbidden" };
-  }
-
-  await post.update(data);
-  return { ok: true, post };
-}
-
-export async function deletePostForUser({ postId, userId }) {
-  const post = await findPostWithAuthor(postId);
-  if (!post) {
-    return { ok: false, reason: "notFound" };
-  }
-  if (post.userId !== userId) {
-    return { ok: false, reason: "forbidden" };
-  }
-
-  await post.destroy();
-  return { ok: true };
-}
-
+export const postService = new PostService(models);
 

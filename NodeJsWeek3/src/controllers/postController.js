@@ -1,5 +1,6 @@
 import { httpStatus, errorMessages, successMessages } from "../utils/constants.js";
 import { validateRequest } from "../middleware/validationMiddleware.js";
+import { getPaginationParams, buildPaginationMeta } from "../utils/pagination.js";
 import {
   createPostSchema,
   updatePostSchema,
@@ -7,14 +8,8 @@ import {
   postIdParamSchema,
   postIdParamForCommentsSchema,
 } from "../validations/postValidation.js";
-import {
-  createPost,
-  listPosts,
-  findPostWithAuthor,
-  getPostWithComments,
-  updatePostForUser,
-  deletePostForUser,
-} from "../services/postService.js";
+import { postService } from "../services/postService.js";
+import { handleAppError } from "../utils/errors.js";
 
 /**
  * Creates a new post.
@@ -34,13 +29,13 @@ export async function create(req, res) {
   const { id: userId } = req.user; // Get userId from authenticated user
 
   try {
-    const post = await createPost({ title, body, status, userId });
-    return res.status(httpStatus.CREATED).send(post);
+    const post = await postService.createPost({ title, body, status, userId });
+    return res.status(httpStatus.CREATED).send({ data: post });
   } catch (error) {
     console.error(error);
     return res
       .status(httpStatus.INTERNAL_SERVER_ERROR)
-      .send({ message: errorMessages.unableToCreatePost });
+      .send({ message: errorMessages.UNABLE_TO_CREATE_POST });
   }
 }
 
@@ -63,12 +58,11 @@ export async function list(req, res) {
   );
   if (!validatedQuery) return;
 
-  const page = parseInt(validatedQuery.page ?? 1, 10) || 1;
-  const limit = parseInt(validatedQuery.limit ?? 10, 10) || 10;
+  const { page, limit } = getPaginationParams(validatedQuery);
   const { search, userId } = validatedQuery; // Already validated by Joi
 
   try {
-    const { rows, count } = await listPosts({
+    const { rows, count } = await postService.listPosts({
       page,
       limit,
       search,
@@ -76,19 +70,16 @@ export async function list(req, res) {
     });
 
     return res.status(httpStatus.OK).send({
-      data: rows,
-      meta: {
-        total: count,
-        page,
-        limit,
-        totalPages: Math.ceil(count / limit),
+      data: {
+        items: rows,
+        meta: buildPaginationMeta({ total: count, page, limit }),
       },
     });
   } catch (error) {
     console.error(error);
     return res
       .status(httpStatus.INTERNAL_SERVER_ERROR)
-      .send({ message: errorMessages.unableToFetchPost });
+      .send({ message: errorMessages.UNABLE_TO_FETCH_POST });
   }
 }
 
@@ -109,19 +100,19 @@ export async function get(req, res) {
     );
     if (!validatedParams) return;
     const { id } = validatedParams;
-    const post = await findPostWithAuthor(id);
+    const post = await postService.findPostWithAuthor(id);
     if (!post) {
-      return res
-        .status(httpStatus.NOT_FOUND)
-        .send({ message: errorMessages.postNotFound });
+      return res.status(httpStatus.NOT_FOUND).send({
+        data: { message: errorMessages.POST_NOT_FOUND },
+      });
     }
 
-    return res.status(httpStatus.OK).send(post);
+    return res.status(httpStatus.OK).send({ data: post });
   } catch (error) {
     console.error(error);
     return res
       .status(httpStatus.INTERNAL_SERVER_ERROR)
-      .send({ message: errorMessages.unableToFetchPost });
+      .send({ message: errorMessages.UNABLE_TO_FETCH_POST });
   }
 }
 
@@ -153,32 +144,33 @@ export async function listForPost(req, res) {
     { convert: true }
   );
   if (!validatedQuery) return;
-  const page = validatedQuery.page|| 1;
-  const limit = validatedQuery.limit || 10;
+  const { page, limit } = getPaginationParams(validatedQuery);
 
   try {
-    const { post, comments, meta } = await getPostWithComments({
+    const { post, comments, meta } = await postService.getPostWithComments({
       postId,
       page,
       limit,
     });
 
     if (!post) {
-      return res
-        .status(httpStatus.NOT_FOUND)
-        .send({ message: errorMessages.postNotFound });
+      return res.status(httpStatus.NOT_FOUND).send({
+        data: { message: errorMessages.POST_NOT_FOUND },
+      });
     }
 
     return res.status(httpStatus.OK).send({
-      post,
-      comments,
-      meta,
+      data: {
+        post,
+        comments,
+        meta,
+      },
     });
   } catch (error) {
     console.error(error);
     return res
       .status(httpStatus.INTERNAL_SERVER_ERROR)
-      .send({ message: errorMessages.unableToFetchPostComments });
+      .send({ message: errorMessages.UNABLE_TO_FETCH_POST_COMMENTS });
   }
 }
 
@@ -209,31 +201,20 @@ export async function update(req, res) {
     const validatedBody = validateRequest(updatePostSchema, req.body, res);
     if (!validatedBody) return;
     const { title, body, status } = validatedBody;
-    const result = await updatePostForUser({
+    const result = await postService.updatePostForUser({
       postId,
       userId,
       data: { title, body, status },
     });
+    return res.status(httpStatus.OK).send({ data: result.post });
+  } catch (err) {
+    if (handleAppError(err, res, errorMessages)) return;
 
-    if (!result.ok) {
-      if (result.reason === "notFound") {
-        return res
-          .status(httpStatus.NOT_FOUND)
-          .send({ message: errorMessages.postNotFound });
-      }
-      if (result.reason === "forbidden") {
-      return res
-          .status(httpStatus.FORBIDDEN)
-        .send({ message: errorMessages.cannotUpdateOtherPost });
-      }
-    }
-
-    return res.status(httpStatus.OK).send(result.post);
-  } catch (error) {
-    console.error(error);
-    return res
-      .status(httpStatus.INTERNAL_SERVER_ERROR)
-      .send({ message: errorMessages.unableToUpdatePost });
+    // eslint-disable-next-line no-console
+    console.error(err);
+    return res.status(httpStatus.INTERNAL_SERVER_ERROR).send({
+      data: { message: errorMessages.UNABLE_TO_UPDATE_POST },
+    });
   }
 }
 
@@ -257,29 +238,19 @@ export async function remove(req, res) {
     );
     if (!validatedParams) return;
     const { id } = validatedParams;
-    const result = await deletePostForUser({ postId: id, userId });
-
-    if (!result.ok) {
-      if (result.reason === "notFound") {
-        return res
-          .status(httpStatus.NOT_FOUND)
-          .send({ message: errorMessages.postNotFound });
-      }
-      if (result.reason === "forbidden") {
-      return res
-          .status(httpStatus.FORBIDDEN)
-        .send({ message: errorMessages.cannotDeleteOtherPost });
-    }
-    }
+    await postService.deletePostForUser({ postId: id, userId });
 
     // Return a JSON message so clients can see confirmation
     return res.status(httpStatus.OK).send({
-      message: successMessages.postDeleted,
+      data: { message: successMessages.POST_DELETED },
     });
-  } catch (error) {
-    console.error(error);
-    return res
-      .status(httpStatus.INTERNAL_SERVER_ERROR)
-      .send({ message: errorMessages.unableToDeletePost });
+  } catch (err) {
+    if (handleAppError(err, res, errorMessages)) return;
+
+    // eslint-disable-next-line no-console
+    console.error(err);
+    return res.status(httpStatus.INTERNAL_SERVER_ERROR).send({
+      data: { message: errorMessages.UNABLE_TO_DELETE_POST },
+    });
   }
 }

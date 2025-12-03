@@ -1,17 +1,14 @@
 import { httpStatus, successMessages, errorMessages } from "../utils/constants.js";
 import { validateRequest } from "../middleware/validationMiddleware.js";
+import { getPaginationParams, buildPaginationMeta } from "../utils/pagination.js";
 import {
   getUserPostsQuerySchema,
   updateUserSchema,
   userIdParamSchema,
   listUsersQuerySchema,
 } from "../validations/userValidation.js";
-import {
-  listUsers,
-  getUserPostsWithComments,
-  updateUserForSelf,
-  deleteUserForSelf,
-} from "../services/userService.js";
+import { userService } from "../services/userService.js";
+import { handleAppError } from "../utils/errors.js";
 
 /**
  * Gets paginated list of all users.
@@ -29,26 +26,22 @@ export async function list(req, res) {
     { convert: true }
   );
   if (!validatedQuery) return;
-  const page = parseInt(validatedQuery.page ?? 1, 10) || 1;
-  const limit = parseInt(validatedQuery.limit ?? 10, 10) || 10;
+  const { page, limit } = getPaginationParams(validatedQuery);
 
   try {
-    const { rows, count } = await listUsers({ page, limit });
+    const { rows, count } = await userService.listUsers({ page, limit });
 
     return res.status(httpStatus.OK).send({
-      users: rows,
-      meta: {
-        total: count,
-        page,
-        limit,
-        totalPages: Math.ceil(count / limit),
+      data: {
+        users: rows,
+        meta: buildPaginationMeta({ total: count, page, limit }),
       },
     });
   } catch (error) {
     console.error(error);
     return res
       .status(httpStatus.INTERNAL_SERVER_ERROR)
-      .send({ message: errorMessages.unableToFetchUsers });
+      .send({ message: errorMessages.UNABLE_TO_FETCH_USERS });
   }
 }
 
@@ -80,28 +73,27 @@ export async function getUserPostsWithComment(req, res) {
     { convert: true }
   );
   if (!validatedQuery) return;
-  const page = parseInt(validatedQuery.page ?? 1, 10) || 1;
-  const limit = parseInt(validatedQuery.limit ?? 10, 10) || 10;
+  const { page, limit } = getPaginationParams(validatedQuery);
 
   try {
-    const result = await getUserPostsWithComments({
+    const result = await userService.getUserPostsWithComments({
       userId: requestedUserId,
       page,
       limit,
     });
 
     if (!result.user) {
-      return res
-        .status(httpStatus.NOT_FOUND)
-        .send({ message: errorMessages.userNotFound });
+      return res.status(httpStatus.NOT_FOUND).send({
+        data: { message: errorMessages.USER_NOT_FOUND },
+      });
     }
 
-    return res.status(httpStatus.OK).send(result);
+    return res.status(httpStatus.OK).send({ data: result });
   } catch (error) {
     console.error(error);
-    return res
-      .status(httpStatus.INTERNAL_SERVER_ERROR)
-      .send({ message: errorMessages.unableToFetchUserPosts });
+    return res.status(httpStatus.INTERNAL_SERVER_ERROR).send({
+      data: { message: errorMessages.UNABLE_TO_FETCH_USER_POSTS },
+    });
   }
 }
 
@@ -134,52 +126,40 @@ export async function update(req, res) {
   try {
     const updateBody = validateRequest(updateUserSchema, req.body, res);
     if (!updateBody) return;
-    const result = await updateUserForSelf({
+    const result = await userService.updateUserForSelf({
       requestedUserId,
       authUserId: authUser,
       data: updateBody,
     });
 
-    if (!result.ok) {
-      if (result.reason === "forbidden") {
-    return res
-          .status(httpStatus.FORBIDDEN)
-      .send({ message: errorMessages.cannotUpdateOtherUser });
-  }
-      if (result.reason === "notFound") {
-        return res
-          .status(httpStatus.NOT_FOUND)
-          .send({ message: errorMessages.userNotFound });
-    }
-      if (result.reason === "emailExists") {
-        return res
-          .status(httpStatus.UNPROCESSABLE_ENTITY)
-          .send({ message: errorMessages.emailAlreadyExists });
-      }
-      if (result.reason === "phoneExists") {
-        return res
-          .status(httpStatus.UNPROCESSABLE_ENTITY)
-          .send({ message: errorMessages.phoneAlreadyExists });
-      }
-    }
-
     const { user } = result;
-    const { id, name: userName, email: userEmail, phone: userPhone, status } = user;
+    const {
+      id,
+      name: userName,
+      email: userEmail,
+      phone: userPhone,
+      status,
+    } = user;
     return res.status(httpStatus.OK).send({
-      message: successMessages.userUpdated,
-      user: {
-        id,
-        name: userName,
-        email: userEmail,
-        phone: userPhone,
-        status,
+      data: {
+        message: successMessages.USER_UPDATED,
+        user: {
+          id,
+          name: userName,
+          email: userEmail,
+          phone: userPhone,
+          status,
+        },
       },
     });
-  } catch (error) {
-    console.error(error);
-    return res
-      .status(httpStatus.INTERNAL_SERVER_ERROR)
-      .send({ message: errorMessages.unableToUpdateUser });
+  } catch (err) {
+    if (handleAppError(err, res, errorMessages)) return;
+
+    // eslint-disable-next-line no-console
+    console.error(err);
+    return res.status(httpStatus.INTERNAL_SERVER_ERROR).send({
+      data: { message: errorMessages.UNABLE_TO_UPDATE_USER },
+    });
   }
 }
 
@@ -204,31 +184,21 @@ export async function remove(req, res) {
   const { id: requestedUserId } = validatedParams;
   const {id: authUser} = req.user;
   try {
-    const result = await deleteUserForSelf({
+    const result = await userService.deleteUserForSelf({
       requestedUserId,
       authUserId: authUser,
     });
 
-    if (!result.ok) {
-      if (result.reason === "forbidden") {
-    return res
-          .status(httpStatus.FORBIDDEN)
-      .send({ message: errorMessages.cannotDeleteOtherUser });
-  }
-      if (result.reason === "notFound") {
-        return res
-          .status(httpStatus.NOT_FOUND)
-          .send({ message: errorMessages.userNotFound });
-    }
-    }
-
     return res.status(httpStatus.OK).send({
-      message: successMessages.userDeleted,
+      data: { message: successMessages.USER_DELETED },
     });
-  } catch (error) {
-    console.error(error);
-    return res
-      .status(httpStatus.INTERNAL_SERVER_ERROR)
-      .send({ message: errorMessages.unableToDeleteUser });
+  } catch (err) {
+    if (handleAppError(err, res, errorMessages)) return;
+
+    // eslint-disable-next-line no-console
+    console.error(err);
+    return res.status(httpStatus.INTERNAL_SERVER_ERROR).send({
+      data: { message: errorMessages.UNABLE_TO_DELETE_USER },
+    });
   }
 }

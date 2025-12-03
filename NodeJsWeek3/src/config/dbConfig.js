@@ -12,7 +12,7 @@ export const initDb = async (res) => {
     if (res) {
       return res
         .status(httpStatus.INTERNAL_SERVER_ERROR)
-        .json({ message: errorMessages.operationFailed });
+        .json({ data: { message: errorMessages.OPERATION_FAILED } });
     }
     throw error;
   }

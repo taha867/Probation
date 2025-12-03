@@ -3,6 +3,7 @@ import {
   successMessages,
   errorMessages,
 } from "../utils/constants.js";
+import { handleAppError } from "../utils/errors.js";
 import { validateRequest } from "../middleware/validationMiddleware.js";
 import {
   signUpSchema,
@@ -11,14 +12,7 @@ import {
   resetPasswordSchema,
   refreshTokenSchema,
 } from "../validations/authValidation.js";
-import {
-  registerUser,
-  authenticateUser,
-  logoutUser,
-  verifyAndRefreshToken,
-  createPasswordResetToken,
-  resetUserPassword,
-} from "../services/authService.js";
+import { authService } from "../services/authService.js";
 
 /**
  * Registers a new user account.
@@ -36,18 +30,17 @@ export async function signUp(req, res) {
   if (!validatedBody) return;
   const { email, password, name, phone } = validatedBody;
   try {
-    const result = await registerUser({ name, email, phone, password });
-    if (!result.ok && result.reason === "userAlreadyExists") {
-      return res
-        .status(httpStatus.UNPROCESSABLE_ENTITY)
-        .send({ message: errorMessages.userAlreadyExists });
-    }
+    await authService.registerUser({ name, email, phone, password });
 
-    return res
-      .status(httpStatus.OK)
-      .send({ message: successMessages.ACCOUNT_CREATED });
-  } catch (e) {
-    console.log(e);
+    return res.status(httpStatus.OK).send({
+      data: { message: successMessages.ACCOUNT_CREATED },
+    });
+  } catch (err) {
+    if (handleAppError(err, res, errorMessages)) return;
+
+    // Fallback for unexpected errors
+    // eslint-disable-next-line no-console
+    console.error(err);
     return res.status(httpStatus.INTERNAL_SERVER_ERROR).send({
       message: errorMessages.operationFailed,
     });
@@ -71,29 +64,32 @@ export async function signIn(req, res) {
   const { email, phone, password } = validatedBody;
 
   try {
-    const result = await authenticateUser({ email, phone, password });
-    if (!result.ok && result.reason === "invalidCredentials") {
-      return res
-        .status(httpStatus.UNAUTHORIZED)
-        .send({ message: errorMessages.invalidCredentials });
-    }
-
+    const result = await authService.authenticateUser({
+      email,
+      phone,
+      password,
+    });
     const { user, accessToken, refreshToken } = result;
     const { id, name, email: userEmail, phone: userPhone, status } = user;
     return res.status(httpStatus.OK).send({
-      message: successMessages.signedIn,
-      accessToken,
-      refreshToken,
-      user: {
-        id,
-        name,
-        email: userEmail,
-        phone: userPhone,
-        status,
+      data: {
+        message: successMessages.SIGNED_IN,
+        accessToken,
+        refreshToken,
+        user: {
+          id,
+          name,
+          email: userEmail,
+          phone: userPhone,
+          status,
+        },
       },
     });
-  } catch (e) {
-    console.log(e);
+  } catch (err) {
+    if (handleAppError(err, res, errorMessages)) return;
+
+    // eslint-disable-next-line no-console
+    console.error(err);
     return res.status(httpStatus.INTERNAL_SERVER_ERROR).send({
       message: errorMessages.operationFailed,
     });
@@ -110,18 +106,16 @@ export async function signIn(req, res) {
 export async function signOut(req, res) {
   try {
     const { id: authUser } = req.user;
-    const result = await logoutUser(authUser);
-    if (!result.ok && result.reason === "userNotFound") {
-      return res
-        .status(httpStatus.NOT_FOUND)
-        .send({ message: errorMessages.userNotFound });
-    }
+    await authService.logoutUser(authUser);
 
     return res.status(httpStatus.OK).send({
-      message: successMessages.loggedOut,
+      data: { message: successMessages.LOGGED_OUT },
     });
-  } catch (error) {
-    console.error(error);
+  } catch (err) {
+    if (handleAppError(err, res, errorMessages)) return;
+
+    // eslint-disable-next-line no-console
+    console.error(err);
     return res.status(httpStatus.INTERNAL_SERVER_ERROR).send({
       message: errorMessages.operationFailed,
     });
@@ -144,30 +138,19 @@ export async function refreshToken(req, res) {
   const { refreshToken } = validatedBody;
 
   try {
-    const result = await verifyAndRefreshToken(refreshToken);
-
-    if (!result.ok) {
-      if (result.reason === "refreshTokenExpired") {
-        return res.status(httpStatus.UNAUTHORIZED).send({
-          message: errorMessages.refreshTokenExpired,
-        });
-      }
-      if (result.reason === "userNotFound") {
-        return res.status(httpStatus.NOT_FOUND).send({
-        message: errorMessages.userNotFound,
-      });
-    }
-      return res.status(httpStatus.UNAUTHORIZED).send({
-        message: errorMessages.invalidRefreshToken,
-      });
-    }
+    const result = await authService.verifyAndRefreshToken(refreshToken);
 
     return res.status(httpStatus.OK).send({
-      message: successMessages.tokenRefreshed,
-      accessToken: result.accessToken,
+      data: {
+        message: successMessages.TOKEN_REFRESHED,
+        accessToken: result.accessToken,
+      },
     });
-  } catch (error) {
-    console.error(error);
+  } catch (err) {
+    if (handleAppError(err, res, errorMessages)) return;
+
+    // eslint-disable-next-line no-console
+    console.error(err);
     return res.status(httpStatus.INTERNAL_SERVER_ERROR).send({
       message: errorMessages.operationFailed,
     });
@@ -189,11 +172,13 @@ export async function forgotPassword(req, res) {
   const { email } = validatedBody;
 
   try {
-    const result = await createPasswordResetToken(email);
+    const result = await authService.createPasswordResetToken(email);
 
     return res.status(httpStatus.OK).send({
-      message: successMessages.resetTokenSent,
-      resetToken: result.resetToken ?? undefined,
+      data: {
+        message: successMessages.RESET_TOKEN_SENT,
+        resetToken: result.resetToken ?? undefined,
+      },
     });
   } catch (error) {
     console.error(error);
@@ -221,31 +206,16 @@ export async function resetPassword(req, res) {
   const { token, newPassword } = validatedBody;
 
   try {
-    const result = await resetUserPassword(token, newPassword);
-
-    if (!result.ok) {
-      if (result.reason === "resetTokenExpired") {
-        return res.status(httpStatus.UNAUTHORIZED).send({
-          message: errorMessages.resetTokenExpired,
-        });
-      }
-      if (result.reason === "resetTokenInvalid") {
-        return res.status(httpStatus.UNAUTHORIZED).send({
-        message: errorMessages.invalidResetToken,
-      });
-    }
-      if (result.reason === "userNotFound") {
-        return res.status(httpStatus.NOT_FOUND).send({
-        message: errorMessages.userNotFound,
-      });
-      }
-    }
+    await authService.resetUserPassword(token, newPassword);
 
     return res.status(httpStatus.OK).send({
-      message: successMessages.passwordReset,
+      data: { message: successMessages.PASSWORD_RESET },
     });
-  } catch (error) {
-    console.error(error);
+  } catch (err) {
+    if (handleAppError(err, res, errorMessages)) return;
+
+    // eslint-disable-next-line no-console
+    console.error(err);
     return res.status(httpStatus.INTERNAL_SERVER_ERROR).send({
       message: errorMessages.operationFailed,
     });
