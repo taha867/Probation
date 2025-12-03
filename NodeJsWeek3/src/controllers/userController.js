@@ -1,5 +1,5 @@
 import { httpStatus, successMessages, errorMessages } from "../utils/constants.js";
-import { validateRequest } from "../middleware/validationMiddleware.js";
+import { validateRequest } from "../utils/validations.js";
 import { getPaginationParams, buildPaginationMeta } from "../utils/pagination.js";
 import {
   getUserPostsQuerySchema,

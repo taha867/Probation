@@ -4,7 +4,7 @@ import {
   errorMessages,
 } from "../utils/constants.js";
 import { handleAppError } from "../utils/errors.js";
-import { validateRequest } from "../middleware/validationMiddleware.js";
+import { validateRequest } from "../utils/validations.js";
 import {
   signUpSchema,
   signInSchema,
