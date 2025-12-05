@@ -20,13 +20,8 @@ export class CommentService {
       attributes: ["id", "title"],
     };
 
-    this.includeReplies = {
-      model: this.Comment,
-      as: "replies",
-      include: [this.includeAuthor],
-      separate: true,
-      order: [["createdAt", "ASC"]],
-    };
+    // We will load replies in a separate query to avoid complex nested JOINs
+    // that were causing Postgres errors with missing aliases.
   }
 
   async createCommentOrReply({ body, postId, parentId, userId }) {
@@ -72,9 +67,25 @@ export class CommentService {
   }
 
   async findCommentWithRelations(id) {
-    return this.Comment.findByPk(id, {
-      include: [this.includeAuthor, this.includePost, this.includeReplies],
+    // Load the main comment with its author and post
+    const comment = await this.Comment.findByPk(id, {
+      include: [this.includeAuthor, this.includePost],
     });
+
+    if (!comment) return null;
+
+    // Load replies for this comment (if any), including their authors
+    const replies = await this.Comment.findAll({
+      where: { parentId: id },
+      include: [this.includeAuthor],
+      order: [["createdAt", "ASC"]],
+    });
+
+    // Attach replies to the returned comment object
+    const commentJson = comment.toJSON();
+    commentJson.replies = replies;
+
+    return commentJson;
   }
 
   async updateCommentForUser({ id, userId, body }) {
