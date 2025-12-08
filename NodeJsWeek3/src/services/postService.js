@@ -1,6 +1,6 @@
 import { Op } from "sequelize";
 import models from "../models/index.js";
-import { httpStatus } from "../utils/constants.js";
+import { HTTP_STATUS } from "../utils/constants.js";
 import { AppError } from "../utils/errors.js";
 import { getPaginationParams, buildPaginationMeta } from "../utils/pagination.js";
 
@@ -91,10 +91,10 @@ export class PostService {
   async updatePostForUser({ postId, userId, data }) {
     const post = await this.findPostWithAuthor(postId);
     if (!post) {
-      throw new AppError("POST_NOT_FOUND", httpStatus.NOT_FOUND);
+      throw new AppError("POST_NOT_FOUND", HTTP_STATUS.NOT_FOUND);
     }
     if (post.userId !== userId) {
-      throw new AppError("CANNOT_UPDATE_OTHER_POST", httpStatus.FORBIDDEN);
+      throw new AppError("CANNOT_UPDATE_OTHER_POST", HTTP_STATUS.FORBIDDEN);
     }
 
     await post.update(data);
@@ -104,10 +104,10 @@ export class PostService {
   async deletePostForUser({ postId, userId }) {
     const post = await this.findPostWithAuthor(postId);
     if (!post) {
-      throw new AppError("POST_NOT_FOUND", httpStatus.NOT_FOUND);
+      throw new AppError("POST_NOT_FOUND", HTTP_STATUS.NOT_FOUND);
     }
     if (post.userId !== userId) {
-      throw new AppError("CANNOT_DELETE_OTHER_POST", httpStatus.FORBIDDEN);
+      throw new AppError("CANNOT_DELETE_OTHER_POST", HTTP_STATUS.FORBIDDEN);
     }
 
     await post.destroy();

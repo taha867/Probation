@@ -1,5 +1,5 @@
 import rateLimit from "express-rate-limit";
-import { httpStatus, errorMessages } from "../utils/constants.js";
+import { HTTP_STATUS, ERROR_MESSAGES } from "../utils/constants.js";
 import { verifyToken } from "../utils/jwt.js";
 
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -12,8 +12,8 @@ export const authenticateToken = async (req, res, next) => {
     const token = authHeader && authHeader.split(" ")[1]; // Bearer TOKEN (xyz123token, This extracts the token only.)
 
     if (!token) {
-      return res.status(httpStatus.UNAUTHORIZED).send({
-        data: { message: errorMessages.ACCESS_TOKEN_REQUIRED },
+      return res.status(HTTP_STATUS.UNAUTHORIZED).send({
+        data: { message: ERROR_MESSAGES.ACCESS_TOKEN_REQUIRED },
       });
     }
 
@@ -21,8 +21,8 @@ export const authenticateToken = async (req, res, next) => {
     
     // Verify this is an access token, not a refresh token
     if (decoded.type !== "access") {
-      return res.status(httpStatus.UNAUTHORIZED).send({
-        data: { message: errorMessages.INVALID_TOKEN },
+      return res.status(HTTP_STATUS.UNAUTHORIZED).send({
+        data: { message: ERROR_MESSAGES.INVALID_TOKEN },
       });
     }
     
@@ -31,18 +31,18 @@ export const authenticateToken = async (req, res, next) => {
     next();
   } catch (error) {
     if (error.name === "JsonWebTokenError") {
-      return res.status(httpStatus.UNAUTHORIZED).send({
-        data: { message: errorMessages.INVALID_TOKEN },
+      return res.status(HTTP_STATUS.UNAUTHORIZED).send({
+        data: { message: ERROR_MESSAGES.INVALID_TOKEN },
       });
     }
     if (error.name === "TokenExpiredError") {
-      return res.status(httpStatus.UNAUTHORIZED).send({
-        data: { message: errorMessages.ACCESS_TOKEN_EXPIRED },
+      return res.status(HTTP_STATUS.UNAUTHORIZED).send({
+        data: { message: ERROR_MESSAGES.ACCESS_TOKEN_EXPIRED },
       });
     }
     console.error("Auth middleware error:", error);
-    return res.status(httpStatus.INTERNAL_SERVER_ERROR).send({
-      data: { message: errorMessages.AUTHENTICATION_FAILED },
+    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send({
+      data: { message: ERROR_MESSAGES.AUTHENTICATION_FAILED },
     });
   }
 };
@@ -55,8 +55,8 @@ export const loginRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   handler: (req, res) => {
-    return res.status(httpStatus.TOO_MANY_REQUESTS).json({
-      data: { message: errorMessages.TOO_MANY_REQUESTS },
+    return res.status(HTTP_STATUS.TOO_MANY_REQUESTS).json({
+      data: { message: ERROR_MESSAGES.TOO_MANY_REQUESTS },
     });
   },
 });

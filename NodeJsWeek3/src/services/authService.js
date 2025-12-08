@@ -1,6 +1,6 @@
 import { Op } from "sequelize";
 import models from "../models/index.js";
-import { httpStatus, userStatus } from "../utils/constants.js";
+import { HTTP_STATUS, USER_STATUS } from "../utils/constants.js";
 import { AppError } from "../utils/errors.js";
 import { signToken, verifyToken } from "../utils/jwt.js";
 import { comparePassword } from "../utils/bcrypt.js";
@@ -17,7 +17,7 @@ export class AuthService {
 
     if (existing) {
       // Service throws a domain error; controller decides how to respond.
-      throw new AppError("USER_ALREADY_EXISTS", httpStatus.UNPROCESSABLE_ENTITY);
+      throw new AppError("USER_ALREADY_EXISTS", HTTP_STATUS.UNPROCESSABLE_ENTITY);
     }
 
     await this.User.create({
@@ -25,7 +25,7 @@ export class AuthService {
       email,
       password,
       phone,
-      status: userStatus.LOGGED_OUT,
+      status: USER_STATUS.LOGGED_OUT,
     });
 
     return { ok: true };
@@ -36,16 +36,16 @@ export class AuthService {
       where: email ? { email } : { phone },
     });
     if (!user) {
-      throw new AppError("INVALID_CREDENTIALS", httpStatus.UNAUTHORIZED);
+      throw new AppError("INVALID_CREDENTIALS", HTTP_STATUS.UNAUTHORIZED);
     }
 
     const isPasswordValid = await comparePassword(password, user.password);
     if (!isPasswordValid) {
-      throw new AppError("INVALID_CREDENTIALS", httpStatus.UNAUTHORIZED);
+      throw new AppError("INVALID_CREDENTIALS", HTTP_STATUS.UNAUTHORIZED);
     }
 
     await user.update({
-      status: userStatus.LOGGED_IN,
+      status: USER_STATUS.LOGGED_IN,
       last_login_at: new Date(),
     });
 
@@ -82,11 +82,11 @@ export class AuthService {
   async logoutUser(userId) {
     const user = await this.User.findByPk(userId);
     if (!user) {
-      throw new AppError("USER_NOT_FOUND", httpStatus.NOT_FOUND);
+      throw new AppError("USER_NOT_FOUND", HTTP_STATUS.NOT_FOUND);
     }
 
     await user.update({
-      status: userStatus.LOGGED_OUT,
+      status: USER_STATUS.LOGGED_OUT,
       tokenVersion: user.tokenVersion + 1,
     });
 
@@ -99,22 +99,22 @@ export class AuthService {
       decoded = verifyToken(refreshToken);
     } catch (error) {
       if (error.name === "TokenExpiredError") {
-        throw new AppError("REFRESH_TOKEN_EXPIRED", httpStatus.UNAUTHORIZED);
+        throw new AppError("REFRESH_TOKEN_EXPIRED", HTTP_STATUS.UNAUTHORIZED);
       }
-      throw new AppError("INVALID_REFRESH_TOKEN", httpStatus.UNAUTHORIZED);
+      throw new AppError("INVALID_REFRESH_TOKEN", HTTP_STATUS.UNAUTHORIZED);
     }
 
     if (decoded.type !== "refresh") {
-      throw new AppError("INVALID_REFRESH_TOKEN", httpStatus.UNAUTHORIZED);
+      throw new AppError("INVALID_REFRESH_TOKEN", HTTP_STATUS.UNAUTHORIZED);
     }
 
     const user = await this.User.findByPk(decoded.userId);
     if (!user) {
-      throw new AppError("USER_NOT_FOUND", httpStatus.NOT_FOUND);
+      throw new AppError("USER_NOT_FOUND", HTTP_STATUS.NOT_FOUND);
     }
 
     if (user.tokenVersion !== decoded.tokenVersion) {
-      throw new AppError("INVALID_REFRESH_TOKEN", httpStatus.UNAUTHORIZED);
+      throw new AppError("INVALID_REFRESH_TOKEN", HTTP_STATUS.UNAUTHORIZED);
     }
 
     const accessToken = signToken(
@@ -154,18 +154,18 @@ export class AuthService {
       decoded = verifyToken(token);
     } catch (error) {
       if (error.name === "TokenExpiredError") {
-        throw new AppError("RESET_TOKEN_EXPIRED", httpStatus.UNAUTHORIZED);
+        throw new AppError("RESET_TOKEN_EXPIRED", HTTP_STATUS.UNAUTHORIZED);
       }
-      throw new AppError("INVALID_RESET_TOKEN", httpStatus.UNAUTHORIZED);
+      throw new AppError("INVALID_RESET_TOKEN", HTTP_STATUS.UNAUTHORIZED);
     }
 
     if (decoded.type !== "password_reset") {
-      throw new AppError("INVALID_RESET_TOKEN", httpStatus.UNAUTHORIZED);
+      throw new AppError("INVALID_RESET_TOKEN", HTTP_STATUS.UNAUTHORIZED);
     }
 
     const user = await this.User.findByPk(decoded.userId);
     if (!user) {
-      throw new AppError("USER_NOT_FOUND", httpStatus.NOT_FOUND);
+      throw new AppError("USER_NOT_FOUND", HTTP_STATUS.NOT_FOUND);
     }
 
     await user.update({ password: newPassword });

@@ -1,5 +1,5 @@
 import models from "../models/index.js";
-import { httpStatus } from "../utils/constants.js";
+import { HTTP_STATUS } from "../utils/constants.js";
 import { AppError } from "../utils/errors.js";
 
 export class CommentService {
@@ -30,13 +30,13 @@ export class CommentService {
     if (parentId) {
       const parentComment = await this.Comment.findByPk(parentId);
       if (!parentComment) {
-        throw new AppError("PARENT_COMMENT_NOT_FOUND", httpStatus.NOT_FOUND);
+        throw new AppError("PARENT_COMMENT_NOT_FOUND", HTTP_STATUS.NOT_FOUND);
       }
       finalPostId = parentComment.postId;
     } else {
       const post = await this.Post.findByPk(postId);
       if (!post) {
-        throw new AppError("POST_NOT_FOUND", httpStatus.NOT_FOUND);
+        throw new AppError("POST_NOT_FOUND", HTTP_STATUS.NOT_FOUND);
       }
     }
 
@@ -91,10 +91,10 @@ export class CommentService {
   async updateCommentForUser({ id, userId, body }) {
     const comment = await this.Comment.findByPk(id);
     if (!comment) {
-      throw new AppError("COMMENT_NOT_FOUND", httpStatus.NOT_FOUND);
+      throw new AppError("COMMENT_NOT_FOUND", HTTP_STATUS.NOT_FOUND);
     }
     if (comment.userId !== userId) {
-      throw new AppError("CANNOT_UPDATE_OTHER_COMMENT", httpStatus.FORBIDDEN);
+      throw new AppError("CANNOT_UPDATE_OTHER_COMMENT", HTTP_STATUS.FORBIDDEN);
     }
 
     await comment.update({ body });
@@ -105,10 +105,10 @@ export class CommentService {
   async deleteCommentForUser({ id, userId }) {
     const comment = await this.Comment.findByPk(id);
     if (!comment) {
-      throw new AppError("COMMENT_NOT_FOUND", httpStatus.NOT_FOUND);
+      throw new AppError("COMMENT_NOT_FOUND", HTTP_STATUS.NOT_FOUND);
     }
     if (comment.userId !== userId) {
-      throw new AppError("CANNOT_DELETE_OTHER_COMMENT", httpStatus.FORBIDDEN);
+      throw new AppError("CANNOT_DELETE_OTHER_COMMENT", HTTP_STATUS.FORBIDDEN);
     }
 
     await comment.destroy();

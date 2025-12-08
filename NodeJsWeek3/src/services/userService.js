@@ -1,6 +1,6 @@
 import { Op } from "sequelize";
 import models from "../models/index.js";
-import { httpStatus } from "../utils/constants.js";
+import { HTTP_STATUS } from "../utils/constants.js";
 import { AppError } from "../utils/errors.js";
 import { buildPaginationMeta, getPaginationParams } from "../utils/pagination.js";
 
@@ -88,12 +88,12 @@ export class UserService {
 
   async updateUserForSelf({ requestedUserId, authUserId, data }) {
     if (requestedUserId !== authUserId) {
-      throw new AppError("CANNOT_UPDATE_OTHER_USER", httpStatus.FORBIDDEN);
+      throw new AppError("CANNOT_UPDATE_OTHER_USER", HTTP_STATUS.FORBIDDEN);
     }
 
     const user = await this.User.findByPk(requestedUserId);
     if (!user) {
-      throw new AppError("USER_NOT_FOUND", httpStatus.NOT_FOUND);
+      throw new AppError("USER_NOT_FOUND", HTTP_STATUS.NOT_FOUND);
     }
 
     const { name, email, phone, password } = data;
@@ -108,7 +108,7 @@ export class UserService {
         },
       });
       if (existingUser) {
-        throw new AppError("EMAIL_ALREADY_EXISTS", httpStatus.UNPROCESSABLE_ENTITY);
+        throw new AppError("EMAIL_ALREADY_EXISTS", HTTP_STATUS.UNPROCESSABLE_ENTITY);
       }
       updateData.email = email;
     }
@@ -120,7 +120,7 @@ export class UserService {
         },
       });
       if (existingUser) {
-        throw new AppError("PHONE_ALREADY_EXISTS", httpStatus.UNPROCESSABLE_ENTITY);
+        throw new AppError("PHONE_ALREADY_EXISTS", HTTP_STATUS.UNPROCESSABLE_ENTITY);
       }
       updateData.phone = phone;
     }
@@ -143,12 +143,12 @@ export class UserService {
 
   async deleteUserForSelf({ requestedUserId, authUserId }) {
     if (requestedUserId !== authUserId) {
-      throw new AppError("CANNOT_DELETE_OTHER_USER", httpStatus.FORBIDDEN);
+      throw new AppError("CANNOT_DELETE_OTHER_USER", HTTP_STATUS.FORBIDDEN);
     }
 
     const user = await this.User.findByPk(requestedUserId);
     if (!user) {
-      throw new AppError("USER_NOT_FOUND", httpStatus.NOT_FOUND);
+      throw new AppError("USER_NOT_FOUND", HTTP_STATUS.NOT_FOUND);
     }
 
     await user.destroy();

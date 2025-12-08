@@ -1,4 +1,4 @@
-import { httpStatus } from "./constants.js";
+import { HTTP_STATUS } from "./constants.js";
 import Joi from "joi";
 
 /**
@@ -23,7 +23,7 @@ export const validateRequest = (schema, payload, res, options = {}) => {
       message: detail.message,
     }));
 
-    res.status(httpStatus.BAD_REQUEST).send({
+    res.status(HTTP_STATUS.BAD_REQUEST).send({
       data: {
         message: "Validation error",
         errors,

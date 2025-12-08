@@ -2,7 +2,7 @@ import userController from "./userRoutes.js";
 import postRoutes from "./postRoutes.js";
 import commentRoutes from "./commentRoutes.js";
 import authRoutes from "./authRoutes.js";
-import { httpStatus, errorMessages } from "../utils/constants.js";
+import { HTTP_STATUS, ERROR_MESSAGES } from "../utils/constants.js";
 
 export default (app) => {
  
@@ -13,8 +13,8 @@ export default (app) => {
 
   // Create a catch-all route for testing the installation.
   app.use((req, res) => {
-    res.status(httpStatus.NOT_FOUND).json({
-      data: { message: errorMessages.ROUTE_NOT_FOUND },
+    res.status(HTTP_STATUS.NOT_FOUND).json({
+      data: { message: ERROR_MESSAGES.ROUTE_NOT_FOUND },
     });
   });
 

@@ -1,10 +1,10 @@
 import { StatusCodes } from "http-status-codes";
 
 // HTTP Status Codes
-export const httpStatus = StatusCodes;
+export const HTTP_STATUS = StatusCodes;
 
 // Success Messages
-export const successMessages = {
+export const SUCCESS_MESSAGES = {
   ACCOUNT_CREATED: "Account created successfully",
   SIGNED_IN: "Signed in successfully",
   LOGGED_OUT: "Logged out successfully",
@@ -22,7 +22,7 @@ export const successMessages = {
 };
 
 // Error Messages
-export const errorMessages = {
+export const ERROR_MESSAGES = {
   // Authentication Errors
   INVALID_CREDENTIALS: "Invalid credentials",
   ACCESS_TOKEN_REQUIRED: "Access token is required",
@@ -92,7 +92,7 @@ export const errorMessages = {
 };
 
 // User Status
-export const userStatus = {
+export const USER_STATUS = {
   LOGGED_IN: "logged in",
   LOGGED_OUT: "logged out",
 };

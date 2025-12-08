@@ -1,5 +1,5 @@
 import db from "../models/index.js";
-import { httpStatus, errorMessages } from "../utils/constants.js";
+import { HTTP_STATUS, ERROR_MESSAGES } from "../utils/constants.js";
 
 const { sequelize } = db;
 
@@ -11,8 +11,8 @@ export const initDb = async (res) => {
     console.error("Unable to connect to the database:", error);
     if (res) {
       return res
-        .status(httpStatus.INTERNAL_SERVER_ERROR)
-        .json({ data: { message: errorMessages.OPERATION_FAILED } });
+        .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+        .json({ data: { message: ERROR_MESSAGES.OPERATION_FAILED } });
     }
     throw error;
   }

@@ -1,6 +1,13 @@
-import { httpStatus, errorMessages, successMessages } from "../utils/constants.js";
+import {
+  HTTP_STATUS,
+  ERROR_MESSAGES,
+  SUCCESS_MESSAGES,
+} from "../utils/constants.js";
 import { validateRequest } from "../utils/validations.js";
-import { getPaginationParams, buildPaginationMeta } from "../utils/pagination.js";
+import {
+  getPaginationParams,
+  buildPaginationMeta,
+} from "../utils/pagination.js";
 import {
   createPostSchema,
   updatePostSchema,
@@ -30,12 +37,12 @@ export async function create(req, res) {
 
   try {
     const post = await postService.createPost({ title, body, status, userId });
-    return res.status(httpStatus.CREATED).send({ data: post });
+    return res.status(HTTP_STATUS.CREATED).send({ data: post });
   } catch (error) {
     console.error(error);
     return res
-      .status(httpStatus.INTERNAL_SERVER_ERROR)
-      .send({ message: errorMessages.UNABLE_TO_CREATE_POST });
+      .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+      .send({ message: ERROR_MESSAGES.UNABLE_TO_CREATE_POST });
   }
 }
 
@@ -50,12 +57,9 @@ export async function create(req, res) {
  * @throws {500} If there's an error during the retrieval process.
  */
 export async function list(req, res) {
-  const validatedQuery = validateRequest(
-    listPostsQuerySchema,
-    req.query,
-    res,
-    { convert: true }
-  );
+  const validatedQuery = validateRequest(listPostsQuerySchema, req.query, res, {
+    convert: true,
+  });
   if (!validatedQuery) return;
 
   const { page, limit } = getPaginationParams(validatedQuery);
@@ -69,7 +73,7 @@ export async function list(req, res) {
       userId,
     });
 
-    return res.status(httpStatus.OK).send({
+    return res.status(HTTP_STATUS.OK).send({
       data: {
         items: rows,
         meta: buildPaginationMeta({ total: count, page, limit }),
@@ -78,8 +82,8 @@ export async function list(req, res) {
   } catch (error) {
     console.error(error);
     return res
-      .status(httpStatus.INTERNAL_SERVER_ERROR)
-      .send({ message: errorMessages.UNABLE_TO_FETCH_POST });
+      .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+      .send({ message: ERROR_MESSAGES.UNABLE_TO_FETCH_POST });
   }
 }
 
@@ -102,17 +106,17 @@ export async function get(req, res) {
     const { id } = validatedParams;
     const post = await postService.findPostWithAuthor(id);
     if (!post) {
-      return res.status(httpStatus.NOT_FOUND).send({
-        data: { message: errorMessages.POST_NOT_FOUND },
+      return res.status(HTTP_STATUS.NOT_FOUND).send({
+        data: { message: ERROR_MESSAGES.POST_NOT_FOUND },
       });
     }
 
-    return res.status(httpStatus.OK).send({ data: post });
+    return res.status(HTTP_STATUS.OK).send({ data: post });
   } catch (error) {
     console.error(error);
     return res
-      .status(httpStatus.INTERNAL_SERVER_ERROR)
-      .send({ message: errorMessages.UNABLE_TO_FETCH_POST });
+      .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+      .send({ message: ERROR_MESSAGES.UNABLE_TO_FETCH_POST });
   }
 }
 
@@ -137,12 +141,9 @@ export async function listForPost(req, res) {
   if (!validatedParams) return;
   const { postId } = validatedParams;
 
-  const validatedQuery = validateRequest(
-    listPostsQuerySchema,
-    req.query,
-    res,
-    { convert: true }
-  );
+  const validatedQuery = validateRequest(listPostsQuerySchema, req.query, res, {
+    convert: true,
+  });
   if (!validatedQuery) return;
   const { page, limit } = getPaginationParams(validatedQuery);
 
@@ -154,12 +155,12 @@ export async function listForPost(req, res) {
     });
 
     if (!post) {
-      return res.status(httpStatus.NOT_FOUND).send({
-        data: { message: errorMessages.POST_NOT_FOUND },
+      return res.status(HTTP_STATUS.NOT_FOUND).send({
+        data: { message: ERROR_MESSAGES.POST_NOT_FOUND },
       });
     }
 
-    return res.status(httpStatus.OK).send({
+    return res.status(HTTP_STATUS.OK).send({
       data: {
         post,
         comments,
@@ -169,8 +170,8 @@ export async function listForPost(req, res) {
   } catch (error) {
     console.error(error);
     return res
-      .status(httpStatus.INTERNAL_SERVER_ERROR)
-      .send({ message: errorMessages.UNABLE_TO_FETCH_POST_COMMENTS });
+      .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+      .send({ message: ERROR_MESSAGES.UNABLE_TO_FETCH_POST_COMMENTS });
   }
 }
 
@@ -206,14 +207,14 @@ export async function update(req, res) {
       userId,
       data: { title, body, status },
     });
-    return res.status(httpStatus.OK).send({ data: result.post });
+    return res.status(HTTP_STATUS.OK).send({ data: result.post });
   } catch (err) {
-    if (handleAppError(err, res, errorMessages)) return;
+    if (handleAppError(err, res, ERROR_MESSAGES)) return;
 
     // eslint-disable-next-line no-console
     console.error(err);
-    return res.status(httpStatus.INTERNAL_SERVER_ERROR).send({
-      data: { message: errorMessages.UNABLE_TO_UPDATE_POST },
+    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send({
+      data: { message: ERROR_MESSAGES.UNABLE_TO_UPDATE_POST },
     });
   }
 }
@@ -241,16 +242,16 @@ export async function remove(req, res) {
     await postService.deletePostForUser({ postId: id, userId });
 
     // Return a JSON message so clients can see confirmation
-    return res.status(httpStatus.OK).send({
-      data: { message: successMessages.POST_DELETED },
+    return res.status(HTTP_STATUS.OK).send({
+      data: { message: SUCCESS_MESSAGES.POST_DELETED },
     });
   } catch (err) {
-    if (handleAppError(err, res, errorMessages)) return;
+    if (handleAppError(err, res, ERROR_MESSAGES)) return;
 
     // eslint-disable-next-line no-console
     console.error(err);
-    return res.status(httpStatus.INTERNAL_SERVER_ERROR).send({
-      data: { message: errorMessages.UNABLE_TO_DELETE_POST },
+    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send({
+      data: { message: ERROR_MESSAGES.UNABLE_TO_DELETE_POST },
     });
   }
 }

@@ -1,4 +1,4 @@
-import { httpStatus, errorMessages, successMessages } from "../utils/constants.js";
+import { HTTP_STATUS, ERROR_MESSAGES, SUCCESS_MESSAGES } from "../utils/constants.js";
 import { validateRequest } from "../utils/validations.js";
 import {
   createCommentSchema,
@@ -34,15 +34,15 @@ export async function create(req, res) {
       parentId,
       userId,
     });
-    return res.status(httpStatus.CREATED).send({ data: result.comment });
+    return res.status(HTTP_STATUS.CREATED).send({ data: result.comment });
   } catch (err) {
-    if (handleAppError(err, res, errorMessages)) return;
+    if (handleAppError(err, res, ERROR_MESSAGES)) return;
 
     // eslint-disable-next-line no-console
     console.error(err);
     return res
-      .status(httpStatus.INTERNAL_SERVER_ERROR)
-      .send({ message: errorMessages.UNABLE_TO_CREATE_COMMENT });
+      .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+      .send({ message: ERROR_MESSAGES.UNABLE_TO_CREATE_COMMENT });
   }
 }
 
@@ -65,12 +65,12 @@ export async function list(req, res) {
 
   try {
     const comments = await commentService.listTopLevelComments({ postId });
-    return res.status(httpStatus.OK).send({ data: comments });
+    return res.status(HTTP_STATUS.OK).send({ data: comments });
   } catch (error) {
     console.error(error);
     return res
-      .status(httpStatus.INTERNAL_SERVER_ERROR)
-      .send({ message: errorMessages.UNABLE_TO_FETCH_COMMENTS });
+      .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+      .send({ message: ERROR_MESSAGES.UNABLE_TO_FETCH_COMMENTS });
   }
 }
 
@@ -93,16 +93,16 @@ export async function get(req, res) {
     const { id } = validatedParams;
     const comment = await commentService.findCommentWithRelations(id);
     if (!comment) {
-      return res.status(httpStatus.NOT_FOUND).send({
-        data: { message: errorMessages.COMMENT_NOT_FOUND },
+      return res.status(HTTP_STATUS.NOT_FOUND).send({
+        data: { message: ERROR_MESSAGES.COMMENT_NOT_FOUND },
       });
     }
 
-    return res.status(httpStatus.OK).send({ data: comment });
+    return res.status(HTTP_STATUS.OK).send({ data: comment });
   } catch (error) {
     console.error(error);
-    return res.status(httpStatus.INTERNAL_SERVER_ERROR).send({
-      data: { message: errorMessages.UNABLE_TO_FETCH_COMMENT },
+    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send({
+      data: { message: ERROR_MESSAGES.UNABLE_TO_FETCH_COMMENT },
     });
   }
 }
@@ -139,14 +139,14 @@ export async function update(req, res) {
       body,
     });
 
-    return res.status(httpStatus.OK).send({ data: result.comment });
+    return res.status(HTTP_STATUS.OK).send({ data: result.comment });
   } catch (err) {
-    if (handleAppError(err, res, errorMessages)) return;
+    if (handleAppError(err, res, ERROR_MESSAGES)) return;
 
     // eslint-disable-next-line no-console
     console.error(err);
-    return res.status(httpStatus.INTERNAL_SERVER_ERROR).send({
-      data: { message: errorMessages.UNABLE_TO_UPDATE_COMMENT },
+    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send({
+      data: { message: ERROR_MESSAGES.UNABLE_TO_UPDATE_COMMENT },
     });
   }
 }
@@ -173,16 +173,16 @@ export async function remove(req, res) {
     const { id: userId } = req.user;
     await commentService.deleteCommentForUser({ id, userId });
 
-    return res.status(httpStatus.OK).send({
-      data: { message: successMessages.COMMENT_DELETED },
+    return res.status(HTTP_STATUS.OK).send({
+      data: { message: SUCCESS_MESSAGES.COMMENT_DELETED },
     });
   } catch (err) {
-    if (handleAppError(err, res, errorMessages)) return;
+    if (handleAppError(err, res, ERROR_MESSAGES)) return;
 
     // eslint-disable-next-line no-console
     console.error(err);
-    return res.status(httpStatus.INTERNAL_SERVER_ERROR).send({
-      data: { message: errorMessages.UNABLE_TO_DELETE_COMMENT },
+    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send({
+      data: { message: ERROR_MESSAGES.UNABLE_TO_DELETE_COMMENT },
     });
   }
 }

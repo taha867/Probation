@@ -1,4 +1,4 @@
-import { httpStatus, successMessages, errorMessages } from "../utils/constants.js";
+import { HTTP_STATUS, SUCCESS_MESSAGES, ERROR_MESSAGES } from "../utils/constants.js";
 import { validateRequest } from "../utils/validations.js";
 import { getPaginationParams, buildPaginationMeta } from "../utils/pagination.js";
 import {
@@ -31,7 +31,7 @@ export async function list(req, res) {
   try {
     const { rows, count } = await userService.listUsers({ page, limit });
 
-    return res.status(httpStatus.OK).send({
+    return res.status(HTTP_STATUS.OK).send({
       data: {
         users: rows,
         meta: buildPaginationMeta({ total: count, page, limit }),
@@ -40,8 +40,8 @@ export async function list(req, res) {
   } catch (error) {
     console.error(error);
     return res
-      .status(httpStatus.INTERNAL_SERVER_ERROR)
-      .send({ message: errorMessages.UNABLE_TO_FETCH_USERS });
+      .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+      .send({ message: ERROR_MESSAGES.UNABLE_TO_FETCH_USERS });
   }
 }
 
@@ -83,16 +83,16 @@ export async function getUserPostsWithComment(req, res) {
     });
 
     if (!result.user) {
-      return res.status(httpStatus.NOT_FOUND).send({
-        data: { message: errorMessages.USER_NOT_FOUND },
+      return res.status(HTTP_STATUS.NOT_FOUND).send({
+        data: { message: ERROR_MESSAGES.USER_NOT_FOUND },
       });
     }
 
-    return res.status(httpStatus.OK).send({ data: result });
+    return res.status(HTTP_STATUS.OK).send({ data: result });
   } catch (error) {
     console.error(error);
-    return res.status(httpStatus.INTERNAL_SERVER_ERROR).send({
-      data: { message: errorMessages.UNABLE_TO_FETCH_USER_POSTS },
+    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send({
+      data: { message: ERROR_MESSAGES.UNABLE_TO_FETCH_USER_POSTS },
     });
   }
 }
@@ -140,9 +140,9 @@ export async function update(req, res) {
       phone: userPhone,
       status,
     } = user;
-    return res.status(httpStatus.OK).send({
+    return res.status(HTTP_STATUS.OK).send({
       data: {
-        message: successMessages.USER_UPDATED,
+        message: SUCCESS_MESSAGES.USER_UPDATED,
         user: {
           id,
           name: userName,
@@ -153,12 +153,12 @@ export async function update(req, res) {
       },
     });
   } catch (err) {
-    if (handleAppError(err, res, errorMessages)) return;
+    if (handleAppError(err, res, ERROR_MESSAGES)) return;
 
     // eslint-disable-next-line no-console
     console.error(err);
-    return res.status(httpStatus.INTERNAL_SERVER_ERROR).send({
-      data: { message: errorMessages.UNABLE_TO_UPDATE_USER },
+    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send({
+      data: { message: ERROR_MESSAGES.UNABLE_TO_UPDATE_USER },
     });
   }
 }
@@ -189,16 +189,16 @@ export async function remove(req, res) {
       authUserId: authUser,
     });
 
-    return res.status(httpStatus.OK).send({
-      data: { message: successMessages.USER_DELETED },
+    return res.status(HTTP_STATUS.OK).send({
+      data: { message: SUCCESS_MESSAGES.USER_DELETED },
     });
   } catch (err) {
-    if (handleAppError(err, res, errorMessages)) return;
+    if (handleAppError(err, res, ERROR_MESSAGES)) return;
 
     // eslint-disable-next-line no-console
     console.error(err);
-    return res.status(httpStatus.INTERNAL_SERVER_ERROR).send({
-      data: { message: errorMessages.UNABLE_TO_DELETE_USER },
+    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send({
+      data: { message: ERROR_MESSAGES.UNABLE_TO_DELETE_USER },
     });
   }
 }
