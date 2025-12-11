@@ -22,19 +22,23 @@ import { handleAppError } from "../utils/errors.js";
  * @throws {500} If there's an error during the creation process.
  */
 export async function create(req, res) {
+
   const validatedBody = validateRequest(createCommentSchema, req.body, res);
   if (!validatedBody) return;
   const { body, postId, parentId } = validatedBody; // Already validated by Joi
   const { id: userId } = req.user;
 
   try {
+
     const result = await commentService.createCommentOrReply({
       body,
       postId,
       parentId,
       userId,
     });
+
     return res.status(HTTP_STATUS.CREATED).send({ data: result.comment });
+
   } catch (err) {
     if (handleAppError(err, res, ERROR_MESSAGES)) return;
 
@@ -54,18 +58,22 @@ export async function create(req, res) {
  * @throws {500} If there's an error during the retrieval process.
  */
 export async function list(req, res) {
+
   const validatedQuery = validateRequest(
     listCommentsQuerySchema,
     req.query,
     res,
     { convert: true }
   );
+
   if (!validatedQuery) return;
   const { postId } = validatedQuery;
 
   try {
+
     const comments = await commentService.listTopLevelComments({ postId });
     return res.status(HTTP_STATUS.OK).send({ data: comments });
+
   } catch (error) {
     console.error(error);
     return res
@@ -83,12 +91,14 @@ export async function list(req, res) {
  */
 export async function get(req, res) {
   try {
+
     const validatedParams = validateRequest(
       commentIdParamSchema,
       req.params,
       res,
       { convert: true }
     );
+
     if (!validatedParams) return;
     const { id } = validatedParams;
     const comment = await commentService.findCommentWithRelations(id);
@@ -99,6 +109,7 @@ export async function get(req, res) {
     }
 
     return res.status(HTTP_STATUS.OK).send({ data: comment });
+
   } catch (error) {
     console.error(error);
     return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send({
@@ -121,12 +132,14 @@ export async function get(req, res) {
  */
 export async function update(req, res) {
   try {
+
     const validatedParams = validateRequest(
       commentIdParamSchema,
       req.params,
       res,
       { convert: true }
     );
+
     if (!validatedParams) return;
     const { id } = validatedParams;
     const { id: userId } = req.user;
@@ -140,6 +153,7 @@ export async function update(req, res) {
     });
 
     return res.status(HTTP_STATUS.OK).send({ data: result.comment });
+    
   } catch (err) {
     if (handleAppError(err, res, ERROR_MESSAGES)) return;
 
@@ -162,12 +176,14 @@ export async function update(req, res) {
  */
 export async function remove(req, res) {
   try {
+
     const validatedParams = validateRequest(
       commentIdParamSchema,
       req.params,
       res,
       { convert: true }
     );
+
     if (!validatedParams) return;
     const { id } = validatedParams;
     const { id: userId } = req.user;
@@ -176,6 +192,7 @@ export async function remove(req, res) {
     return res.status(HTTP_STATUS.OK).send({
       data: { message: SUCCESS_MESSAGES.COMMENT_DELETED },
     });
+    
   } catch (err) {
     if (handleAppError(err, res, ERROR_MESSAGES)) return;
 

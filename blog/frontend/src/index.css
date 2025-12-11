@@ -1,0 +1,44 @@
+:root {
+  /* Primary font + fallback fonts */
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, sans-serif; 
+  /* Sets the default vertical spacing between lines */
+  line-height: 1.6;              
+  /* Normal/default font weight */
+  font-weight: 400;               
+  /* Default text color for the whole app */
+  color: #0f172a;                 
+  /* Default background color for the page */
+  background-color: #f5f7fb;      
+  
+  /* Prevents browser from creating fake bold/italic fonts */
+  font-synthesis: none;           
+  
+  /* Makes text easier to read by improving kerning/letter rendering */
+  text-rendering: optimizeLegibility;
+  
+  /* Makes fonts smoother on Chrome/Safari */
+  -webkit-font-smoothing: antialiased;
+  /* Makes fonts smoother on Firefox/macOS */
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Makes width/height calculations easier by including padding + border */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  /* Removes default browser body margin */
+  margin: 0;                     
+  /* Ensures the body covers the whole screen height */
+  min-height: 100vh;             
+  /* Background color of the main page */
+  background: #f5f7fb;           
+}
+
+/* Makes all links inherit the surrounding text color */
+a {
+  color: inherit;                
+}
