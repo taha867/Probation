@@ -8,11 +8,13 @@ const app = express();
 const App = async () => {
   await initDb();
 
-   // Enable CORS for your frontend
-  app.use(cors({
-    origin: 'http://localhost:5173', // frontend origin
-    credentials: true,               // if you use cookies or sessions
-  }));
+  // Enable CORS for your frontend
+  app.use(
+    cors({
+      origin: "http://localhost:5173", // frontend origin
+      credentials: true, // if you use cookies or sessions
+    })
+  );
 
   app.use(express.urlencoded({ extended: true })); //It parses URL-encoded data, which is the format used when a form is submitted.
   //After parsing, it puts the data inside req.body

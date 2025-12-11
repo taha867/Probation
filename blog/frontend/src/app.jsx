@@ -1,178 +1,103 @@
 import { useMemo, useState } from "react";
-import { Alert, Box, Container, Paper, Stack, Typography } from "@mui/material";
-import { jwtDecode } from "jwt-decode";
-import SigninForm from "./components/signinForm";
-import SignupForm from "./components/signupForm";
-import AuthTabs from "./components/authTabs";
-import Dashboard from "./components/dashboard";
-import { useAuthState, useAuthDispatch } from "./utils/authContext";
+import SigninForm from "./components/SigninForm.jsx";
+import SignupForm from "./components/SignupForm";
+import AuthTabs from "./components/AuthTabs";
+import Dashboard from "./components/Dashboard";
+import { useAuth } from "./hooks/authHooks";
+import { Alert, AlertDescription } from "./components/custom/alert";
+import { Card, CardContent } from "./components/custom/card";
 
-const TOKEN_KEY = "auth_token";
-
-async function apiRequest(url, body) {
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.message || "Request failed");
-  }
-  return res.json();
-}
+// cva lets you define different styles based on the variant prop.
+// variant="destructive" → red alert
+// variant="success" → green alert
+// variant="default" → normal alert
 
 function StatusAlert({ error, message }) {
   if (!error && !message) return null;
   return (
-    <Alert
-      sx={{ mt: 2 }}
-      severity={error ? "error" : "success"}
-      variant="outlined"
-    >
-      {error || message}
+    <Alert variant={error ? "destructive" : "success"} className="mt-4">
+      <AlertDescription>{error || message}</AlertDescription>
     </Alert>
   );
 }
 
-function ComponentA() {
-  useEffect(() => {
-    console.log("Displaying Component A");
-  }, []);
-
-  return <ComponentB />;
-}
-
-function ComponentB() {
-  useEffect(() => {
-    console.log("Displaying Component ");
-  }, []);
-
-  return <ComponentB />;
-}
-
-function ComponentC() {
-  useEffect(() => {
-    console.log("Displaying Component A");
-  }, []);
-
-  return <p>12345</p>;
-}
-
 function App() {
-  const { user, status, error, message } = useAuthState();
-  const dispatch = useAuthDispatch();
+  const {
+    user,
+    error,
+    message,
+    isLoading,
+    signin,
+    signup,
+    signout,
+    clearMessages,
+  } = useAuth();
   const [view, setView] = useState("signin");
 
-  const resetAlerts = () => dispatch({ type: "AUTH_ERROR", payload: "" });
-
-  const handleSignin = async ({ email, password }) => {
-    resetAlerts();
-    dispatch({ type: "LOGIN_START" });
-
+  const handleSignin = async (credentials) => {
+    clearMessages();
     try {
-      const data = await apiRequest("http://localhost:3000/auth/login", {
-        email,
-        password,
-      });
-
-      localStorage.setItem(TOKEN_KEY, data.data.accessToken);
-      const decodedUser = jwtDecode(data.data.accessToken);
-      dispatch({
-        type: "LOGIN_SUCCESS",
-        payload: {
-          user: decodedUser,
-          token: data.data.accessToken,
-          message: data.data.message,
-        },
-      });
+      await signin(credentials);
     } catch (err) {
-      dispatch({ type: "AUTH_ERROR", payload: err.message });
+      // Error is already handled by the useAuth hook
+      console.error("Signin error:", err);
     }
   };
 
-  const handleSignup = async ({
-    name,
-    phone,
-    email,
-    password,
-    confirmPassword,
-  }) => {
-    resetAlerts();
-    if (password !== confirmPassword) {
-      dispatch({ type: "AUTH_ERROR", payload: "Passwords do not match" });
-      return;
-    }
-    dispatch({ type: "SIGNUP_START" });
-
+  const handleSignup = async (userData) => {
+    clearMessages();
     try {
-      const data = await apiRequest("http://localhost:3000/auth/register", {
-        name,
-        phone,
-        email,
-        password,
-      });
-      dispatch({
-        type: "SIGNUP_SUCCESS",
-        payload: { message: data.data.message },
-      });
+      await signup(userData);
     } catch (err) {
-      dispatch({ type: "AUTH_ERROR", payload: err.message });
+      // Error is already handled by the useAuth hook
+      console.error("Signup error:", err);
     }
   };
 
   const handleSignout = () => {
-    localStorage.removeItem(TOKEN_KEY);
-    dispatch({ type: "LOGOUT" });
+    signout();
     setView("signin");
   };
 
   const canAccessSignup = useMemo(() => !user, [user]);
 
   return (
-    <Container maxWidth="sm" sx={{ py: 5, px: 2.5 }}>
-      <Stack spacing={2.5}>
-        <Box>
-          <Typography variant="overline" color="text.secondary">
+    <div className="container max-w-md mx-auto py-10 px-4">
+      <div className="space-y-6">
+        <div className="text-center space-y-2">
+          <p className="text-sm text-muted-foreground uppercase tracking-wide">
             React 19 Auth Demo
-          </Typography>
-          <Typography variant="h4" component="h1" sx={{ mt: 0.5 }}>
-            User Accounts
-          </Typography>
-          <Typography color="text.secondary">
+          </p>
+          <h1 className="text-3xl font-bold">User Accounts</h1>
+          <p className="text-muted-foreground">
             Sign up, sign in, sign out, and keep the session on reload.
-          </Typography>
-        </Box>
+          </p>
+        </div>
 
-        <Paper elevation={3} sx={{ p: 3 }}>
-          {user ? (
-            <Dashboard user={user} onSignout={handleSignout} />
-          ) : (
-            <>
-              <AuthTabs
-                active={view}
-                onChange={setView}
-                disableSignup={!canAccessSignup}
-              />
-              {view === "signup" ? (
-                <SignupForm
-                  onSubmit={handleSignup}
-                  loading={status === "busy"}
+        <Card className="shadow-lg">
+          <CardContent className="p-6">
+            {user ? (
+              <Dashboard user={user} onSignout={handleSignout} />
+            ) : (
+              <>
+                <AuthTabs
+                  active={view}
+                  onChange={setView}
+                  disableSignup={!canAccessSignup}
                 />
-              ) : (
-                <SigninForm
-                  onSubmit={handleSignin}
-                  loading={status === "busy"}
-                />
-              )}
-            </>
-          )}
-          <StatusAlert error={error} message={message} />
-        </Paper>
-      </Stack>
-    </Container>
+                {view === "signup" ? (
+                  <SignupForm onSubmit={handleSignup} loading={isLoading} />
+                ) : (
+                  <SigninForm onSubmit={handleSignin} loading={isLoading} />
+                )}
+              </>
+            )}
+            <StatusAlert error={error} message={message} />
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
-  // return <ComponentA/>
 }
 
 export default App;
