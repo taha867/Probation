@@ -8,14 +8,25 @@ import {
   decodeAndValidateToken,
 } from "../utils/tokenUtils";
 import { loginUser, registerUser } from "../services/authService";
+import { AUTH_STATUS } from "../utils/constants";
 
 /**
  * Custom hook for authentication operations
  * @returns {object} - Authentication methods and state
  */
 export const useAuth = () => {
-  const state = useAuthState();
-  const dispatch = useAuthDispatch();
+  const state = useAuthState(); //gives the current auth state (user, token, status, error, message).
+  const dispatch = useAuthDispatch(); // gives the dispatch function that lets you send actions to the reducer.
+  const {
+    setUserFromToken,
+    loginSuccess,
+    signupSuccess,
+    authError,
+    loginStart,
+    signupStart,
+    logout,
+    clearMessages,
+  } = authActions;
 
   // Initialize auth state from localStorage on mount
   useEffect(() => {
@@ -23,17 +34,13 @@ export const useAuth = () => {
     if (token) {
       const decodedUser = decodeAndValidateToken(token);
       if (decodedUser) {
-        dispatch(authActions.setUserFromToken(decodedUser, token));
+        dispatch(setUserFromToken(decodedUser, token));
       }
     }
   }, [dispatch]);
 
-  /**
-   * Sign in user
-   * @param {object} credentials - Login credentials
-   */
   const signin = async (credentials) => {
-    dispatch(authActions.loginStart());
+    dispatch(loginStart());
 
     try {
       const response = await loginUser(credentials);
@@ -46,22 +53,18 @@ export const useAuth = () => {
       const decodedUser = decodeAndValidateToken(accessToken);
 
       if (decodedUser) {
-        dispatch(authActions.loginSuccess(decodedUser, accessToken, message));
+        dispatch(loginSuccess(decodedUser, accessToken, message));
       } else {
         throw new Error("Invalid token received");
       }
     } catch (error) {
-      dispatch(authActions.authError(error.message));
+      dispatch(authError(error.message));
       throw error; // Re-throw for component handling
     }
   };
 
-  /**
-   * Sign up user
-   * @param {object} userData - Registration data
-   */
   const signup = async (userData) => {
-    dispatch(authActions.signupStart());
+    dispatch(signupStart());
 
     try {
       const response = await registerUser(userData);
@@ -69,42 +72,38 @@ export const useAuth = () => {
         data: { message },
       } = response;
 
-      dispatch(authActions.signupSuccess(message));
+      dispatch(signupSuccess(message));
     } catch (error) {
-      dispatch(authActions.authError(error.message));
+      dispatch(authError(error.message));
       throw error; // Re-throw for component handling
     }
   };
 
-  /**
-   * Sign out user
-   */
   const signout = () => {
     removeToken();
-    dispatch(authActions.logout());
+    dispatch(logout());
   };
 
-  /**
-   * Clear error and success messages
-   */
-  const clearMessages = () => {
-    dispatch(authActions.clearMessages());
+  const clearMsg = () => {
+    dispatch(clearMessages());
   };
+
+  const { user, token, status, error, message } = state;
 
   return {
     // State
-    user: state.user,
-    token: state.token,
-    status: state.status,
-    error: state.error,
-    message: state.message,
-    isAuthenticated: !!state.user,
-    isLoading: state.status === "busy",
+    user,
+    token,
+    status,
+    error,
+    message,
+    isAuthenticated: !!user,
+    isLoading: status === AUTH_STATUS.BUSY,
 
     // Actions
     signin,
     signup,
     signout,
-    clearMessages,
+    clearMessages: clearMsg,
   };
 };

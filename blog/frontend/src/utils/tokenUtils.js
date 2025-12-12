@@ -1,45 +1,32 @@
 import { jwtDecode } from "jwt-decode";
+import { STORAGE_KEYS } from "./constants";
 
-export const TOKEN_KEY = "auth_token";
-
-/**
- * Store token in localStorage
- * @param {string} token - JWT token to store
- */
+//Store token in localStorage
 export const storeToken = (token) => {
-  localStorage.setItem(TOKEN_KEY, token);
+  localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token);
 };
 
-/**
- * Get token from localStorage
- * @returns {string|null} - JWT token or null if not found
- */
+//Get token from localStorage
 export const getToken = () => {
-  return localStorage.getItem(TOKEN_KEY);
+  return localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
 };
 
-/**
- * Remove token from localStorage
- */
+//Remove token from localStorage
 export const removeToken = () => {
-  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
 };
 
-/**
- * Decode JWT token and validate expiration
- * @param {string} token - JWT token to decode
- * @returns {object|null} - Decoded user data or null if invalid/expired
- */
+// Decode JWT token and validate expiration
 export const decodeAndValidateToken = (token) => {
   try {
     const decodedUser = jwtDecode(token);
-    
+
     // Check if token is expired
     if (decodedUser.exp * 1000 < Date.now()) {
       removeToken(); // Clean up expired token
       return null;
     }
-    
+
     return decodedUser;
   } catch (error) {
     console.error("Token decode error:", error);
@@ -48,25 +35,19 @@ export const decodeAndValidateToken = (token) => {
   }
 };
 
-/**
- * Check if user is authenticated
- * @returns {boolean} - True if user has valid token
- */
+//Check if user is authenticated
 export const isAuthenticated = () => {
   const token = getToken();
   if (!token) return false;
-  
+
   const decodedUser = decodeAndValidateToken(token);
   return !!decodedUser;
 };
 
-/**
- * Get current user from token
- * @returns {object|null} - Current user data or null
- */
+//Get current user from token
 export const getCurrentUser = () => {
   const token = getToken();
   if (!token) return null;
-  
+
   return decodeAndValidateToken(token);
 };

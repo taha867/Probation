@@ -1,7 +1,9 @@
 import { useForm } from "react-hook-form";
-import { Button } from "./custom/button";
-import { Input } from "./custom/input";
-import { Label } from "./custom/label";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { signinSchema } from "../validations/authSchemas";
 
 function SigninForm({ onSubmit, loading }) {
   const {
@@ -9,10 +11,12 @@ function SigninForm({ onSubmit, loading }) {
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm({
+    resolver: yupResolver(signinSchema),
     defaultValues: {
       email: "",
       password: "",
     },
+    mode: "onChange", // Validate on change for better UX
   });
 
   const onFormSubmit = async (data) => {
@@ -27,13 +31,7 @@ function SigninForm({ onSubmit, loading }) {
           id="email"
           type="email"
           autoComplete="email"
-          {...register("email", {
-            required: "Email is required",
-            pattern: {
-              value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-              message: "Invalid email address",
-            },
-          })}
+          {...register("email")}
           className={errors.email ? "border-destructive" : ""}
         />
         {errors.email && (
@@ -46,13 +44,7 @@ function SigninForm({ onSubmit, loading }) {
           id="password"
           type="password"
           autoComplete="current-password"
-          {...register("password", {
-            required: "Password is required",
-            minLength: {
-              value: 6,
-              message: "Password must be at least 6 characters",
-            },
-          })}
+          {...register("password")}
           className={errors.password ? "border-destructive" : ""}
         />
         {errors.password && (

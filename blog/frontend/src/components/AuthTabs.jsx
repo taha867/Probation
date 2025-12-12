@@ -1,4 +1,4 @@
-import { Tabs, TabsList, TabsTrigger } from "./custom/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 function AuthTabs({ active, onChange, disableSignup }) {
   return (
@@ -14,3 +14,4 @@ function AuthTabs({ active, onChange, disableSignup }) {
 }
 
 export default AuthTabs;
+

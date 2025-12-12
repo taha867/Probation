@@ -1,15 +1,17 @@
 import { useForm } from "react-hook-form";
-import { Button } from "./custom/button";
-import { Input } from "./custom/input";
-import { Label } from "./custom/label";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { signupSchema } from "../validations/authSchemas";
 
 function SignupForm({ onSubmit, loading }) {
   const {
     register,
     handleSubmit,
-    watch,
     formState: { errors, isSubmitting },
   } = useForm({
+    resolver: yupResolver(signupSchema),
     defaultValues: {
       name: "",
       phone: "",
@@ -17,9 +19,8 @@ function SignupForm({ onSubmit, loading }) {
       password: "",
       confirmPassword: "",
     },
+    mode: "onChange", // Validate on change for better UX
   });
-
-  const password = watch("password");
 
   const onFormSubmit = async (data) => {
     await onSubmit(data);
@@ -31,13 +32,7 @@ function SignupForm({ onSubmit, loading }) {
         <Label htmlFor="name">Full Name</Label>
         <Input
           id="name"
-          {...register("name", {
-            required: "Full name is required",
-            minLength: {
-              value: 2,
-              message: "Name must be at least 2 characters",
-            },
-          })}
+          {...register("name")}
           className={errors.name ? "border-destructive" : ""}
         />
         {errors.name && (
@@ -50,13 +45,7 @@ function SignupForm({ onSubmit, loading }) {
         <Input
           id="phone"
           type="tel"
-          {...register("phone", {
-            required: "Phone number is required",
-            pattern: {
-              value: /^[\+]?[1-9][\d]{0,15}$/,
-              message: "Invalid phone number",
-            },
-          })}
+          {...register("phone")}
           className={errors.phone ? "border-destructive" : ""}
         />
         {errors.phone && (
@@ -70,13 +59,7 @@ function SignupForm({ onSubmit, loading }) {
           id="email"
           type="email"
           autoComplete="email"
-          {...register("email", {
-            required: "Email is required",
-            pattern: {
-              value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-              message: "Invalid email address",
-            },
-          })}
+          {...register("email")}
           className={errors.email ? "border-destructive" : ""}
         />
         {errors.email && (
@@ -90,13 +73,7 @@ function SignupForm({ onSubmit, loading }) {
           id="password"
           type="password"
           autoComplete="new-password"
-          {...register("password", {
-            required: "Password is required",
-            minLength: {
-              value: 6,
-              message: "Password must be at least 6 characters",
-            },
-          })}
+          {...register("password")}
           className={errors.password ? "border-destructive" : ""}
         />
         {errors.password && (
@@ -110,10 +87,7 @@ function SignupForm({ onSubmit, loading }) {
           id="confirmPassword"
           type="password"
           autoComplete="new-password"
-          {...register("confirmPassword", {
-            required: "Please confirm your password",
-            validate: (value) => value === password || "Passwords do not match",
-          })}
+          {...register("confirmPassword")}
           className={errors.confirmPassword ? "border-destructive" : ""}
         />
         {errors.confirmPassword && (

@@ -4,8 +4,8 @@ import SignupForm from "./components/SignupForm";
 import AuthTabs from "./components/AuthTabs";
 import Dashboard from "./components/Dashboard";
 import { useAuth } from "./hooks/authHooks";
-import { Alert, AlertDescription } from "./components/custom/alert";
-import { Card, CardContent } from "./components/custom/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Card, CardContent } from "@/components/ui/card";
 
 // cva lets you define different styles based on the variant prop.
 // variant="destructive" → red alert

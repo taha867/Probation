@@ -1,4 +1,4 @@
-import { Button } from "./custom/button";
+import { Button } from "@/components/ui/button";
 
 function Dashboard({ user, onSignout }) {
   return (
