@@ -3,11 +3,17 @@ import { useAuthState, useAuthDispatch } from "../contexts/authContext";
 import { authActions } from "../reducers/authReducer";
 import {
   getToken,
-  storeToken,
-  removeToken,
+  storeTokens,
+  removeTokens,
   decodeAndValidateToken,
 } from "../utils/tokenUtils";
-import { loginUser, registerUser } from "../services/authService";
+import {
+  loginUser,
+  registerUser,
+  logoutUser,
+  forgotPassword,
+  resetPassword,
+} from "../services/authService";
 import { AUTH_STATUS } from "../utils/constants";
 
 /**
@@ -26,6 +32,10 @@ export const useAuth = () => {
     signupStart,
     logout,
     clearMessages,
+    forgotPasswordStart,
+    forgotPasswordSuccess,
+    resetPasswordStart,
+    resetPasswordSuccess,
   } = authActions;
 
   // Initialize auth state from localStorage on mount
@@ -45,11 +55,11 @@ export const useAuth = () => {
     try {
       const response = await loginUser(credentials);
       const {
-        data: { accessToken, message },
+        data: { accessToken, refreshToken, message },
       } = response;
 
-      // Store token and decode user
-      storeToken(accessToken);
+      // Store both tokens and decode user
+      storeTokens(accessToken, refreshToken);
       const decodedUser = decodeAndValidateToken(accessToken);
 
       if (decodedUser) {
@@ -79,13 +89,58 @@ export const useAuth = () => {
     }
   };
 
-  const signout = () => {
-    removeToken();
-    dispatch(logout());
+  const signout = async () => {
+    try {
+      // Call backend logout API to invalidate session
+      await logoutUser();
+    } catch (error) {
+      // Even if backend logout fails, we still want to clear local state
+      console.warn("Backend logout failed:", error.message);
+    } finally {
+      // Always clear both tokens and state
+      removeTokens();
+      dispatch(logout());
+    }
   };
 
   const clearMsg = () => {
     dispatch(clearMessages());
+  };
+
+  const requestPasswordReset = async (email) => {
+    dispatch(forgotPasswordStart());
+
+    try {
+      const response = await forgotPassword({ email });
+      const {
+        data: { message },
+      } = response;
+
+      dispatch(forgotPasswordSuccess(message));
+    } catch (error) {
+      dispatch(authError(error.message));
+      throw error; // Re-throw for component handling
+    }
+  };
+
+  const resetUserPassword = async (token, newPassword, confirmPassword) => {
+    dispatch(resetPasswordStart());
+
+    try {
+      const response = await resetPassword({
+        token,
+        newPassword,
+        confirmPassword,
+      });
+      const {
+        data: { message },
+      } = response;
+
+      dispatch(resetPasswordSuccess(message));
+    } catch (error) {
+      dispatch(authError(error.message));
+      throw error; // Re-throw for component handling
+    }
   };
 
   const { user, token, status, error, message } = state;
@@ -104,6 +159,8 @@ export const useAuth = () => {
     signin,
     signup,
     signout,
+    requestPasswordReset,
+    resetUserPassword,
     clearMessages: clearMsg,
   };
 };

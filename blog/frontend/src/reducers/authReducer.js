@@ -18,6 +18,10 @@ const {
   LOGOUT,
   SET_USER_FROM_TOKEN,
   CLEAR_MESSAGES,
+  FORGOT_PASSWORD_START,
+  FORGOT_PASSWORD_SUCCESS,
+  RESET_PASSWORD_START,
+  RESET_PASSWORD_SUCCESS,
 } = AUTH_ACTIONS;
 
 const { BUSY, IDLE } = AUTH_STATUS;
@@ -26,6 +30,8 @@ export function authReducer(state, action) {
   switch (action.type) {
     case LOGIN_START:
     case SIGNUP_START:
+    case FORGOT_PASSWORD_START:
+    case RESET_PASSWORD_START:
       return {
         ...state,
         status: BUSY,
@@ -49,6 +55,8 @@ export function authReducer(state, action) {
       };
 
     case SIGNUP_SUCCESS:
+    case FORGOT_PASSWORD_SUCCESS:
+    case RESET_PASSWORD_SUCCESS:
       const { message: signupMessage } = action.payload;
       return {
         ...state,
@@ -119,6 +127,20 @@ export const authActions = {
   }),
 
   clearMessages: () => ({ type: CLEAR_MESSAGES }),
+
+  forgotPasswordStart: () => ({ type: FORGOT_PASSWORD_START }),
+
+  forgotPasswordSuccess: (message) => ({
+    type: FORGOT_PASSWORD_SUCCESS,
+    payload: { message },
+  }),
+
+  resetPasswordStart: () => ({ type: RESET_PASSWORD_START }),
+
+  resetPasswordSuccess: (message) => ({
+    type: RESET_PASSWORD_SUCCESS,
+    payload: { message },
+  }),
 };
 
 //Your component → dispatch(action) → authReducer(state, action) → newState

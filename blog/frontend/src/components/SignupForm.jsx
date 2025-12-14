@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { signupSchema } from "../validations/authSchemas";
 
-function SignupForm({ onSubmit, loading }) {
+export default function SignupForm({ onSubmit, loading }) {
   const {
     register,
     handleSubmit,
@@ -108,5 +108,3 @@ function SignupForm({ onSubmit, loading }) {
     </form>
   );
 }
-
-export default SignupForm;

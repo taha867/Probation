@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 
-function Dashboard({ user, onSignout }) {
+export default function Dashboard({ user, onSignout }) {
   return (
     <div className="space-y-4">
       <h2 className="text-2xl font-semibold">Welcome back</h2>
@@ -15,5 +15,3 @@ function Dashboard({ user, onSignout }) {
     </div>
   );
 }
-
-export default Dashboard;

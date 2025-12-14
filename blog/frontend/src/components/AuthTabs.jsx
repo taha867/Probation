@@ -1,17 +1,15 @@
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-function AuthTabs({ active, onChange, disableSignup }) {
+export default function AuthTabs({ active, onChange, disableSignup }) {
   return (
     <Tabs value={active} onValueChange={onChange} className="mb-4">
-      <TabsList className="grid w-full grid-cols-2">
+      <TabsList className="grid w-full grid-cols-3">
         <TabsTrigger value="signin">Sign in</TabsTrigger>
         <TabsTrigger value="signup" disabled={disableSignup}>
           Sign up
         </TabsTrigger>
+        <TabsTrigger value="forgot-password">Forgot Password</TabsTrigger>
       </TabsList>
     </Tabs>
   );
 }
-
-export default AuthTabs;
-

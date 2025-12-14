@@ -1,102 +1,67 @@
-import { useMemo, useState } from "react";
-import SigninForm from "./components/SigninForm.jsx";
-import SignupForm from "./components/SignupForm";
-import AuthTabs from "./components/AuthTabs";
-import Dashboard from "./components/Dashboard";
-import { useAuth } from "./hooks/authHooks";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Card, CardContent } from "@/components/ui/card";
-
-// cva lets you define different styles based on the variant prop.
-// variant="destructive" → red alert
-// variant="success" → green alert
-// variant="default" → normal alert
-
-function StatusAlert({ error, message }) {
-  if (!error && !message) return null;
-  return (
-    <Alert variant={error ? "destructive" : "success"} className="mt-4">
-      <AlertDescription>{error || message}</AlertDescription>
-    </Alert>
-  );
-}
+/**
+ * App component with React Router setup
+ * Main application component with routing configuration
+ */
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import AuthPage from "./pages/AuthPage.jsx";
+import DashboardPage from "./pages/DashboardPage.jsx";
+import HomePage from "./pages/HomePage.jsx";
+import ResetPasswordPage from "./pages/ResetPasswordPage.jsx";
+import Navbar from "./components/Navbar.jsx";
+import ProtectedRoute from "./components/common/ProtectedRoute";
 
 function App() {
-  const {
-    user,
-    error,
-    message,
-    isLoading,
-    signin,
-    signup,
-    signout,
-    clearMessages,
-  } = useAuth();
-  const [view, setView] = useState("signin");
-
-  const handleSignin = async (credentials) => {
-    clearMessages();
-    try {
-      await signin(credentials);
-    } catch (err) {
-      // Error is already handled by the useAuth hook
-      console.error("Signin error:", err);
-    }
-  };
-
-  const handleSignup = async (userData) => {
-    clearMessages();
-    try {
-      await signup(userData);
-    } catch (err) {
-      // Error is already handled by the useAuth hook
-      console.error("Signup error:", err);
-    }
-  };
-
-  const handleSignout = () => {
-    signout();
-    setView("signin");
-  };
-
-  const canAccessSignup = useMemo(() => !user, [user]);
-
   return (
-    <div className="container max-w-md mx-auto py-10 px-4">
-      <div className="space-y-6">
-        <div className="text-center space-y-2">
-          <p className="text-sm text-muted-foreground uppercase tracking-wide">
-            React 19 Auth Demo
-          </p>
-          <h1 className="text-3xl font-bold">User Accounts</h1>
-          <p className="text-muted-foreground">
-            Sign up, sign in, sign out, and keep the session on reload.
-          </p>
-        </div>
+    <Router>
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <main>
+          <Routes>
+            {/* Home route - redirects based on auth status */}
+            <Route path="/" element={<HomePage />} />
 
-        <Card className="shadow-lg">
-          <CardContent className="p-6">
-            {user ? (
-              <Dashboard user={user} onSignout={handleSignout} />
-            ) : (
-              <>
-                <AuthTabs
-                  active={view}
-                  onChange={setView}
-                  disableSignup={!canAccessSignup}
-                />
-                {view === "signup" ? (
-                  <SignupForm onSubmit={handleSignup} loading={isLoading} />
-                ) : (
-                  <SigninForm onSubmit={handleSignin} loading={isLoading} />
-                )}
-              </>
-            )}
-            <StatusAlert error={error} message={message} />
-          </CardContent>
-        </Card>
+            {/* Authentication route */}
+            <Route path="/auth" element={<AuthPage />} />
+
+            {/* Reset password route */}
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
+
+            {/* Protected dashboard route */}
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <DashboardPage />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Future protected routes can be added here */}
+            {/* 
+            <Route 
+              path="/profile" 
+              element={
+                <ProtectedRoute>
+                  <ProfilePage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/settings" 
+              element={
+                <ProtectedRoute>
+                  <SettingsPage />
+                </ProtectedRoute>
+              } 
+            />
+            */}
+
+            {/* Catch all route - redirect to home */}
+            <Route path="*" element={<HomePage />} />
+          </Routes>
+        </main>
       </div>
-    </div>
+    </Router>
   );
 }
 

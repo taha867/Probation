@@ -57,6 +57,34 @@ export const signupSchema = yup.object({
 });
 
 /**
+ * Forgot Password Form Validation Schema
+ */
+export const forgotPasswordSchema = yup.object({
+  email: yup
+    .string()
+    .required(VALIDATION_MESSAGES.EMAIL_REQUIRED)
+    .max(254, VALIDATION_MESSAGES.EMAIL_TOO_LONG)
+    .email(VALIDATION_MESSAGES.INVALID_EMAIL)
+    .trim(),
+});
+
+/**
+ * Reset Password Form Validation Schema
+ */
+export const resetPasswordSchema = yup.object({
+  newPassword: yup
+    .string()
+    .required(VALIDATION_MESSAGES.PASSWORD_REQUIRED)
+    .min(8, VALIDATION_MESSAGES.PASSWORD_TOO_SHORT)
+    .max(128, VALIDATION_MESSAGES.PASSWORD_TOO_LONG),
+
+  confirmPassword: yup
+    .string()
+    .required(VALIDATION_MESSAGES.CONFIRM_PASSWORD_REQUIRED)
+    .oneOf([yup.ref("newPassword")], VALIDATION_MESSAGES.PASSWORDS_DONT_MATCH),
+});
+
+/**
  * Export individual field schemas for reuse if needed
  */
 export const fieldSchemas = {
