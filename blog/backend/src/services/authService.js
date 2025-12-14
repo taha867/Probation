@@ -4,6 +4,7 @@ import { HTTP_STATUS, USER_STATUS } from "../utils/constants.js";
 import { AppError } from "../utils/errors.js";
 import { signToken, verifyToken } from "../utils/jwt.js";
 import { comparePassword } from "../utils/bcrypt.js";
+import { emailService } from "../utils/emailService.js";
 
 export class AuthService {
   constructor(models) {
@@ -17,7 +18,10 @@ export class AuthService {
 
     if (existing) {
       // Service throws a domain error; controller decides how to respond.
-      throw new AppError("USER_ALREADY_EXISTS", HTTP_STATUS.UNPROCESSABLE_ENTITY);
+      throw new AppError(
+        "USER_ALREADY_EXISTS",
+        HTTP_STATUS.UNPROCESSABLE_ENTITY,
+      );
     }
 
     await this.User.create({
@@ -56,12 +60,12 @@ export class AuthService {
         tokenVersion: user.tokenVersion,
         type: "access",
       },
-      { expiresIn: "15m" }
+      { expiresIn: "15m" },
     );
 
     const refreshToken = signToken(
       { userId: user.id, tokenVersion: user.tokenVersion, type: "refresh" },
-      { expiresIn: "7d" }
+      { expiresIn: "7d" },
     );
 
     const { id, name, email: userEmail, phone: userPhone, status } = user;
@@ -124,7 +128,7 @@ export class AuthService {
         tokenVersion: user.tokenVersion,
         type: "access",
       },
-      { expiresIn: "15m" }
+      { expiresIn: "15m" },
     );
 
     return {
@@ -137,15 +141,28 @@ export class AuthService {
     const user = await this.User.findOne({ where: { email } });
 
     if (!user) {
-      return { ok: true, userFound: false, resetToken: null };
+      // Return success even if user not found (security best practice)
+      // Don't reveal whether email exists in system
+      return { ok: true, emailSent: false };
     }
 
     const resetToken = signToken(
       { userId: user.id, type: "password_reset" },
-      { expiresIn: "1h" }
+      { expiresIn: "1h" },
     );
 
-    return { ok: true, userFound: true, resetToken };
+    try {
+      // Send password reset email
+      await emailService.sendPasswordResetEmail(email, resetToken, user.name);
+
+      return { ok: true, emailSent: true };
+    } catch (error) {
+      console.error("Failed to send password reset email:", error);
+      throw new AppError(
+        "EMAIL_SEND_FAILED",
+        HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   async resetUserPassword(token, newPassword) {

@@ -1,6 +1,7 @@
 /**
  * ResetPasswordPage - Reset password page route handler
- * Renders the ResetPasswordContainer component
+ * Handles password reset via email link with token
+ * URL format: /reset-password?token=xyz123
  */
 import ResetPasswordContainer from "../containers/ResetPasswordContainer";
 

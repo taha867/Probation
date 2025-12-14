@@ -42,6 +42,7 @@ export const ERROR_MESSAGES = {
   INVALID_REFRESH_TOKEN: "Invalid or expired refresh token",
   REFRESH_TOKEN_EXPIRED: "Refresh token has expired. Please login again",
   ACCESS_TOKEN_EXPIRED: "Access token has expired. Please refresh your token",
+  EMAIL_SEND_FAILED: "Failed to send email. Please try again later",
 
   // User Errors
   USER_NOT_FOUND: "User not found",

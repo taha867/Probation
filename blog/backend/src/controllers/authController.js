@@ -161,10 +161,9 @@ export async function refreshToken(req, res) {
  * Generates a password reset token and sends it to the user's email.
  * @param {Object} req.body - The request body containing user email.
  * @param {string} req.body.email - The email address of the user.
- * @returns {Object} Success message with reset token (for testing) with 200 status code.
+ * @returns {Object} Success message indicating email was sent with 200 status code.
  * @throws {400} If email is missing.
- * @throws {404} If user with the provided email is not found.
- * @throws {500} If there's an error during the process.
+ * @throws {500} If there's an error during the process or email sending fails.
  */
 export async function forgotPassword(req, res) {
   const validatedBody = validateRequest(forgotPasswordSchema, req.body, res);
@@ -172,16 +171,18 @@ export async function forgotPassword(req, res) {
   const { email } = validatedBody;
 
   try {
-    const result = await authService.createPasswordResetToken(email);
+    await authService.createPasswordResetToken(email);
 
     return res.status(HTTP_STATUS.OK).send({
       data: {
         message: SUCCESS_MESSAGES.RESET_TOKEN_SENT,
-        resetToken: result.resetToken ?? undefined,
       },
     });
-  } catch (error) {
-    console.error(error);
+  } catch (err) {
+    if (handleAppError(err, res, ERROR_MESSAGES)) return;
+
+    // eslint-disable-next-line no-console
+    console.error(err);
     return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send({
       message: ERROR_MESSAGES.OPERATION_FAILED,
     });
