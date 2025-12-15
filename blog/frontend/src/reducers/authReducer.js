@@ -7,6 +7,7 @@ export const initialAuthState = {
   status: AUTH_STATUS.IDLE,
   error: "",
   message: "",
+  isInitialized: false, // Track if auth has been initialized from localStorage
 };
 
 const {
@@ -22,6 +23,7 @@ const {
   FORGOT_PASSWORD_SUCCESS,
   RESET_PASSWORD_START,
   RESET_PASSWORD_SUCCESS,
+  INITIALIZE_AUTH,
 } = AUTH_ACTIONS;
 
 const { BUSY, IDLE } = AUTH_STATUS;
@@ -84,6 +86,7 @@ export function authReducer(state, action) {
         ...state,
         user: tokenUser,
         token: tokenToken,
+        isInitialized: true,
       };
 
     case CLEAR_MESSAGES:
@@ -91,6 +94,12 @@ export function authReducer(state, action) {
         ...state,
         error: "",
         message: "",
+      };
+
+    case INITIALIZE_AUTH:
+      return {
+        ...state,
+        isInitialized: true,
       };
 
     default:
@@ -141,6 +150,8 @@ export const authActions = {
     type: RESET_PASSWORD_SUCCESS,
     payload: { message },
   }),
+
+  initializeAuth: () => ({ type: INITIALIZE_AUTH }),
 };
 
 //Your component → dispatch(action) → authReducer(state, action) → newState

@@ -1,5 +1,5 @@
 import { jwtDecode } from "jwt-decode";
-import { STORAGE_KEYS } from "./constants";
+import { STORAGE_KEYS, TOAST_MESSAGES } from "./constants";
 
 //Store access token in localStorage
 export const storeToken = (token) => {
@@ -56,7 +56,7 @@ export const decodeAndValidateToken = (token) => {
 
     return decodedUser;
   } catch (error) {
-    console.error("Token decode error:", error);
+    console.error(TOAST_MESSAGES.TOKEN_DECODE_ERROR, error);
     removeToken(); // Clean up invalid token
     return null;
   }
@@ -89,7 +89,7 @@ export const hasValidRefreshToken = () => {
     // Check if refresh token is expired
     return decoded.exp * 1000 > Date.now();
   } catch (error) {
-    console.error("Refresh token decode error:", error);
+    console.error(TOAST_MESSAGES.REFRESH_TOKEN_DECODE_ERROR, error);
     removeRefreshToken(); // Clean up invalid refresh token
     return false;
   }

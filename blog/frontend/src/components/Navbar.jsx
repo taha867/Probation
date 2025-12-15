@@ -3,13 +3,15 @@
  * Shows different navigation based on authentication status
  */
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "../hooks/authHooks";
+import { TOAST_MESSAGES } from "../utils/constants";
 
 export default function Navbar() {
   const { user, isAuthenticated, signout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isSigningOut, setIsSigningOut] = useState(false);
 
   const handleSignout = async () => {
@@ -19,35 +21,72 @@ export default function Navbar() {
       navigate("/auth");
     } catch (error) {
       // Signout handles errors internally, but we still navigate
-      console.error("Signout error:", error);
+      console.error(TOAST_MESSAGES.SIGNOUT_ERROR_CONSOLE, error);
       navigate("/auth");
     } finally {
       setIsSigningOut(false);
     }
   };
 
-  return (
-    <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container mx-auto px-4">
-        <div className="flex h-16 items-center justify-between">
-          {/* Logo/Brand */}
-          <div className="flex items-center space-x-4">
-            <Link to="/" className="text-xl font-bold">
-              React 19 Auth
-            </Link>
-          </div>
+  // Dynamic navigation links based on authentication status
+  const getNavigationLinks = () => {
+    const baseLinks = [
+      { label: "Home", to: "/" },
+      { label: "Blog", to: "/blog" },
+    ];
 
-          {/* Navigation Links */}
-          <div className="flex items-center space-x-4">
+    if (isAuthenticated) {
+      return [...baseLinks, { label: "Dashboard", to: "/dashboard" }];
+    }
+
+    return baseLinks;
+  };
+
+  const links = getNavigationLinks();
+
+  const isActive = (path) => location.pathname === path;
+
+  return (
+    <nav className="sticky top-0 z-40 border-b bg-white/85 backdrop-blur">
+      <div className="mx-auto flex h-16 max-w-6xl items-center px-4">
+        {/* Logo/Brand - Extreme Left */}
+        <div className="flex-shrink-0">
+          <Link
+            to="/"
+            className="flex items-center gap-2 text-lg font-semibold text-slate-900"
+          >
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-white font-bold">
+              B
+            </span>
+            Blogify
+          </Link>
+        </div>
+
+        {/* Navigation Links - Center */}
+        <div className="flex-1 flex justify-center">
+          <div className="hidden items-center gap-6 md:flex">
+            {links.map((link) => (
+              <Link
+                key={`${link.label}-${link.to}`}
+                to={link.to}
+                className={`text-sm font-medium transition-colors ${
+                  isActive(link.to)
+                    ? "text-blue-600"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        {/* Auth Actions - Extreme Right */}
+        <div className="flex-shrink-0">
+          <div className="flex items-center gap-3">
             {isAuthenticated ? (
               <>
-                <Link
-                  to="/dashboard"
-                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Dashboard
-                </Link>
-                <span className="text-sm text-muted-foreground">
+                <span className="hidden text-sm text-slate-600 sm:inline">
                   Welcome, {user?.name || user?.email}
                 </span>
                 <Button
@@ -56,15 +95,20 @@ export default function Navbar() {
                   onClick={handleSignout}
                   disabled={isSigningOut}
                 >
-                  {isSigningOut ? "Signing out..." : "Sign Out"}
+                  {isSigningOut ? "Signing out..." : "Logout"}
                 </Button>
               </>
             ) : (
-              <Link to="/auth">
-                <Button variant="default" size="sm">
-                  Sign In
-                </Button>
-              </Link>
+              <div className="flex items-center gap-2">
+                <Link to="/auth?mode=signin">
+                  <Button variant="ghost" size="sm">
+                    Sign In
+                  </Button>
+                </Link>
+                <Link to="/auth?mode=signup">
+                  <Button size="sm">Sign Up</Button>
+                </Link>
+              </div>
             )}
           </div>
         </div>

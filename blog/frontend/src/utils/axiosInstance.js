@@ -4,7 +4,7 @@
  */
 import axios from "axios";
 import createAuthRefreshInterceptor from "axios-auth-refresh";
-import { HTTP_STATUS } from "./constants";
+import { HTTP_STATUS, TOAST_MESSAGES } from "./constants";
 import {
   getToken,
   getRefreshToken,
@@ -27,14 +27,26 @@ const apiClient = axios.create({
  * Called automatically by axios-auth-refresh when a 401 is received
  */
 const refreshAuthLogic = async (failedRequest) => {
-  console.warn("Access token expired, attempting to refresh...");
+  const url = failedRequest?.response?.config?.url || "";
+
+  // Do NOT try to refresh for auth endpoints like login/register/forgot/reset
+  if (
+    url.includes("/auth/login") ||
+    url.includes("/auth/register") ||
+    url.includes("/auth/forgotPassword") ||
+    url.includes("/auth/resetPassword")
+  ) {
+    return Promise.reject(failedRequest.error || failedRequest);
+  }
+
+  console.warn(TOAST_MESSAGES.ACCESS_TOKEN_EXPIRED);
 
   // Check if we have a valid refresh token
   if (!hasValidRefreshToken()) {
-    console.warn("No valid refresh token available, logging out...");
+    console.warn(TOAST_MESSAGES.NO_REFRESH_TOKEN);
     removeTokens();
     window.location.href = "/auth";
-    return Promise.reject(new Error("Session expired. Please login again."));
+    return Promise.reject(new Error(TOAST_MESSAGES.SESSION_EXPIRED));
   }
 
   try {
@@ -44,7 +56,7 @@ const refreshAuthLogic = async (failedRequest) => {
       { refreshToken },
       {
         headers: { "Content-Type": "application/json" },
-      }
+      },
     );
 
     const { accessToken } = response.data.data;
@@ -55,16 +67,16 @@ const refreshAuthLogic = async (failedRequest) => {
     // Update the authorization header for the failed request
     failedRequest.response.config.headers.Authorization = `Bearer ${accessToken}`;
 
-    console.log("Token refreshed successfully");
+    console.log(TOAST_MESSAGES.TOKEN_REFRESHED);
     return Promise.resolve();
   } catch (refreshError) {
-    console.error("Token refresh failed:", refreshError);
+    console.error(TOAST_MESSAGES.TOKEN_REFRESH_FAILED, refreshError);
 
     // Clear tokens and redirect to login
     removeTokens();
     window.location.href = "/auth";
 
-    return Promise.reject(new Error("Session expired. Please login again."));
+    return Promise.reject(new Error(TOAST_MESSAGES.SESSION_EXPIRED));
   }
 };
 
@@ -86,7 +98,7 @@ apiClient.interceptors.request.use(
   },
   (error) => {
     return Promise.reject(error);
-  }
+  },
 );
 
 //runs after every request is sent
@@ -119,10 +131,10 @@ apiClient.interceptors.response.use(
         console.warn("Resource not found");
       } else if (status === HTTP_STATUS.UNPROCESSABLE_ENTITY) {
         // Validation errors
-        console.warn("Validation error");
+        console.warn(TOAST_MESSAGES.VALIDATION_ERROR);
       } else if (status === HTTP_STATUS.INTERNAL_SERVER_ERROR) {
         // Server error
-        console.error("Internal server error");
+        console.error(TOAST_MESSAGES.INTERNAL_SERVER_ERROR);
       }
 
       // Create a more descriptive error
@@ -133,14 +145,12 @@ apiClient.interceptors.response.use(
       return Promise.reject(enhancedError);
     } else if (error.request) {
       // Network error - no response received
-      return Promise.reject(
-        new Error("Network error. Please check your connection.")
-      );
+      return Promise.reject(new Error(TOAST_MESSAGES.NETWORK_ERROR));
     } else {
       // Request setup error
-      return Promise.reject(new Error("Request configuration error"));
+      return Promise.reject(new Error(TOAST_MESSAGES.REQUEST_CONFIG_ERROR));
     }
-  }
+  },
 );
 
 export default apiClient;

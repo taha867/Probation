@@ -14,7 +14,17 @@ import {
   forgotPassword,
   resetPassword,
 } from "../services/authService";
-import { AUTH_STATUS } from "../utils/constants";
+import {
+  AUTH_STATUS,
+  AUTH_ERROR_MESSAGES,
+  TOAST_MESSAGES,
+} from "../utils/constants";
+
+const extractErrorMessage = (error, fallback) =>
+  error?.response?.data?.data?.message ||
+  error?.response?.data?.message ||
+  error?.message ||
+  fallback;
 
 /**
  * Custom hook for authentication operations
@@ -36,6 +46,7 @@ export const useAuth = () => {
     forgotPasswordSuccess,
     resetPasswordStart,
     resetPasswordSuccess,
+    initializeAuth,
   } = authActions;
 
   // Initialize auth state from localStorage on mount
@@ -45,9 +56,15 @@ export const useAuth = () => {
       const decodedUser = decodeAndValidateToken(token);
       if (decodedUser) {
         dispatch(setUserFromToken(decodedUser, token));
+      } else {
+        // Token is invalid, mark as initialized
+        dispatch(initializeAuth());
       }
+    } else {
+      // No token found, mark as initialized
+      dispatch(initializeAuth());
     }
-  }, [dispatch]);
+  }, [dispatch, setUserFromToken, initializeAuth]);
 
   const signin = async (credentials) => {
     dispatch(loginStart());
@@ -68,8 +85,14 @@ export const useAuth = () => {
         throw new Error("Invalid token received");
       }
     } catch (error) {
-      dispatch(authError(error.message));
-      throw error; // Re-throw for component handling
+      const message = extractErrorMessage(
+        error,
+        AUTH_ERROR_MESSAGES.INVALID_CREDENTIALS,
+      );
+      dispatch(authError(message));
+      const forwarded = new Error(message);
+      forwarded.response = error?.response;
+      throw forwarded; // Re-throw for component handling
     }
   };
 
@@ -84,8 +107,14 @@ export const useAuth = () => {
 
       dispatch(signupSuccess(message));
     } catch (error) {
-      dispatch(authError(error.message));
-      throw error; // Re-throw for component handling
+      const message = extractErrorMessage(
+        error,
+        AUTH_ERROR_MESSAGES.UNABLE_TO_CREATE_ACCOUNT,
+      );
+      dispatch(authError(message));
+      const forwarded = new Error(message);
+      forwarded.response = error?.response;
+      throw forwarded; // Re-throw for component handling
     }
   };
 
@@ -95,7 +124,7 @@ export const useAuth = () => {
       await logoutUser();
     } catch (error) {
       // Even if backend logout fails, we still want to clear local state
-      console.warn("Backend logout failed:", error.message);
+      console.warn(TOAST_MESSAGES.BACKEND_LOGOUT_FAILED, error.message);
     } finally {
       // Always clear both tokens and state
       removeTokens();
@@ -118,8 +147,14 @@ export const useAuth = () => {
 
       dispatch(forgotPasswordSuccess(message));
     } catch (error) {
-      dispatch(authError(error.message));
-      throw error; // Re-throw for component handling
+      const message = extractErrorMessage(
+        error,
+        AUTH_ERROR_MESSAGES.FAILED_TO_SEND_RESET_EMAIL,
+      );
+      dispatch(authError(message));
+      const forwarded = new Error(message);
+      forwarded.response = error?.response;
+      throw forwarded; // Re-throw for component handling
     }
   };
 
@@ -138,12 +173,18 @@ export const useAuth = () => {
 
       dispatch(resetPasswordSuccess(message));
     } catch (error) {
-      dispatch(authError(error.message));
-      throw error; // Re-throw for component handling
+      const message = extractErrorMessage(
+        error,
+        AUTH_ERROR_MESSAGES.FAILED_TO_RESET_PASSWORD,
+      );
+      dispatch(authError(message));
+      const forwarded = new Error(message);
+      forwarded.response = error?.response;
+      throw forwarded; // Re-throw for component handling
     }
   };
 
-  const { user, token, status, error, message } = state;
+  const { user, token, status, error, message, isInitialized } = state;
 
   return {
     // State
@@ -154,6 +195,7 @@ export const useAuth = () => {
     message,
     isAuthenticated: !!user,
     isLoading: status === AUTH_STATUS.BUSY,
+    isInitialized,
 
     // Actions
     signin,

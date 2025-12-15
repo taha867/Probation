@@ -25,13 +25,13 @@ class EmailService {
       ];
       //checks: If any variable is missing
       const missingVars = requiredEnvVars.filter(
-        (varName) => !process.env[varName]
+        (varName) => !process.env[varName],
       );
 
       if (missingVars.length > 0) {
         console.error(
           "Missing required email environment variables:",
-          missingVars
+          missingVars,
         );
         return;
       }
@@ -70,12 +70,15 @@ class EmailService {
   async sendPasswordResetEmail(email, resetToken, userName = "User") {
     if (!this.transporter) {
       console.error(
-        "Email transporter not initialized - check environment variables"
+        "Email transporter not initialized - check environment variables",
       );
       throw new Error("Email transporter not initialized");
     }
 
     const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+
+    // Generate reset link using environment variable
+    console.log("Generated reset link:", resetLink);
 
     const htmlTemplate = this.getPasswordResetTemplate(userName, resetLink);
 
@@ -91,9 +94,6 @@ class EmailService {
     };
 
     try {
-      console.log("Attempting to send email to:", email);
-      console.log("Reset link:", resetLink);
-
       const info = await this.transporter.sendMail(mailOptions);
       console.log("Password reset email sent successfully:", info.messageId);
       return { success: true, messageId: info.messageId };

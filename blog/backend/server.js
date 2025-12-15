@@ -11,9 +11,9 @@ const App = async () => {
   // Enable CORS for your frontend
   app.use(
     cors({
-      origin: "http://localhost:5173", // frontend origin
+      origin: ["http://localhost:5173", "http://localhost:5174"], // frontend origins
       credentials: true, // if you use cookies or sessions
-    })
+    }),
   );
 
   app.use(express.urlencoded({ extended: true })); //It parses URL-encoded data, which is the format used when a form is submitted.

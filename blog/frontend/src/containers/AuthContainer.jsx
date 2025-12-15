@@ -1,126 +1,184 @@
 /**
- * AuthContainer - Handles authentication business logic
- * Orchestrates authentication operations and UI state
+ * AuthContainer - full-page auth experience inspired by the reference mock
+ * Two-column layout: left brand/story panel, right auth card with views
  */
-import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { useAuth } from "../hooks/authHooks";
-import SigninForm from "../components/SigninForm";
-import SignupForm from "../components/SignupForm";
-import ForgotPasswordForm from "../components/ForgotPasswordForm";
-import AuthTabs from "../components/AuthTabs";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Card, CardContent } from "@/components/ui/card";
+import { useMemo, useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Github } from "lucide-react";
+import toast from "react-hot-toast";
+import { TOAST_MESSAGES } from "../utils/constants";
+import SignInForm from "../components/auth/SignInForm";
+import SignUpForm from "../components/auth/SignUpForm";
+import ForgotPasswordForm from "../components/auth/ForgotPasswordForm";
+import ResetPasswordForm from "../components/auth/ResetPasswordForm";
 
-export function AuthContainer() {
-  const {
-    user,
-    error,
-    message,
-    isLoading,
-    signin,
-    signup,
-    requestPasswordReset,
-    clearMessages,
-  } = useAuth();
+export default function AuthContainer() {
+  const [searchParams] = useSearchParams();
+  const [currentView, setCurrentView] = useState("signin"); // signin | signup | forgot-password | reset-password
+  const [resetToken, setResetToken] = useState(null);
 
-  const [activeTab, setActiveTab] = useState("signin");
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  // Redirect to dashboard if already authenticated
+  // Set initial view based on URL parameters
   useEffect(() => {
-    if (user) {
-      const from = location.state?.from?.pathname || "/dashboard";
-      navigate(from, { replace: true });
-    }
-  }, [user, navigate, location]);
+    const mode = searchParams.get("mode");
+    const token = searchParams.get("token");
 
-  // Handle sign in
-  const handleSignin = async (credentials) => {
-    clearMessages();
-    try {
-      await signin(credentials);
-      // Navigation will be handled by the useEffect above
-    } catch (err) {
-      // Error is already handled by the useAuth hook
-      console.error("Signin error:", err);
+    if (token) {
+      // If there's a token, show reset password form
+      setCurrentView("reset-password");
+      setResetToken(token);
+    } else if (mode === "signup") {
+      setCurrentView("signup");
+    } else if (mode === "signin") {
+      setCurrentView("signin");
+    } else {
+      // Default to signin if no mode specified
+      setCurrentView("signin");
     }
-  };
+  }, [searchParams]);
 
-  // Handle sign up
-  const handleSignup = async (userData) => {
-    clearMessages();
-    try {
-      await signup(userData);
-      // Optionally switch to signin tab after successful signup
-      setActiveTab("signin");
-    } catch (err) {
-      // Error is already handled by the useAuth hook
-      console.error("Signup error:", err);
+  const { title, description, actionLabel } = useMemo(() => {
+    switch (currentView) {
+      case "signin":
+        return {
+          title: "Welcome back",
+          description: "Sign in to access your account",
+          actionLabel: "Need an account?",
+        };
+      case "forgot-password":
+        return {
+          title: "Reset password",
+          description: "We’ll email you a reset link",
+          actionLabel: "Remembered it?",
+        };
+      case "reset-password":
+        return {
+          title: "Set new password",
+          description: "Enter your new password below",
+          actionLabel: null, // No action label for reset password
+        };
+      default:
+        return {
+          title: "Create an account",
+          description: "Enter your email below to create your account",
+          actionLabel: "Already have an account?",
+        };
     }
-  };
+  }, [currentView]);
 
-  // Handle forgot password
-  const handleForgotPassword = async (email) => {
-    clearMessages();
-    try {
-      await requestPasswordReset(email);
-      // Success message will be shown via the message state
-    } catch (err) {
-      // Error is already handled by the useAuth hook
-      console.error("Forgot password error:", err);
+  const renderForm = () => {
+    switch (currentView) {
+      case "signin":
+        return (
+          <SignInForm
+            onSwitchToSignUp={() => setCurrentView("signup")}
+            onForgotPassword={() => setCurrentView("forgot-password")}
+          />
+        );
+      case "forgot-password":
+        return (
+          <ForgotPasswordForm onBackToSignIn={() => setCurrentView("signin")} />
+        );
+      case "reset-password":
+        return (
+          <ResetPasswordForm
+            token={resetToken}
+            onBackToSignIn={() => setCurrentView("signin")}
+          />
+        );
+      default:
+        return <SignUpForm onSwitchToSignIn={() => setCurrentView("signin")} />;
     }
-  };
-
-  // Status alert component
-  const StatusAlert = ({ error, message }) => {
-    if (!error && !message) return null;
-    return (
-      <Alert variant={error ? "destructive" : "success"} className="mt-4">
-        <AlertDescription>{error || message}</AlertDescription>
-      </Alert>
-    );
   };
 
   return (
-    <div className="container max-w-md mx-auto py-10 px-4">
-      <div className="space-y-6">
-        <div className="text-center space-y-2">
-          <p className="text-sm text-muted-foreground uppercase tracking-wide">
-            React 19 Auth Demo
-          </p>
-          <h1 className="text-3xl font-bold">User Accounts</h1>
-          <p className="text-muted-foreground">
-            Sign up, sign in, sign out, and keep the session on reload.
-          </p>
+    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2">
+      {/* Left brand/story panel with blog image */}
+      <div className="relative hidden overflow-hidden lg:flex">
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: 'url("/blogImg.jpeg")' }}
+        />
+      </div>
+
+      {/* Right auth panel */}
+      <div className="flex items-center justify-center px-4 py-10">
+        <div className="w-full max-w-md space-y-6">
+          <Card className="shadow-md border border-slate-200/60">
+            <CardHeader className="space-y-2 pb-4">
+              <CardTitle className="text-2xl font-semibold text-slate-900">
+                {title}
+              </CardTitle>
+              <CardDescription className="text-slate-600">
+                {description}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {renderForm()}
+
+              {currentView !== "reset-password" && (
+                <>
+                  <Separator />
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full h-11"
+                    onClick={() =>
+                      toast(TOAST_MESSAGES.GITHUB_OAUTH_COMING_SOON, {
+                        icon: "🔗",
+                        duration: 3000,
+                      })
+                    }
+                  >
+                    <Github className="h-4 w-4 mr-2" />
+                    Continue with GitHub
+                  </Button>
+
+                  <p className="text-xs text-center text-slate-500">
+                    By clicking continue, you agree to our{" "}
+                    <a className="text-blue-600 hover:text-blue-700" href="#">
+                      Terms of Service
+                    </a>{" "}
+                    and{" "}
+                    <a className="text-blue-600 hover:text-blue-700" href="#">
+                      Privacy Policy
+                    </a>
+                    .
+                  </p>
+                </>
+              )}
+
+              {currentView !== "forgot-password" &&
+                currentView !== "reset-password" &&
+                actionLabel && (
+                  <p className="text-sm text-center text-slate-600">
+                    {actionLabel}{" "}
+                    <button
+                      type="button"
+                      className="text-blue-600 hover:text-blue-700 font-medium"
+                      onClick={() =>
+                        setCurrentView(
+                          currentView === "signin" ? "signup" : "signin",
+                        )
+                      }
+                    >
+                      {currentView === "signin" ? "Sign up" : "Sign in"}
+                    </button>
+                  </p>
+                )}
+            </CardContent>
+          </Card>
         </div>
-
-        <Card className="shadow-lg">
-          <CardContent className="p-6">
-            <AuthTabs
-              active={activeTab}
-              onChange={setActiveTab}
-              disableSignup={false}
-            />
-
-            {activeTab === "signup" ? (
-              <SignupForm onSubmit={handleSignup} loading={isLoading} />
-            ) : activeTab === "forgot-password" ? (
-              <ForgotPasswordForm
-                onSubmit={handleForgotPassword}
-                loading={isLoading}
-              />
-            ) : (
-              <SigninForm onSubmit={handleSignin} loading={isLoading} />
-            )}
-
-            <StatusAlert error={error} message={message} />
-          </CardContent>
-        </Card>
       </div>
     </div>
   );
 }
-
-export default AuthContainer;
