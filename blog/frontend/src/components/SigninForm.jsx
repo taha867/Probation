@@ -62,4 +62,3 @@ export default function SigninForm({ onSubmit, loading }) {
     </form>
   );
 }
-

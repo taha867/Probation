@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useAuthState, useAuthDispatch } from "../contexts/authContext";
+import { useAuthContext } from "../contexts/authContext";
 import { authActions } from "../reducers/authReducer";
 import {
   getToken,
@@ -21,8 +21,8 @@ import { AUTH_STATUS } from "../utils/constants";
  * @returns {object} - Authentication methods and state
  */
 export const useAuth = () => {
-  const state = useAuthState(); //gives the current auth state (user, token, status, error, message).
-  const dispatch = useAuthDispatch(); // gives the dispatch function that lets you send actions to the reducer.
+  // Use single context following React 19 best practices
+  const { state, dispatch } = useAuthContext();
   const {
     setUserFromToken,
     loginSuccess,

@@ -1,12 +1,12 @@
 /**
  * ProtectedRoute component for authentication checks
  * Redirects to auth page if user is not authenticated
-*/
+ */
 
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../hooks/authHooks";
 
-function ProtectedRoute({ children }) {
+export default function ProtectedRoute({ children }) {
   const { isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
 
@@ -29,5 +29,3 @@ function ProtectedRoute({ children }) {
 
   return children;
 }
-
-export default ProtectedRoute;

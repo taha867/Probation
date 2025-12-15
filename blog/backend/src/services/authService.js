@@ -4,7 +4,7 @@ import { HTTP_STATUS, USER_STATUS } from "../utils/constants.js";
 import { AppError } from "../utils/errors.js";
 import { signToken, verifyToken } from "../utils/jwt.js";
 import { comparePassword } from "../utils/bcrypt.js";
-import { emailService } from "../utils/emailService.js";
+import { emailService } from "./emailService.js";
 
 export class AuthService {
   constructor(models) {

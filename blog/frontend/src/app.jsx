@@ -36,26 +36,6 @@ function App() {
               }
             />
 
-            {/* Future protected routes can be added here */}
-            {/* 
-            <Route 
-              path="/profile" 
-              element={
-                <ProtectedRoute>
-                  <ProfilePage />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/settings" 
-              element={
-                <ProtectedRoute>
-                  <SettingsPage />
-                </ProtectedRoute>
-              } 
-            />
-            */}
-
             {/* Catch all route - redirect to home */}
             <Route path="*" element={<HomePage />} />
           </Routes>

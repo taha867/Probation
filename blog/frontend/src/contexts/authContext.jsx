@@ -1,50 +1,42 @@
-import { createContext, useReducer, useContext } from "react";
+import { createContext, useReducer, useContext, useMemo } from "react";
 import { authReducer, initialAuthState } from "../reducers/authReducer";
 
-// Create separate contexts for state and dispatch (reduces unnecessary re-renders).
-const AuthStateContext = createContext(null); // current data of your auth system, user info, token, loading status, error, message.
-const AuthDispatchContext = createContext(null); // function you call to tell reducer to change state, dispatch({ type: "LOGIN_SUCCESS", payload: {...} })
+// Single context for both state and dispatch
+const AuthContext = createContext(null);
 
 /**
  * Auth Provider component that wraps the app with authentication context
+ * single context and memoization
  * @param {object} props - Component props
  * @param {React.ReactNode} props.children - Child components
  */
 export function AuthProvider({ children }) {
-
-  //useReducer returns current state and a dispatch function.
+  // useReducer returns current state and a dispatch function
   const [state, dispatch] = useReducer(authReducer, initialAuthState);
 
+  // Memoize the context value to prevent unnecessary re-renders
+  // Only re-creates when state or dispatch changes
+  const contextValue = useMemo(
+    () => ({
+      state,
+      dispatch,
+    }),
+    [state, dispatch],
+  );
+
   return (
-    //Provides state and dispatch to the subtree.
-    <AuthStateContext.Provider value={state}>
-      <AuthDispatchContext.Provider value={dispatch}> 
-        {children}
-      </AuthDispatchContext.Provider>
-    </AuthStateContext.Provider>
+    <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>
   );
 }
 
 /**
- * Hook to access auth state
- * @returns {object} - Current auth state
+ * Hook to access the complete auth context (state + dispatch)
+ * @returns {object} - Auth context with state and dispatch
  */
-export function useAuthState() {
-  const context = useContext(AuthStateContext);
+export function useAuthContext() {
+  const context = useContext(AuthContext);
   if (!context) {
-    throw new Error("useAuthState must be used within an AuthProvider");
-  }
-  return context;
-}
-
-/**
- * Hook to access auth dispatch function
- * @returns {function} - Auth dispatch function
- */
-export function useAuthDispatch() {
-  const context = useContext(AuthDispatchContext);
-  if (!context) {
-    throw new Error("useAuthDispatch must be used within an AuthProvider");
+    throw new Error("useAuthContext must be used within an AuthProvider");
   }
   return context;
 }
