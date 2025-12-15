@@ -4,8 +4,6 @@
  */
 import { AuthContainer } from "../containers/AuthContainer.jsx";
 
-export function AuthPage() {
+export default function AuthPage() {
   return <AuthContainer />;
 }
-
-export default AuthPage;

@@ -4,8 +4,8 @@
  */
 import { DashboardContainer } from "../containers/DashboardContainer.jsx";
 
-export function DashboardPage() {
+export default function DashboardPage() {
   return <DashboardContainer />;
 }
 
-export default DashboardPage;
+

@@ -14,7 +14,7 @@ import {
 } from "./tokenUtils";
 
 // Create axios instance with base configuration
-export const apiClient = axios.create({
+const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
   timeout: 10000, // 10 seconds
   headers: {
@@ -44,7 +44,7 @@ const refreshAuthLogic = async (failedRequest) => {
       { refreshToken },
       {
         headers: { "Content-Type": "application/json" },
-      },
+      }
     );
 
     const { accessToken } = response.data.data;
@@ -68,7 +68,6 @@ const refreshAuthLogic = async (failedRequest) => {
   }
 };
 
-//runs automatically before response interceptor continues.
 // Initialize axios-auth-refresh interceptor
 createAuthRefreshInterceptor(apiClient, refreshAuthLogic, {
   statusCodes: [401], // Refresh on 401 Unauthorized
@@ -87,7 +86,7 @@ apiClient.interceptors.request.use(
   },
   (error) => {
     return Promise.reject(error);
-  },
+  }
 );
 
 //runs after every request is sent
@@ -135,11 +134,13 @@ apiClient.interceptors.response.use(
     } else if (error.request) {
       // Network error - no response received
       return Promise.reject(
-        new Error("Network error. Please check your connection."),
+        new Error("Network error. Please check your connection.")
       );
     } else {
       // Request setup error
       return Promise.reject(new Error("Request configuration error"));
     }
-  },
+  }
 );
+
+export default apiClient;

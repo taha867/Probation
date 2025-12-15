@@ -8,7 +8,7 @@ import DashboardPage from "./pages/DashboardPage.jsx";
 import HomePage from "./pages/HomePage.jsx";
 import ResetPasswordPage from "./pages/ResetPasswordPage.jsx";
 import Navbar from "./components/Navbar.jsx";
-import ProtectedRoute from "./components/common/ProtectedRoute";
+import ProtectedRoute from "./components/common/ProtectedRoute.jsx";
 
 function App() {
   return (
