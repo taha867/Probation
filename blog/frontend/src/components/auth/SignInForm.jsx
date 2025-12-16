@@ -15,11 +15,9 @@ import { signinSchema } from "../../validations/authSchemas";
 import { useAuth } from "../../hooks/authHooks";
 import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
-import toast from "react-hot-toast";
-import { TOAST_MESSAGES } from "../../utils/constants";
 
 const SignInForm = () => {
-  const { signin, isLoading, error } = useAuth();
+  const { signin, isLoading } = useAuth();
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
 
@@ -32,16 +30,11 @@ const SignInForm = () => {
   });
 
   const onSubmit = async (data) => {
-    const loadingToast = toast.loading(TOAST_MESSAGES.SIGNING_IN);
-
     try {
       await signin(data);
-      toast.dismiss(loadingToast);
-      toast.success(TOAST_MESSAGES.WELCOME_BACK);
       navigate("/dashboard");
     } catch (error) {
-      toast.dismiss(loadingToast);
-      toast.error(error.message || TOAST_MESSAGES.INVALID_CREDENTIALS);
+      // Error message is handled by axios interceptor
     }
   };
 
@@ -130,12 +123,6 @@ const SignInForm = () => {
               </FormItem>
             )}
           />
-
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">
-              {error}
-            </div>
-          )}
 
           <Button
             type="submit"

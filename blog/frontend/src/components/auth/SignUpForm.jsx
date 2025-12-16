@@ -14,11 +14,9 @@ import { signupSchema } from "../../validations/authSchemas";
 import { useAuth } from "../../hooks/authHooks";
 import { Eye, EyeOff, User, Mail, Phone } from "lucide-react";
 import { useState } from "react";
-import toast from "react-hot-toast";
-import { TOAST_MESSAGES } from "../../utils/constants";
 
 const SignUpForm = () => {
-  const { signup, isLoading, error } = useAuth();
+  const { signup, isLoading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -34,16 +32,11 @@ const SignUpForm = () => {
   });
 
   const onSubmit = async (data) => {
-    const loadingToast = toast.loading(TOAST_MESSAGES.CREATING_ACCOUNT);
-
     try {
       await signup(data);
-      toast.dismiss(loadingToast);
-      toast.success(TOAST_MESSAGES.ACCOUNT_CREATED_SUCCESS);
       onSwitchToSignIn();
     } catch (error) {
-      toast.dismiss(loadingToast);
-      toast.error(error.message || TOAST_MESSAGES.ACCOUNT_CREATION_FAILED);
+      // Error message is handled by axios interceptor
     }
   };
 
@@ -224,12 +217,6 @@ const SignUpForm = () => {
               </FormItem>
             )}
           />
-
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">
-              {error}
-            </div>
-          )}
 
           <Button
             type="submit"

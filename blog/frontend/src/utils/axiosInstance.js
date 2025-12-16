@@ -1,9 +1,11 @@
 /**
  * Axios instance with interceptors for API requests
  * Handles authentication, error responses, and automatic token refresh using axios-auth-refresh
+ * Global success/error message handling via toast notifications
  */
 import axios from "axios";
 import createAuthRefreshInterceptor from "axios-auth-refresh";
+import toast from "react-hot-toast";
 import { HTTP_STATUS, TOAST_MESSAGES } from "./constants";
 import {
   getToken,
@@ -102,10 +104,17 @@ apiClient.interceptors.request.use(
 );
 
 //runs after every request is sent
-// Response interceptor - handle errors globally (401 handled by axios-auth-refresh)
+// Response interceptor - handle success/error messages globally
 apiClient.interceptors.response.use(
   (response) => {
-    // Return successful responses as-is
+    // Handle success messages globally via toast
+    const successMessage =
+      response.data?.data?.message || response.data?.message;
+
+    if (successMessage) {
+      toast.success(successMessage);
+    }
+
     return response;
   },
   (error) => {
@@ -120,6 +129,9 @@ apiClient.interceptors.response.use(
         data.data?.message ||
         data.error ||
         `Request failed with status ${status}`;
+
+      // Show error message globally via toast
+      toast.error(errorMessage);
 
       // Handle specific status codes using HTTP_STATUS constants
       // Note: 401 is handled automatically by axios-auth-refresh
@@ -145,9 +157,11 @@ apiClient.interceptors.response.use(
       return Promise.reject(enhancedError);
     } else if (error.request) {
       // Network error - no response received
+      toast.error(TOAST_MESSAGES.NETWORK_ERROR);
       return Promise.reject(new Error(TOAST_MESSAGES.NETWORK_ERROR));
     } else {
       // Request setup error
+      toast.error(TOAST_MESSAGES.REQUEST_CONFIG_ERROR);
       return Promise.reject(new Error(TOAST_MESSAGES.REQUEST_CONFIG_ERROR));
     }
   },

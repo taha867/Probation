@@ -13,11 +13,9 @@ import {
 import { forgotPasswordSchema } from "../../validations/authSchemas";
 import { useAuth } from "../../hooks/authHooks";
 import { Mail, ArrowLeft } from "lucide-react";
-import toast from "react-hot-toast";
-import { TOAST_MESSAGES } from "../../utils/constants";
 
 const ForgotPasswordForm = () => {
-  const { requestPasswordReset, isLoading, error } = useAuth();
+  const { requestPasswordReset, isLoading } = useAuth();
 
   const form = useForm({
     resolver: yupResolver(forgotPasswordSchema),
@@ -27,16 +25,11 @@ const ForgotPasswordForm = () => {
   });
 
   const onSubmit = async (data) => {
-    const loadingToast = toast.loading(TOAST_MESSAGES.SENDING_RESET_LINK);
-
     try {
       await requestPasswordReset(data.email);
-      toast.dismiss(loadingToast);
-      toast.success(TOAST_MESSAGES.RESET_LINK_SENT);
       form.reset();
     } catch (error) {
-      toast.dismiss(loadingToast);
-      toast.error(error.message || TOAST_MESSAGES.RESET_EMAIL_FAILED);
+      // Error message is handled by axios interceptor
     }
   };
 
@@ -85,12 +78,6 @@ const ForgotPasswordForm = () => {
               </FormItem>
             )}
           />
-
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">
-              {error}
-            </div>
-          )}
 
           <Button
             type="submit"

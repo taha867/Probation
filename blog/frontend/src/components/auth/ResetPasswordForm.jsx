@@ -17,11 +17,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { resetPasswordSchema } from "../../validations/authSchemas";
 import { useAuth } from "../../hooks/authHooks";
-import { TOAST_MESSAGES } from "../../utils/constants";
-import toast from "react-hot-toast";
 
 const ResetPasswordForm = ({ token }) => {
-  const { resetUserPassword, isLoading, clearMessages } = useAuth();
+  const { resetUserPassword, isLoading } = useAuth();
   const navigate = useNavigate();
 
   const form = useForm({
@@ -34,25 +32,15 @@ const ResetPasswordForm = ({ token }) => {
   });
 
   const onSubmit = async (data) => {
-    clearMessages();
-
-    const loadingToast = toast.loading(TOAST_MESSAGES.RESETTING_PASSWORD);
-
     try {
       await resetUserPassword(token, data.newPassword, data.confirmPassword);
-
-      toast.dismiss(loadingToast);
-      toast.success(TOAST_MESSAGES.PASSWORD_RESET_SUCCESS, {
-        duration: 4000,
-      });
 
       // Redirect to signin after successful reset
       setTimeout(() => {
         navigate("/signin");
       }, 1500);
     } catch (error) {
-      toast.dismiss(loadingToast);
-      toast.error(error.message || TOAST_MESSAGES.RESET_EMAIL_FAILED);
+      // Error message is handled by axios interceptor
     }
   };
 

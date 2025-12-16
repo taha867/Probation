@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useTransition } from "react";
 import { useAuthContext } from "../contexts/authContext";
 import { authActions } from "../reducers/authReducer";
 import {
@@ -14,17 +14,9 @@ import {
   forgotPassword,
   resetPassword,
 } from "../services/authService";
-import {
-  AUTH_STATUS,
-  AUTH_ERROR_MESSAGES,
-  TOAST_MESSAGES,
-} from "../utils/constants";
+import { TOAST_MESSAGES } from "../utils/constants";
 
-const extractErrorMessage = (error, fallback) =>
-  error?.response?.data?.data?.message ||
-  error?.response?.data?.message ||
-  error?.message ||
-  fallback;
+// Error messages are now handled globally by axios interceptors
 
 /**
  * Custom hook for authentication operations
@@ -33,18 +25,15 @@ const extractErrorMessage = (error, fallback) =>
 export const useAuth = () => {
   // Use single context following React 19 best practices
   const { state, dispatch } = useAuthContext();
+  const [isPending, startTransition] = useTransition();
+
   const {
     setUserFromToken,
     loginSuccess,
     signupSuccess,
     authError,
-    loginStart,
-    signupStart,
     logout,
-    clearMessages,
-    forgotPasswordStart,
     forgotPasswordSuccess,
-    resetPasswordStart,
     resetPasswordSuccess,
     initializeAuth,
   } = authActions;
@@ -73,56 +62,46 @@ export const useAuth = () => {
   }, [dispatch, setUserFromToken, initializeAuth]);
 
   const signin = async (credentials) => {
-    dispatch(loginStart());
+    return new Promise((resolve, reject) => {
+      startTransition(async () => {
+        try {
+          const response = await loginUser(credentials);
+          const {
+            data: { accessToken, refreshToken, user },
+          } = response;
 
-    try {
-      const response = await loginUser(credentials);
-      const {
-        data: { accessToken, refreshToken, message, user },
-      } = response;
+          // Store both tokens and validate the access token
+          storeTokens(accessToken, refreshToken);
+          const decodedUser = decodeAndValidateToken(accessToken);
 
-      // Store both tokens and validate the access token
-      storeTokens(accessToken, refreshToken);
-      const decodedUser = decodeAndValidateToken(accessToken);
-
-      if (decodedUser) {
-        // Use the complete user object from the backend response
-        dispatch(loginSuccess(user, message));
-      } else {
-        throw new Error("Invalid token received");
-      }
-    } catch (error) {
-      const message = extractErrorMessage(
-        error,
-        AUTH_ERROR_MESSAGES.INVALID_CREDENTIALS,
-      );
-      dispatch(authError(message));
-      const forwarded = new Error(message);
-      forwarded.response = error?.response;
-      throw forwarded; // Re-throw for component handling
-    }
+          if (decodedUser) {
+            // Use the complete user object from the backend response
+            dispatch(loginSuccess(user));
+            resolve(response);
+          } else {
+            throw new Error("Invalid token received");
+          }
+        } catch (error) {
+          dispatch(authError());
+          reject(error);
+        }
+      });
+    });
   };
 
   const signup = async (userData) => {
-    dispatch(signupStart());
-
-    try {
-      const response = await registerUser(userData);
-      const {
-        data: { message },
-      } = response;
-
-      dispatch(signupSuccess(message));
-    } catch (error) {
-      const message = extractErrorMessage(
-        error,
-        AUTH_ERROR_MESSAGES.UNABLE_TO_CREATE_ACCOUNT,
-      );
-      dispatch(authError(message));
-      const forwarded = new Error(message);
-      forwarded.response = error?.response;
-      throw forwarded; // Re-throw for component handling
-    }
+    return new Promise((resolve, reject) => {
+      startTransition(async () => {
+        try {
+          const response = await registerUser(userData);
+          dispatch(signupSuccess());
+          resolve(response);
+        } catch (error) {
+          dispatch(authError());
+          reject(error);
+        }
+      });
+    });
   };
 
   const signout = async () => {
@@ -139,68 +118,47 @@ export const useAuth = () => {
     }
   };
 
-  const clearMsg = () => {
-    dispatch(clearMessages());
-  };
-
   const requestPasswordReset = async (email) => {
-    dispatch(forgotPasswordStart());
-
-    try {
-      const response = await forgotPassword({ email });
-      const {
-        data: { message },
-      } = response;
-
-      dispatch(forgotPasswordSuccess(message));
-    } catch (error) {
-      const message = extractErrorMessage(
-        error,
-        AUTH_ERROR_MESSAGES.FAILED_TO_SEND_RESET_EMAIL,
-      );
-      dispatch(authError(message));
-      const forwarded = new Error(message);
-      forwarded.response = error?.response;
-      throw forwarded; // Re-throw for component handling
-    }
+    return new Promise((resolve, reject) => {
+      startTransition(async () => {
+        try {
+          const response = await forgotPassword({ email });
+          dispatch(forgotPasswordSuccess());
+          resolve(response);
+        } catch (error) {
+          dispatch(authError());
+          reject(error);
+        }
+      });
+    });
   };
 
   const resetUserPassword = async (token, newPassword, confirmPassword) => {
-    dispatch(resetPasswordStart());
-
-    try {
-      const response = await resetPassword({
-        token,
-        newPassword,
-        confirmPassword,
+    return new Promise((resolve, reject) => {
+      startTransition(async () => {
+        try {
+          const response = await resetPassword({
+            token,
+            newPassword,
+            confirmPassword,
+          });
+          dispatch(resetPasswordSuccess());
+          resolve(response);
+        } catch (error) {
+          dispatch(authError());
+          reject(error);
+        }
       });
-      const {
-        data: { message },
-      } = response;
-
-      dispatch(resetPasswordSuccess(message));
-    } catch (error) {
-      const message = extractErrorMessage(
-        error,
-        AUTH_ERROR_MESSAGES.FAILED_TO_RESET_PASSWORD,
-      );
-      dispatch(authError(message));
-      const forwarded = new Error(message);
-      forwarded.response = error?.response;
-      throw forwarded; // Re-throw for component handling
-    }
+    });
   };
 
-  const { user, status, error, message, isInitialized } = state;
+  const { user, isInitialized } = state;
 
   return {
     // State
     user,
-    status,
-    error,
-    message,
     isAuthenticated: !!user,
-    isLoading: status === AUTH_STATUS.BUSY,
+    isLoading: isPending, // From useTransition
     isInitialized,
 
     // Actions
@@ -209,6 +167,5 @@ export const useAuth = () => {
     signout,
     requestPasswordReset,
     resetUserPassword,
-    clearMessages: clearMsg,
   };
 };
