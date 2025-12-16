@@ -72,6 +72,10 @@ export const TOAST_MESSAGES = {
   CREATING_ACCOUNT: "Creating your account...",
   SENDING_RESET_LINK: "Sending reset link...",
   RESETTING_PASSWORD: "Resetting your password...",
+  CREATING_POST: "Creating post...",
+  UPDATING_POST: "Updating post...",
+  DELETING_POST: "Deleting post...",
+  LOADING_POSTS: "Loading posts...",
 
   // Success messages
   WELCOME_BACK: "Welcome back! ",
@@ -81,6 +85,9 @@ export const TOAST_MESSAGES = {
   PASSWORD_RESET_SUCCESS:
     "Password reset successfully! Please sign in with your new password.",
   TOKEN_REFRESHED: "Token refreshed successfully",
+  POST_CREATED_SUCCESS: "Post created successfully!",
+  POST_UPDATED_SUCCESS: "Post updated successfully!",
+  POST_DELETED_SUCCESS: "Post deleted successfully!",
 
   // Error messages
   INVALID_CREDENTIALS: "Invalid credentials. Please try again.",
@@ -92,6 +99,10 @@ export const TOAST_MESSAGES = {
   SESSION_EXPIRED: "Session expired. Please login again.",
   TOKEN_REFRESH_FAILED: "Token refresh failed",
   BACKEND_LOGOUT_FAILED: "Backend logout failed",
+  POST_CREATE_FAILED: "Failed to create post. Please try again.",
+  POST_UPDATE_FAILED: "Failed to update post. Please try again.",
+  POST_DELETE_FAILED: "Failed to delete post. Please try again.",
+  POST_FETCH_FAILED: "Failed to fetch posts. Please try again.",
 
   // Console messages
   TOKEN_DECODE_ERROR: "Token decode error:",
@@ -105,6 +116,47 @@ export const TOAST_MESSAGES = {
 
   // GitHub OAuth
   GITHUB_OAUTH_COMING_SOON: "GitHub OAuth coming soon! ",
+};
+
+// Posts Actions Constants
+export const POSTS_ACTIONS = {
+  // Data actions
+  SET_LOADING: "SET_LOADING",
+  SET_POSTS: "SET_POSTS",
+  SET_PAGINATION: "SET_PAGINATION",
+  ADD_POST: "ADD_POST",
+  UPDATE_POST: "UPDATE_POST",
+  DELETE_POST: "DELETE_POST",
+
+  // UI actions
+  SET_SEARCH_QUERY: "SET_SEARCH_QUERY",
+  SET_ACTIVE_TAB: "SET_ACTIVE_TAB",
+
+  // Dialog actions
+  OPEN_EDIT_DIALOG: "OPEN_EDIT_DIALOG",
+  CLOSE_EDIT_DIALOG: "CLOSE_EDIT_DIALOG",
+  OPEN_VIEW_DIALOG: "OPEN_VIEW_DIALOG",
+  CLOSE_VIEW_DIALOG: "CLOSE_VIEW_DIALOG",
+  SET_VIEW_DIALOG_LOADING: "SET_VIEW_DIALOG_LOADING",
+  SET_FULL_POST: "SET_FULL_POST",
+  OPEN_DELETE_DIALOG: "OPEN_DELETE_DIALOG",
+  CLOSE_DELETE_DIALOG: "CLOSE_DELETE_DIALOG",
+
+  // Error actions
+  SET_ERROR: "SET_ERROR",
+  CLEAR_ERROR: "CLEAR_ERROR",
+};
+
+// Post Status Constants
+export const POST_STATUS = {
+  DRAFT: "draft",
+  PUBLISHED: "published",
+};
+
+// Post Tab Constants
+export const POST_TABS = {
+  LIST: "list",
+  CREATE: "create",
 };
 
 // Default error messages for auth operations

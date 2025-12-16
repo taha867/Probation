@@ -55,7 +55,13 @@ export const useAuth = () => {
     if (token) {
       const decodedUser = decodeAndValidateToken(token);
       if (decodedUser) {
-        dispatch(setUserFromToken(decodedUser, token));
+        // Map JWT payload to user object format expected by components
+        const user = {
+          id: decodedUser.userId,
+          email: decodedUser.email,
+          tokenVersion: decodedUser.tokenVersion,
+        };
+        dispatch(setUserFromToken(user, token));
       } else {
         // Token is invalid, mark as initialized
         dispatch(initializeAuth());
@@ -72,15 +78,16 @@ export const useAuth = () => {
     try {
       const response = await loginUser(credentials);
       const {
-        data: { accessToken, refreshToken, message },
+        data: { accessToken, refreshToken, message, user },
       } = response;
 
-      // Store both tokens and decode user
+      // Store both tokens and validate the access token
       storeTokens(accessToken, refreshToken);
       const decodedUser = decodeAndValidateToken(accessToken);
 
       if (decodedUser) {
-        dispatch(loginSuccess(decodedUser, accessToken, message));
+        // Use the complete user object from the backend response
+        dispatch(loginSuccess(user, accessToken, message));
       } else {
         throw new Error("Invalid token received");
       }

@@ -1,11 +1,14 @@
 /**
- * DashboardPage - Dashboard page route handler
- * Renders the DashboardContainer component
+ * DashboardPage - Dashboard page route handler with Posts Provider
+ * Provides posts context to the entire dashboard
  */
-import { DashboardContainer } from "../containers/DashboardContainer.jsx";
+import { PostsProvider } from "../contexts/postsContext";
+import DashboardContainer from "../containers/DashboardContainer.jsx";
 
 export default function DashboardPage() {
-  return <DashboardContainer />;
+  return (
+    <PostsProvider>
+      <DashboardContainer />
+    </PostsProvider>
+  );
 }
-
-
