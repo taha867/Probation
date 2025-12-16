@@ -5,6 +5,7 @@
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { useAuth } from "../hooks/authHooks";
+import { getCurrentUser } from "../utils/tokenUtils";
 import {
   usePosts,
   usePostOperations,
@@ -32,8 +33,9 @@ import ViewPostDialog from "../components/posts/ViewPostDialog";
  * DashboardContainer - Main dashboard component
  * Uses posts context provided by DashboardPage
  */
-export function DashboardContainer() {
-  const { user, signout } = useAuth();
+export const DashboardContainer = () => {
+  const { signout } = useAuth();
+  const user = getCurrentUser();
   const navigate = useNavigate();
   const { activeTab, setActiveTab } = usePosts();
   const { deletePost } = usePostOperations();
@@ -48,23 +50,6 @@ export function DashboardContainer() {
     openDeleteDialog,
     closeDeleteDialog,
   } = usePostDialogs();
-
-  // Handle sign out
-  const handleSignout = async () => {
-    const loadingToast = toast.loading(TOAST_MESSAGES.SIGNING_OUT);
-
-    try {
-      await signout();
-      toast.dismiss(loadingToast);
-      toast.success(TOAST_MESSAGES.SIGNED_OUT_SUCCESS);
-      navigate("/auth");
-    } catch (error) {
-      toast.dismiss(loadingToast);
-      toast.error(TOAST_MESSAGES.SIGNOUT_ERROR);
-      console.error(TOAST_MESSAGES.SIGNOUT_ERROR_CONSOLE, error);
-      navigate("/auth");
-    }
-  };
 
   // Handle delete confirmation
   const handleConfirmDelete = async () => {
@@ -146,6 +131,6 @@ export function DashboardContainer() {
       </div>
     </div>
   );
-}
+};
 
 export default DashboardContainer;

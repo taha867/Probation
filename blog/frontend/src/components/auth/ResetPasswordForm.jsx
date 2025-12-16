@@ -1,9 +1,10 @@
 /**
  * ResetPasswordForm component
- * Form for resetting password with token from email - integrated with AuthContainer
+ * Form for resetting password with token from email
  */
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -19,8 +20,9 @@ import { useAuth } from "../../hooks/authHooks";
 import { TOAST_MESSAGES } from "../../utils/constants";
 import toast from "react-hot-toast";
 
-export default function ResetPasswordForm({ token, onBackToSignIn }) {
+const ResetPasswordForm = ({ token }) => {
   const { resetUserPassword, isLoading, clearMessages } = useAuth();
+  const navigate = useNavigate();
 
   const form = useForm({
     resolver: yupResolver(resetPasswordSchema),
@@ -46,7 +48,7 @@ export default function ResetPasswordForm({ token, onBackToSignIn }) {
 
       // Redirect to signin after successful reset
       setTimeout(() => {
-        onBackToSignIn();
+        navigate("/signin");
       }, 1500);
     } catch (error) {
       toast.dismiss(loadingToast);
@@ -103,7 +105,7 @@ export default function ResetPasswordForm({ token, onBackToSignIn }) {
           <button
             type="button"
             className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-            onClick={onBackToSignIn}
+            onClick={() => navigate("/signin")}
           >
             Back to Sign In
           </button>
@@ -111,4 +113,6 @@ export default function ResetPasswordForm({ token, onBackToSignIn }) {
       </form>
     </Form>
   );
-}
+};
+
+export default ResetPasswordForm;

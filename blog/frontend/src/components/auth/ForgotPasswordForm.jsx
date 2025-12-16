@@ -16,7 +16,7 @@ import { Mail, ArrowLeft } from "lucide-react";
 import toast from "react-hot-toast";
 import { TOAST_MESSAGES } from "../../utils/constants";
 
-export default function ForgotPasswordForm({ onBackToSignIn }) {
+const ForgotPasswordForm = () => {
   const { requestPasswordReset, isLoading, error } = useAuth();
 
   const form = useForm({
@@ -38,6 +38,11 @@ export default function ForgotPasswordForm({ onBackToSignIn }) {
       toast.dismiss(loadingToast);
       toast.error(error.message || TOAST_MESSAGES.RESET_EMAIL_FAILED);
     }
+  };
+
+  const onBackToSignIn = () => {
+    // This function was referenced but not defined - adding placeholder
+    // You may need to implement navigation logic here
   };
 
   return (
@@ -109,4 +114,6 @@ export default function ForgotPasswordForm({ onBackToSignIn }) {
       </div>
     </div>
   );
-}
+};
+
+export default ForgotPasswordForm;

@@ -3,7 +3,6 @@ import { AUTH_ACTIONS, AUTH_STATUS } from "../utils/constants";
 // Auth reducer for managing authentication state
 export const initialAuthState = {
   user: null,
-  token: null,
   status: AUTH_STATUS.IDLE,
   error: "",
   message: "",
@@ -28,7 +27,7 @@ const {
 
 const { BUSY, IDLE } = AUTH_STATUS;
 
-export function authReducer(state, action) {
+export const authReducer = (state, action) => {
   switch (action.type) {
     case LOGIN_START:
     case SIGNUP_START:
@@ -42,18 +41,14 @@ export function authReducer(state, action) {
       };
 
     case LOGIN_SUCCESS:
-      const {
-        user: loginUser,
-        token: loginToken,
-        message: loginMessage,
-      } = action.payload;
+      const { user: loginUser, message: loginMessage } = action.payload;
       return {
         ...state,
         status: IDLE,
         user: loginUser,
-        token: loginToken,
         message: loginMessage,
         error: "",
+        isInitialized: true,
       };
 
     case SIGNUP_SUCCESS:
@@ -78,14 +73,14 @@ export function authReducer(state, action) {
     case LOGOUT:
       return {
         ...initialAuthState,
+        isInitialized: true,
       };
 
     case SET_USER_FROM_TOKEN:
-      const { user: tokenUser, token: tokenToken } = action.payload;
+      const { user: tokenUser } = action.payload;
       return {
         ...state,
         user: tokenUser,
-        token: tokenToken,
         isInitialized: true,
       };
 
@@ -105,7 +100,7 @@ export function authReducer(state, action) {
     default:
       throw new Error(`Unknown action type: ${action.type}`);
   }
-}
+};
 
 // Action creators for better type safety and consistency
 export const authActions = {
@@ -113,9 +108,9 @@ export const authActions = {
 
   signupStart: () => ({ type: SIGNUP_START }),
 
-  loginSuccess: (user, token, message) => ({
+  loginSuccess: (user, message) => ({
     type: LOGIN_SUCCESS,
-    payload: { user, token, message },
+    payload: { user, message },
   }),
 
   signupSuccess: (message) => ({
@@ -130,9 +125,9 @@ export const authActions = {
 
   logout: () => ({ type: LOGOUT }),
 
-  setUserFromToken: (user, token) => ({
+  setUserFromToken: (user) => ({
     type: SET_USER_FROM_TOKEN,
-    payload: { user, token },
+    payload: { user },
   }),
 
   clearMessages: () => ({ type: CLEAR_MESSAGES }),

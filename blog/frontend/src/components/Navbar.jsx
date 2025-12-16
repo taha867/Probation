@@ -6,10 +6,16 @@ import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "../hooks/authHooks";
+import {
+  getCurrentUser,
+  isAuthenticated as checkAuth,
+} from "../utils/tokenUtils";
 import { TOAST_MESSAGES } from "../utils/constants";
 
-export default function Navbar() {
-  const { user, isAuthenticated, signout } = useAuth();
+const Navbar = () => {
+  const { signout } = useAuth();
+  const user = getCurrentUser();
+  const isAuthenticated = checkAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [isSigningOut, setIsSigningOut] = useState(false);
@@ -18,11 +24,11 @@ export default function Navbar() {
     setIsSigningOut(true);
     try {
       await signout();
-      navigate("/auth");
+      navigate("/signin");
     } catch (error) {
       // Signout handles errors internally, but we still navigate
       console.error(TOAST_MESSAGES.SIGNOUT_ERROR_CONSOLE, error);
-      navigate("/auth");
+      navigate("/signin");
     } finally {
       setIsSigningOut(false);
     }
@@ -100,12 +106,12 @@ export default function Navbar() {
               </>
             ) : (
               <div className="flex items-center gap-2">
-                <Link to="/auth?mode=signin">
+                <Link to="/signin">
                   <Button variant="ghost" size="sm">
                     Sign In
                   </Button>
                 </Link>
-                <Link to="/auth?mode=signup">
+                <Link to="/signup">
                   <Button size="sm">Sign Up</Button>
                 </Link>
               </div>
@@ -115,4 +121,6 @@ export default function Navbar() {
       </div>
     </nav>
   );
-}
+};
+
+export default Navbar;

@@ -1,10 +1,8 @@
 import { useAuth } from "../../hooks/authHooks.js";
 import { Navigate } from "react-router-dom";
-import AuthPage from "../../pages/AuthPage.jsx";
 
 // Component to handle auth route protection
-export default function AuthRoute() {
-
+const AuthRoute = ({ children }) => {
   // isAuthenticated → user logged in?
   // isInitialized → did we finish checking localStorage token?
   const { isAuthenticated, isInitialized } = useAuth();
@@ -26,6 +24,8 @@ export default function AuthRoute() {
     return <Navigate to="/dashboard" replace />;
   }
 
-  // Show auth page for non-authenticated users
-  return <AuthPage />;
-}
+  // Show the specific auth page for non-authenticated users
+  return children;
+};
+
+export default AuthRoute;

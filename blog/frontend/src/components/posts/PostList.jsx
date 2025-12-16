@@ -90,7 +90,7 @@ const PostItem = memo(({ post, onEdit, onView, onDelete }) => {
 
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                
+
                 <AlertDialogAction
                   onClick={() => onDelete(post.id)}
                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
@@ -99,7 +99,6 @@ const PostItem = memo(({ post, onEdit, onView, onDelete }) => {
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
-
           </AlertDialog>
         </div>
       </div>
@@ -109,7 +108,7 @@ const PostItem = memo(({ post, onEdit, onView, onDelete }) => {
 
 PostItem.displayName = "PostItem";
 
-function PostList({ onEditPost, onViewPost }) {
+const PostList = ({ onEditPost, onViewPost }) => {
   const {
     filteredPosts,
     loading,
@@ -133,7 +132,7 @@ function PostList({ onEditPost, onViewPost }) {
         // Error handling is done in the hook
       }
     },
-    [deletePost]
+    [deletePost],
   );
 
   if (loading && filteredPosts.length === 0) {
@@ -234,6 +233,6 @@ function PostList({ onEditPost, onViewPost }) {
       </CardContent>
     </Card>
   );
-}
+};
 
 export default memo(PostList);

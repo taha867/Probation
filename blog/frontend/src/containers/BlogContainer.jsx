@@ -1,7 +1,7 @@
 /**
  * BlogContainer - Blog listing container
  */
-import { useAuth } from "../hooks/authHooks";
+import { isAuthenticated as checkAuth } from "../utils/tokenUtils";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -12,8 +12,8 @@ import {
 } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 
-export default function BlogContainer() {
-  const { isAuthenticated } = useAuth();
+const BlogContainer = () => {
+  const isAuthenticated = checkAuth();
 
   const blogPosts = [
     {
@@ -108,4 +108,6 @@ export default function BlogContainer() {
       </div>
     </div>
   );
-}
+};
+
+export default BlogContainer;

@@ -17,7 +17,7 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 import { TOAST_MESSAGES } from "../../utils/constants";
 
-export default function SignUpForm({ onSwitchToSignIn }) {
+const SignUpForm = () => {
   const { signup, isLoading, error } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -242,4 +242,6 @@ export default function SignUpForm({ onSwitchToSignIn }) {
       </Form>
     </div>
   );
-}
+};
+
+export default SignUpForm;

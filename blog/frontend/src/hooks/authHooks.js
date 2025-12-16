@@ -61,7 +61,7 @@ export const useAuth = () => {
           email: decodedUser.email,
           tokenVersion: decodedUser.tokenVersion,
         };
-        dispatch(setUserFromToken(user, token));
+        dispatch(setUserFromToken(user));
       } else {
         // Token is invalid, mark as initialized
         dispatch(initializeAuth());
@@ -87,7 +87,7 @@ export const useAuth = () => {
 
       if (decodedUser) {
         // Use the complete user object from the backend response
-        dispatch(loginSuccess(user, accessToken, message));
+        dispatch(loginSuccess(user, message));
       } else {
         throw new Error("Invalid token received");
       }
@@ -191,12 +191,11 @@ export const useAuth = () => {
     }
   };
 
-  const { user, token, status, error, message, isInitialized } = state;
+  const { user, status, error, message, isInitialized } = state;
 
   return {
     // State
     user,
-    token,
     status,
     error,
     message,

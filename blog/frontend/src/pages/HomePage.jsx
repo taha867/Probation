@@ -4,8 +4,8 @@
  */
 import HomeContainer from "../containers/HomeContainer";
 
-export default function HomePage() {
+const HomePage = () => {
   return <HomeContainer />;
-}
+};
 
-
+export default HomePage;

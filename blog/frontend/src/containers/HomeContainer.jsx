@@ -1,7 +1,10 @@
 /**
  * HomeContainer - Home page container
  */
-import { useAuth } from "../hooks/authHooks";
+import {
+  getCurrentUser,
+  isAuthenticated as checkAuth,
+} from "../utils/tokenUtils";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -13,8 +16,9 @@ import {
 import { Link } from "react-router-dom";
 import { PenTool, Users, BookOpen, Zap } from "lucide-react";
 
-function HomeContainer() {
-  const { isAuthenticated, user } = useAuth();
+const HomeContainer = () => {
+  const user = getCurrentUser();
+  const isAuthenticated = checkAuth();
 
   const features = [
     {
@@ -131,6 +135,6 @@ function HomeContainer() {
       </div>
     </div>
   );
-}
+};
 
 export default HomeContainer;

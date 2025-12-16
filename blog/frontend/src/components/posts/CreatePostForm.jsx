@@ -28,7 +28,7 @@ import { postSchema } from "../../validations/postSchemas";
 import { usePostOperations } from "../../hooks/postsHooks";
 import { POST_STATUS } from "../../utils/constants";
 
-function CreatePostForm() {
+const CreatePostForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { createPost } = usePostOperations();
 
@@ -131,6 +131,6 @@ function CreatePostForm() {
       </CardContent>
     </Card>
   );
-}
+};
 
 export default memo(CreatePostForm);

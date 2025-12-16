@@ -16,7 +16,7 @@ import { Edit, Trash2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { POST_STATUS } from "../../utils/constants";
 
-function ViewPostDialog({
+const ViewPostDialog = ({
   post,
   fullPost,
   loading,
@@ -24,7 +24,7 @@ function ViewPostDialog({
   onClose,
   onEditPost,
   onDeletePost,
-}) {
+}) => {
   const getStatusColor = useCallback((status) => {
     return status === POST_STATUS.PUBLISHED
       ? "bg-green-100 text-green-800"
@@ -131,6 +131,6 @@ function ViewPostDialog({
       </DialogContent>
     </Dialog>
   );
-}
+};
 
 export default memo(ViewPostDialog);

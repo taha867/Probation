@@ -5,10 +5,12 @@
 import { PostsProvider } from "../contexts/postsContext";
 import DashboardContainer from "../containers/DashboardContainer.jsx";
 
-export default function DashboardPage() {
+const DashboardPage = () => {
   return (
     <PostsProvider>
       <DashboardContainer />
     </PostsProvider>
   );
-}
+};
+
+export default DashboardPage;

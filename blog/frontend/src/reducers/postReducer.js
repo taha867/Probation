@@ -48,7 +48,7 @@ const {
   CLEAR_ERROR,
 } = POSTS_ACTIONS;
 
-export function postsReducer(state, action) {
+export const postsReducer = (state, action) => {
   switch (action.type) {
     case SET_LOADING:
       return { ...state, loading: action.payload };
@@ -190,7 +190,7 @@ export function postsReducer(state, action) {
     default:
       throw new Error(`Unknown action type: ${action.type}`);
   }
-}
+};
 
 // Action creators for better type safety and consistency
 export const postsActions = {

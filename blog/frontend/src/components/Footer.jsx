@@ -1,6 +1,6 @@
 import { Github, Instagram, Twitter, Linkedin } from "lucide-react";
 
-export default function Footer() {
+const Footer = () => {
   const socialLinks = [
     {
       name: "GitHub",
@@ -67,4 +67,6 @@ export default function Footer() {
       </div>
     </footer>
   );
-}
+};
+
+export default Footer;

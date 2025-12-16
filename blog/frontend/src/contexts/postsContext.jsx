@@ -11,7 +11,7 @@ const PostsContext = createContext(null);
 /**
  * Posts Provider component
  */
-export function PostsProvider({ children }) {
+export const PostsProvider = ({ children }) => {
   const [state, dispatch] = useReducer(postsReducer, initialPostsState);
 
   // Memoize context value to prevent unnecessary re-renders
@@ -28,15 +28,15 @@ export function PostsProvider({ children }) {
       {children}
     </PostsContext.Provider>
   );
-}
+};
 
 /**
  * Hook to access posts context
  */
-export function usePostsContext() {
+export const usePostsContext = () => {
   const context = useContext(PostsContext);
   if (!context) {
     throw new Error("usePostsContext must be used within a PostsProvider");
   }
   return context;
-}
+};

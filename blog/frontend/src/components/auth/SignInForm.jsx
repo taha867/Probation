@@ -18,7 +18,7 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 import { TOAST_MESSAGES } from "../../utils/constants";
 
-export default function SignInForm({ onSwitchToSignUp, onForgotPassword }) {
+const SignInForm = () => {
   const { signin, isLoading, error } = useAuth();
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
@@ -97,7 +97,7 @@ export default function SignInForm({ onSwitchToSignUp, onForgotPassword }) {
                   </FormLabel>
                   <button
                     type="button"
-                    onClick={onForgotPassword}
+                    onClick={() => navigate("/forgot-password")}
                     className="text-xs text-blue-600 hover:text-blue-700 font-medium"
                   >
                     Forgot password?
@@ -148,4 +148,6 @@ export default function SignInForm({ onSwitchToSignUp, onForgotPassword }) {
       </Form>
     </div>
   );
-}
+};
+
+export default SignInForm;

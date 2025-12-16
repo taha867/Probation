@@ -34,7 +34,7 @@ import { postSchema } from "../../validations/postSchemas";
 import { usePostOperations } from "../../hooks/postsHooks";
 import { POST_STATUS } from "../../utils/constants";
 
-function EditPostForm({ post, isOpen, onClose }) {
+const EditPostForm = ({ post, isOpen, onClose }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { updatePost } = usePostOperations();
 
@@ -169,6 +169,6 @@ function EditPostForm({ post, isOpen, onClose }) {
       </DialogContent>
     </Dialog>
   );
-}
+};
 
 export default memo(EditPostForm);

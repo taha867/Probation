@@ -6,7 +6,7 @@
 import { useCallback, useMemo, useEffect } from "react";
 import { usePostsContext } from "../contexts/postsContext";
 import { POSTS_ACTIONS, POST_TABS } from "../utils/constants";
-import { useAuth } from "./authHooks";
+import { getCurrentUser } from "../utils/tokenUtils";
 import {
   fetchUserPosts,
   createPost,
@@ -18,9 +18,9 @@ import {
 
 //Hook for posts data management
 
-export function usePosts() {
+export const usePosts = () => {
   const { state, dispatch } = usePostsContext();
-  const { user } = useAuth();
+  const user = getCurrentUser();
 
   const { posts, searchQuery, pagination, activeTab, loading, error } = state;
   const filteredPosts = useMemo(() => {
@@ -113,12 +113,12 @@ export function usePosts() {
     setActiveTab,
     changePage,
   };
-}
+};
 
 /**
  * Hook for post CRUD operations
  */
-export function usePostOperations() {
+export const usePostOperations = () => {
   const { dispatch } = usePostsContext();
   const { SET_ACTIVE_TAB, ADD_POST, UPDATE_POST, DELETE_POST } = POSTS_ACTIONS;
 
@@ -189,12 +189,12 @@ export function usePostOperations() {
     updatePost: updatePostOptimistic,
     deletePost: deletePostOptimistic,
   };
-}
+};
 
 /**
  * Hook for dialog management
  */
-export function usePostDialogs() {
+export const usePostDialogs = () => {
   const { state, dispatch } = usePostsContext();
   const {
     OPEN_EDIT_DIALOG,
@@ -274,4 +274,4 @@ export function usePostDialogs() {
     openDeleteDialog,
     closeDeleteDialog,
   };
-}
+};

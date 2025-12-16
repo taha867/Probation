@@ -94,3 +94,9 @@ export const hasValidRefreshToken = () => {
     return false;
   }
 };
+
+//Get user ID from token (commonly needed)
+export const getCurrentUserId = () => {
+  const user = getCurrentUser();
+  return user?.userId || null;
+};

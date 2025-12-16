@@ -10,7 +10,7 @@ const AuthContext = createContext(null);
  * @param {object} props - Component props
  * @param {React.ReactNode} props.children - Child components
  */
-export function AuthProvider({ children }) {
+export const AuthProvider = ({ children }) => {
   // useReducer returns current state and a dispatch function
   const [state, dispatch] = useReducer(authReducer, initialAuthState);
 
@@ -27,16 +27,16 @@ export function AuthProvider({ children }) {
   return (
     <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>
   );
-}
+};
 
 /**
  * Hook to access the complete auth context (state + dispatch)
  * @returns {object} - Auth context with state and dispatch
  */
-export function useAuthContext() {
+export const useAuthContext = () => {
   const context = useContext(AuthContext);
   if (!context) {
     throw new Error("useAuthContext must be used within an AuthProvider");
   }
   return context;
-}
+};
