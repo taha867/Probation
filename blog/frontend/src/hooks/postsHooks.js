@@ -1,69 +1,69 @@
 /**
- * Posts Hooks - Custom hooks for posts business logic
- * Following React 19 best practices with optimized performance
+ * Posts Hooks - React integration layer for posts
+ * Handles React-specific logic: state management, side effects, memoization
+ * Business logic is delegated to postService
  */
 import { useCallback, useMemo, useEffect } from "react";
 import { usePostsContext } from "../contexts/postsContext";
 import { POSTS_ACTIONS, POST_TABS } from "../utils/constants";
 import { useAuth } from "./authHooks";
 import {
-  getUserPosts,
+  fetchUserPosts,
   createPost,
   updatePost,
   deletePost,
-  getPost,
+  getPostDetails,
+  searchPosts,
 } from "../services/postService";
-import toast from "react-hot-toast";
 
-/**
- * Hook for posts data management
- */
+//Hook for posts data management
+
 export function usePosts() {
   const { state, dispatch } = usePostsContext();
   const { user } = useAuth();
 
-  // Memoized filtered posts for search
+  const { posts, searchQuery, pagination, activeTab, loading, error } = state;
   const filteredPosts = useMemo(() => {
-    if (!state.searchQuery.trim()) return state.posts;
+    return searchPosts(posts, searchQuery);
+  }, [posts, searchQuery]);
 
-    const query = state.searchQuery.toLowerCase();
-    return state.posts.filter(
-      (post) =>
-        post.title.toLowerCase().includes(query) ||
-        post.body.toLowerCase().includes(query),
-    );
-  }, [state.posts, state.searchQuery]);
+  const {
+    SET_LOADING,
+    SET_POSTS,
+    SET_PAGINATION,
+    SET_ERROR,
+    SET_SEARCH_QUERY,
+    SET_ACTIVE_TAB,
+  } = POSTS_ACTIONS;
 
   // Fetch posts function
   const fetchPosts = useCallback(
     async (page = 1) => {
       if (!user?.id) {
-        dispatch({ type: POSTS_ACTIONS.SET_LOADING, payload: false });
+        dispatch({ type: SET_LOADING, payload: false });
         return;
       }
 
-      dispatch({ type: POSTS_ACTIONS.SET_LOADING, payload: true });
+      dispatch({ type: SET_LOADING, payload: true });
 
       try {
-        const response = await getUserPosts(user.id, {
+        // Delegate business logic to service
+        const result = await fetchUserPosts(user.id, {
           page,
-          limit: state.pagination.limit,
+          limit: pagination.limit,
         });
 
-        const { posts: userPosts, meta } = response.data.data;
-
-        dispatch({ type: POSTS_ACTIONS.SET_POSTS, payload: userPosts });
-        dispatch({ type: POSTS_ACTIONS.SET_PAGINATION, payload: meta });
+        // Use direct property access to avoid variable name conflicts
+        dispatch({ type: SET_POSTS, payload: result.posts });
+        dispatch({
+          type: SET_PAGINATION,
+          payload: result.pagination,
+        });
       } catch (error) {
-        const errorMessage =
-          error?.response?.data?.message ||
-          "Failed to fetch posts. Please try again.";
-
-        dispatch({ type: POSTS_ACTIONS.SET_ERROR, payload: errorMessage });
-        toast.error(errorMessage);
+        dispatch({ type: SET_ERROR, payload: error.message });
       }
     },
-    [user?.id, state.pagination.limit, dispatch],
+    [user?.id, pagination.limit, dispatch],
   );
 
   // Auto-fetch posts when user changes
@@ -76,7 +76,7 @@ export function usePosts() {
   // Search function with debouncing
   const setSearchQuery = useCallback(
     (query) => {
-      dispatch({ type: POSTS_ACTIONS.SET_SEARCH_QUERY, payload: query });
+      dispatch({ type: SET_SEARCH_QUERY, payload: query });
     },
     [dispatch],
   );
@@ -84,7 +84,7 @@ export function usePosts() {
   // Tab management
   const setActiveTab = useCallback(
     (tab) => {
-      dispatch({ type: POSTS_ACTIONS.SET_ACTIVE_TAB, payload: tab });
+      dispatch({ type: SET_ACTIVE_TAB, payload: tab });
     },
     [dispatch],
   );
@@ -99,13 +99,13 @@ export function usePosts() {
 
   return {
     // State
-    posts: state.posts,
+    posts: posts,
     filteredPosts,
-    loading: state.loading,
-    pagination: state.pagination,
-    searchQuery: state.searchQuery,
-    activeTab: state.activeTab,
-    error: state.error,
+    loading: loading,
+    pagination: pagination,
+    searchQuery: searchQuery,
+    activeTab: activeTab,
+    error: error,
 
     // Actions
     fetchPosts,
@@ -120,94 +120,64 @@ export function usePosts() {
  */
 export function usePostOperations() {
   const { dispatch } = usePostsContext();
+  const { SET_ACTIVE_TAB, ADD_POST, UPDATE_POST, DELETE_POST } = POSTS_ACTIONS;
 
-  // Create post with optimistic update
+  const { LIST } = POST_TABS;
+
+  // Create post with optimistic update - React integration only
   const createPostOptimistic = useCallback(
     async (postData) => {
-      const loadingToast = toast.loading("Creating post...");
-
       try {
-        const response = await createPost(postData);
-        const newPost = response.data.data;
+        const newPost = await createPost(postData);
 
-        // Optimistic update
-        dispatch({ type: POSTS_ACTIONS.ADD_POST, payload: newPost });
+        // React-specific: Optimistic update
+        dispatch({ type: ADD_POST, payload: newPost });
 
-        toast.dismiss(loadingToast);
-        toast.success("Post created successfully!");
-
-        // Switch to list tab
+        // React-specific: Switch to list tab
         dispatch({
-          type: POSTS_ACTIONS.SET_ACTIVE_TAB,
-          payload: POST_TABS.LIST,
+          type: SET_ACTIVE_TAB,
+          payload: LIST,
         });
 
         return newPost;
       } catch (error) {
-        toast.dismiss(loadingToast);
-        const errorMessage =
-          error?.response?.data?.message ||
-          error?.response?.data?.data?.message ||
-          "Failed to create post. Please try again.";
-
-        toast.error(errorMessage);
+        // Error handling is done in service, just re-throw
         throw error;
       }
     },
     [dispatch],
   );
 
-  // Update post with optimistic update
+  // Update post with optimistic update - React integration only
   const updatePostOptimistic = useCallback(
     async (postId, postData) => {
-      const loadingToast = toast.loading("Updating post...");
-
       try {
-        const response = await updatePost(postId, postData);
-        const updatedPost = response.data.data;
+        // Delegate business logic to service
+        const updatedPost = await updatePost(postId, postData);
 
-        // Optimistic update
-        dispatch({ type: POSTS_ACTIONS.UPDATE_POST, payload: updatedPost });
-
-        toast.dismiss(loadingToast);
-        toast.success("Post updated successfully!");
+        // React-specific: Optimistic update
+        dispatch({ type: UPDATE_POST, payload: updatedPost });
 
         return updatedPost;
       } catch (error) {
-        toast.dismiss(loadingToast);
-        const errorMessage =
-          error?.response?.data?.message ||
-          error?.response?.data?.data?.message ||
-          "Failed to update post. Please try again.";
-
-        toast.error(errorMessage);
+        // Error handling is done in service, just re-throw
         throw error;
       }
     },
     [dispatch],
   );
 
-  // Delete post with optimistic update
+  // Delete post with optimistic update - React integration only
   const deletePostOptimistic = useCallback(
     async (postId) => {
-      const loadingToast = toast.loading("Deleting post...");
-
       try {
+        // Delegate business logic to service
         await deletePost(postId);
 
-        // Optimistic update
-        dispatch({ type: POSTS_ACTIONS.DELETE_POST, payload: postId });
-
-        toast.dismiss(loadingToast);
-        toast.success("Post deleted successfully!");
+        // React-specific: Optimistic update
+        dispatch({ type: DELETE_POST, payload: postId });
       } catch (error) {
-        toast.dismiss(loadingToast);
-        const errorMessage =
-          error?.response?.data?.message ||
-          error?.response?.data?.data?.message ||
-          "Failed to delete post. Please try again.";
-
-        toast.error(errorMessage);
+        // Error handling is done in service, just re-throw
         throw error;
       }
     },
@@ -226,39 +196,45 @@ export function usePostOperations() {
  */
 export function usePostDialogs() {
   const { state, dispatch } = usePostsContext();
+  const {
+    OPEN_EDIT_DIALOG,
+    CLOSE_EDIT_DIALOG,
+    OPEN_VIEW_DIALOG,
+    SET_VIEW_DIALOG_LOADING,
+  } = POSTS_ACTIONS;
 
   // Edit dialog
   const openEditDialog = useCallback(
     (post) => {
-      dispatch({ type: POSTS_ACTIONS.OPEN_EDIT_DIALOG, payload: post });
+      dispatch({ type: OPEN_EDIT_DIALOG, payload: post });
     },
     [dispatch],
   );
 
   const closeEditDialog = useCallback(() => {
-    dispatch({ type: POSTS_ACTIONS.CLOSE_EDIT_DIALOG });
+    dispatch({ type: CLOSE_EDIT_DIALOG });
   }, [dispatch]);
 
-  // View dialog
+  // View dialog - React integration only
   const openViewDialog = useCallback(
     async (post) => {
-      dispatch({ type: POSTS_ACTIONS.OPEN_VIEW_DIALOG, payload: post });
-
-      // Fetch full post details
-      dispatch({ type: POSTS_ACTIONS.SET_VIEW_DIALOG_LOADING, payload: true });
+      // React-specific: Open dialog and set loading
+      dispatch({ type: OPEN_VIEW_DIALOG, payload: post });
+      dispatch({ type: SET_VIEW_DIALOG_LOADING, payload: true });
 
       try {
-        const response = await getPost(post.id);
+        // Delegate business logic to service
+        const fullPost = await getPostDetails(post.id);
+
+        // React-specific: Update state
         dispatch({
           type: POSTS_ACTIONS.SET_FULL_POST,
-          payload: response.data.data,
+          payload: fullPost,
         });
       } catch (error) {
-        const errorMessage =
-          error?.response?.data?.message || "Failed to fetch post details.";
-        toast.error(errorMessage);
+        // React-specific: Handle loading state
         dispatch({
-          type: POSTS_ACTIONS.SET_VIEW_DIALOG_LOADING,
+          type: SET_VIEW_DIALOG_LOADING,
           payload: false,
         });
       }

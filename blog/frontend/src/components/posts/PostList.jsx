@@ -25,6 +25,7 @@ import { POST_STATUS } from "../../utils/constants";
 
 // Memoized Post Item Component for better performance
 const PostItem = memo(({ post, onEdit, onView, onDelete }) => {
+  //change it
   const getStatusColor = useCallback((status) => {
     return status === POST_STATUS.PUBLISHED
       ? "bg-green-100 text-green-800"
@@ -76,16 +77,20 @@ const PostItem = memo(({ post, onEdit, onView, onDelete }) => {
                 <Trash2 className="h-4 w-4" />
               </Button>
             </AlertDialogTrigger>
+
             <AlertDialogContent>
               <AlertDialogHeader>
                 <AlertDialogTitle>Delete Post</AlertDialogTitle>
+
                 <AlertDialogDescription>
                   Are you sure you want to delete "{post.title}"? This action
                   cannot be undone.
                 </AlertDialogDescription>
               </AlertDialogHeader>
+
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
+                
                 <AlertDialogAction
                   onClick={() => onDelete(post.id)}
                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
@@ -94,6 +99,7 @@ const PostItem = memo(({ post, onEdit, onView, onDelete }) => {
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
+
           </AlertDialog>
         </div>
       </div>
@@ -127,7 +133,7 @@ function PostList({ onEditPost, onViewPost }) {
         // Error handling is done in the hook
       }
     },
-    [deletePost],
+    [deletePost]
   );
 
   if (loading && filteredPosts.length === 0) {

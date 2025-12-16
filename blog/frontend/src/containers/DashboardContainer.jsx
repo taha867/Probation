@@ -11,8 +11,6 @@ import {
   usePostDialogs,
 } from "../hooks/postsHooks";
 import { TOAST_MESSAGES, POST_TABS } from "../utils/constants";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   AlertDialog,
