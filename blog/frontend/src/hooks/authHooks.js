@@ -1,8 +1,7 @@
-import { useEffect, useTransition } from "react";
+import { useTransition } from "react";
 import { useAuthContext } from "../contexts/authContext";
 import { authActions } from "../reducers/authReducer";
 import {
-  getToken,
   storeTokens,
   removeTokens,
   decodeAndValidateToken,
@@ -15,6 +14,7 @@ import {
   resetPassword,
 } from "../services/authService";
 import { TOAST_MESSAGES } from "../utils/constants";
+import { invalidateAuthPromise, updateAuthPromise } from "../utils/authPromise";
 
 // Error messages are now handled globally by axios interceptors
 
@@ -28,38 +28,13 @@ export const useAuth = () => {
   const [isPending, startTransition] = useTransition();
 
   const {
-    setUserFromToken,
     loginSuccess,
     signupSuccess,
     authError,
     logout,
     forgotPasswordSuccess,
     resetPasswordSuccess,
-    initializeAuth,
   } = authActions;
-
-  // Initialize auth state from localStorage on mount
-  useEffect(() => {
-    const token = getToken();
-    if (token) {
-      const decodedUser = decodeAndValidateToken(token);
-      if (decodedUser) {
-        // Map JWT payload to user object format expected by components
-        const user = {
-          id: decodedUser.userId,
-          email: decodedUser.email,
-          tokenVersion: decodedUser.tokenVersion,
-        };
-        dispatch(setUserFromToken(user));
-      } else {
-        // Token is invalid, mark as initialized
-        dispatch(initializeAuth());
-      }
-    } else {
-      // No token found, mark as initialized
-      dispatch(initializeAuth());
-    }
-  }, [dispatch, setUserFromToken, initializeAuth]);
 
   const signin = async (credentials) => {
     return new Promise((resolve, reject) => {
@@ -77,6 +52,8 @@ export const useAuth = () => {
           if (decodedUser) {
             // Use the complete user object from the backend response
             dispatch(loginSuccess(user));
+            // Update the auth promise cache with new user
+            updateAuthPromise(user);
             resolve(response);
           } else {
             throw new Error("Invalid token received");
@@ -115,6 +92,8 @@ export const useAuth = () => {
       // Always clear both tokens and state
       removeTokens();
       dispatch(logout());
+      // Invalidate auth promise cache for next login
+      invalidateAuthPromise();
     }
   };
 
@@ -152,14 +131,13 @@ export const useAuth = () => {
     });
   };
 
-  const { user, isInitialized } = state;
+  const { user } = state;
 
   return {
     // State
     user,
     isAuthenticated: !!user,
     isLoading: isPending, // From useTransition
-    isInitialized,
 
     // Actions
     signin,

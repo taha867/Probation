@@ -2,10 +2,10 @@
  * ResetPasswordPage - Reset password page route handler
  * Renders the ResetPasswordContainer component
  */
-import ResetPasswordContainer from "../../containers/ResetPasswordContainer.jsx";
+import ResetPassword from "../../components/auth/ResetPassword.jsx";
 
 const ResetPasswordPage = () => {
-  return <ResetPasswordContainer />;
+  return <ResetPassword />;
 };
 
 export default ResetPasswordPage;

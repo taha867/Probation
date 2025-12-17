@@ -3,8 +3,6 @@ import { AUTH_ACTIONS } from "../utils/constants";
 // Auth reducer for managing authentication state
 export const initialAuthState = {
   user: null,
-  // status removed - replaced by useTransition's isPending
-  isInitialized: false, // Track if auth has been initialized from localStorage
 };
 
 const {
@@ -16,7 +14,6 @@ const {
   CLEAR_MESSAGES,
   FORGOT_PASSWORD_SUCCESS,
   RESET_PASSWORD_SUCCESS,
-  INITIALIZE_AUTH,
 } = AUTH_ACTIONS;
 
 export const authReducer = (state, action) => {
@@ -26,7 +23,6 @@ export const authReducer = (state, action) => {
       return {
         ...state,
         user: loginUser,
-        isInitialized: true,
       };
 
     case SIGNUP_SUCCESS:
@@ -35,13 +31,11 @@ export const authReducer = (state, action) => {
     case AUTH_ERROR:
       return {
         ...state,
-        // No status changes - useTransition handles loading states
       };
 
     case LOGOUT:
       return {
         ...initialAuthState,
-        isInitialized: true,
       };
 
     case SET_USER_FROM_TOKEN:
@@ -49,18 +43,11 @@ export const authReducer = (state, action) => {
       return {
         ...state,
         user: tokenUser,
-        isInitialized: true,
       };
 
     case CLEAR_MESSAGES:
       return {
         ...state,
-      };
-
-    case INITIALIZE_AUTH:
-      return {
-        ...state,
-        isInitialized: true,
       };
 
     default:
@@ -99,8 +86,6 @@ export const authActions = {
   resetPasswordSuccess: () => ({
     type: RESET_PASSWORD_SUCCESS,
   }),
-
-  initializeAuth: () => ({ type: INITIALIZE_AUTH }),
 };
 
 //Your component → dispatch(action) → authReducer(state, action) → newState

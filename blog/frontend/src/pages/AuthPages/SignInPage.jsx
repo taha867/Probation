@@ -2,10 +2,10 @@
  * SignInPage - Sign in page route handler
  * Renders the SignInContainer component
  */
-import SignInContainer from "../../containers/SignInContainer.jsx";
+import SignIn from "../../components/auth/SignIn.jsx";
 
 const SignInPage = () => {
-  return <SignInContainer />;
+  return <SignIn />;
 };
 
 export default SignInPage;

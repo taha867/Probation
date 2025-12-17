@@ -10,8 +10,8 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { forgotPasswordSchema } from "../../validations/authSchemas";
-import { useAuth } from "../../hooks/authHooks";
+import { forgotPasswordSchema } from "../../../validations/authSchemas";
+import { useAuth } from "../../../hooks/authHooks";
 import { Mail, ArrowLeft } from "lucide-react";
 
 const ForgotPasswordForm = () => {

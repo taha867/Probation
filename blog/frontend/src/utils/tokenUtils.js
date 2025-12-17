@@ -100,3 +100,30 @@ export const getCurrentUserId = () => {
   const user = getCurrentUser();
   return user?.userId || null;
 };
+
+/**
+ * Checks if access token is expired without removing it
+ * Used for refresh logic to determine if refresh is needed
+ */
+export const isTokenExpired = (token) => {
+  if (!token) return true;
+
+  try {
+    const decoded = jwtDecode(token);
+    return decoded.exp * 1000 < Date.now();
+  } catch (error) {
+    return true; // Consider invalid tokens as expired
+  }
+};
+
+//Gets token expiration time in milliseconds
+export const getTokenExpiration = (token) => {
+  if (!token) return null;
+
+  try {
+    const decoded = jwtDecode(token);
+    return decoded.exp * 1000;
+  } catch (error) {
+    return null;
+  }
+};

@@ -11,8 +11,8 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { signinSchema } from "../../validations/authSchemas";
-import { useAuth } from "../../hooks/authHooks";
+import { signinSchema } from "../../../validations/authSchemas";
+import { useAuth } from "../../../hooks/authHooks";
 import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 

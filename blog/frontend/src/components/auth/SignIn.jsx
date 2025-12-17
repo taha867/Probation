@@ -14,10 +14,10 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Github } from "lucide-react";
 import toast from "react-hot-toast";
-import { TOAST_MESSAGES } from "../utils/constants";
-import SignInForm from "../components/auth/SignInForm";
+import { TOAST_MESSAGES } from "../../utils/constants";
+import SignInForm from "./form/SignInForm.jsx";
 
-const SignInContainer = () => {
+const SignIn = () => {
   return (
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2">
       {/* Left brand/story panel with blog image */}
@@ -40,9 +40,9 @@ const SignInContainer = () => {
                 Sign in to access your account
               </CardDescription>
             </CardHeader>
+
             <CardContent className="space-y-6">
               <SignInForm />
-
               <Separator />
 
               <Button
@@ -89,4 +89,4 @@ const SignInContainer = () => {
   );
 };
 
-export default SignInContainer;
+export default SignIn;

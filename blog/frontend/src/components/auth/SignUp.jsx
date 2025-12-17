@@ -14,10 +14,10 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Github } from "lucide-react";
 import toast from "react-hot-toast";
-import { TOAST_MESSAGES } from "../utils/constants";
-import SignUpForm from "../components/auth/SignUpForm";
+import { TOAST_MESSAGES } from "../../utils/constants";
+import SignUpForm from "./form/SignUpForm.jsx";
 
-const SignUpContainer = () => {
+const SignUp = () => {
   return (
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2">
       {/* Left brand/story panel with blog image */}
@@ -27,7 +27,6 @@ const SignUpContainer = () => {
           style={{ backgroundImage: 'url("/blogImg.jpeg")' }}
         />
       </div>
-
       {/* Right auth panel */}
       <div className="flex items-center justify-center px-4 py-10">
         <div className="w-full max-w-md space-y-6">
@@ -36,13 +35,14 @@ const SignUpContainer = () => {
               <CardTitle className="text-2xl font-semibold text-slate-900">
                 Create an account
               </CardTitle>
+
               <CardDescription className="text-slate-600">
                 Enter your email below to create your account
               </CardDescription>
             </CardHeader>
+
             <CardContent className="space-y-6">
               <SignUpForm />
-
               <Separator />
 
               <Button
@@ -89,4 +89,4 @@ const SignUpContainer = () => {
   );
 };
 
-export default SignUpContainer;
+export default SignUp;

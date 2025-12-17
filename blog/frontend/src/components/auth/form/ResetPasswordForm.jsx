@@ -15,8 +15,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { resetPasswordSchema } from "../../validations/authSchemas";
-import { useAuth } from "../../hooks/authHooks";
+import { resetPasswordSchema } from "../../../validations/authSchemas";
+import { useAuth } from "../../../hooks/authHooks";
 
 const ResetPasswordForm = ({ token }) => {
   const { resetUserPassword, isLoading } = useAuth();

@@ -58,7 +58,7 @@ const refreshAuthLogic = async (failedRequest) => {
       { refreshToken },
       {
         headers: { "Content-Type": "application/json" },
-      },
+      }
     );
 
     const { accessToken } = response.data.data;
@@ -82,6 +82,7 @@ const refreshAuthLogic = async (failedRequest) => {
   }
 };
 
+// This function is used by axios-auth-refresh to automatically refresh the token whenever a request gets a 401 Unauthorized.
 // Initialize axios-auth-refresh interceptor
 createAuthRefreshInterceptor(apiClient, refreshAuthLogic, {
   statusCodes: [401], // Refresh on 401 Unauthorized
@@ -100,7 +101,7 @@ apiClient.interceptors.request.use(
   },
   (error) => {
     return Promise.reject(error);
-  },
+  }
 );
 
 //runs after every request is sent
@@ -108,8 +109,14 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => {
     // Handle success messages globally via toast
-    const successMessage =
-      response.data?.data?.message || response.data?.message;
+    const {
+      data: {
+        data: { message: nestedMessage } = {},
+        message: topLevelMessage,
+      } = {},
+    } = response;
+
+    const successMessage = nestedMessage || topLevelMessage;
 
     if (successMessage) {
       toast.success(successMessage);
@@ -119,15 +126,24 @@ apiClient.interceptors.response.use(
   },
   (error) => {
     // Handle different error scenarios
-    if (error.response) {
+    const { response } = error;
+    if (response) {
       // Server responded with error status (4xx, 5xx)
-      const { status, data } = error.response;
-
       // Extract error message from different possible response structures
+      const {
+        status,
+        data: {
+          message: topLevelMessage,
+          data: { message: nestedMessage } = {},
+          error: errorField,
+        } = {},
+      } = response;
+
+      // Pick the first available message
       const errorMessage =
-        data.message ||
-        data.data?.message ||
-        data.error ||
+        nestedMessage ||
+        topLevelMessage ||
+        errorField ||
         `Request failed with status ${status}`;
 
       // Show error message globally via toast
@@ -137,7 +153,7 @@ apiClient.interceptors.response.use(
       // Note: 401 is handled automatically by axios-auth-refresh
       if (status === HTTP_STATUS.FORBIDDEN) {
         // Insufficient permissions
-        console.warn("Access forbidden - insufficient permissions");
+        console.warn("Access forbidden");
       } else if (status === HTTP_STATUS.NOT_FOUND) {
         // Resource not found
         console.warn("Resource not found");
@@ -164,7 +180,7 @@ apiClient.interceptors.response.use(
       toast.error(TOAST_MESSAGES.REQUEST_CONFIG_ERROR);
       return Promise.reject(new Error(TOAST_MESSAGES.REQUEST_CONFIG_ERROR));
     }
-  },
+  }
 );
 
 export default apiClient;

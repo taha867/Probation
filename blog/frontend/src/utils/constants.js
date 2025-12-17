@@ -15,7 +15,6 @@ export const AUTH_ACTIONS = {
   CLEAR_MESSAGES: "CLEAR_MESSAGES",
   FORGOT_PASSWORD_SUCCESS: "FORGOT_PASSWORD_SUCCESS",
   RESET_PASSWORD_SUCCESS: "RESET_PASSWORD_SUCCESS",
-  INITIALIZE_AUTH: "INITIALIZE_AUTH",
 };
 
 // AUTH_STATUS removed - replaced by useTransition's isPending
@@ -104,6 +103,9 @@ export const TOAST_MESSAGES = {
   RESET_PASSWORD_ERROR: "Reset password error:",
   ACCESS_TOKEN_EXPIRED: "Access token expired, attempting to refresh...",
   NO_REFRESH_TOKEN: "No valid refresh token available, logging out...",
+  INIT_TOKEN_REFRESH_SUCCESS:
+    "Token refreshed successfully during app initialization",
+  INIT_TOKEN_REFRESH_FAILED: "Token refresh failed during app initialization",
   VALIDATION_ERROR: "Validation error",
   INTERNAL_SERVER_ERROR: "Internal server error",
 

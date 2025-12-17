@@ -13,6 +13,8 @@ export const fetchUserPosts = async (userId, options = {}) => {
     const response = await axiosInstance.get(`/users/${userId}/posts`, {
       params: options,
     });
+    // const { posts: userPosts, meta } = response.data.data;
+    const {data } = response || {}
     const { posts: userPosts, meta } = response.data.data;
 
     return {

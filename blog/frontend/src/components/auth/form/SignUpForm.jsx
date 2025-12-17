@@ -10,8 +10,8 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { signupSchema } from "../../validations/authSchemas";
-import { useAuth } from "../../hooks/authHooks";
+import { signupSchema } from "../../../validations/authSchemas";
+import { useAuth } from "../../../hooks/authHooks";
 import { Eye, EyeOff, User, Mail, Phone } from "lucide-react";
 import { useState } from "react";
 

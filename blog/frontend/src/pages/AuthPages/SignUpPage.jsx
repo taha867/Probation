@@ -2,10 +2,10 @@
  * SignUpPage - Sign up page route handler
  * Renders the SignUpContainer component
  */
-import SignUpContainer from "../../containers/SignUpContainer.jsx";
+import SignUp from "../../components/auth/SignUp.jsx";
 
 const SignUpPage = () => {
-  return <SignUpContainer />;
+  return <SignUp />;
 };
 
 export default SignUpPage;

@@ -5,8 +5,8 @@
  */
 import { useCallback, useMemo, useEffect } from "react";
 import { usePostsContext } from "../contexts/postsContext";
+import { useAuthContext } from "../contexts/authContext";
 import { POSTS_ACTIONS, POST_TABS } from "../utils/constants";
-import { getCurrentUser } from "../utils/tokenUtils";
 import {
   fetchUserPosts,
   createPost,
@@ -20,7 +20,8 @@ import {
 
 export const usePosts = () => {
   const { state, dispatch } = usePostsContext();
-  const user = getCurrentUser();
+  const { state: authState } = useAuthContext();
+  const user = authState.user;
 
   const { posts, searchQuery, pagination, activeTab, loading, error } = state;
   const filteredPosts = useMemo(() => {

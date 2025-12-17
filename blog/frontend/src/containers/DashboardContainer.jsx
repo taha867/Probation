@@ -2,16 +2,12 @@
  * DashboardContainer - Optimized dashboard with centralized state management
  * Following React 19 best practices with context and custom hooks
  */
-import { useNavigate } from "react-router-dom";
-import toast from "react-hot-toast";
-import { useAuth } from "../hooks/authHooks";
-import { getCurrentUser } from "../utils/tokenUtils";
 import {
   usePosts,
   usePostOperations,
   usePostDialogs,
 } from "../hooks/postsHooks";
-import { TOAST_MESSAGES, POST_TABS } from "../utils/constants";
+import { POST_TABS } from "../utils/constants";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   AlertDialog,
@@ -34,9 +30,6 @@ import ViewPostDialog from "../components/posts/ViewPostDialog";
  * Uses posts context provided by DashboardPage
  */
 export const DashboardContainer = () => {
-  const { signout } = useAuth();
-  const user = getCurrentUser();
-  const navigate = useNavigate();
   const { activeTab, setActiveTab } = usePosts();
   const { deletePost } = usePostOperations();
   const {

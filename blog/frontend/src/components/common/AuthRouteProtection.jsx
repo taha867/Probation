@@ -4,20 +4,7 @@ import { Navigate } from "react-router-dom";
 // Component to handle auth route protection
 const AuthRoute = ({ children }) => {
   // isAuthenticated → user logged in?
-  // isInitialized → did we finish checking localStorage token?
-  const { isAuthenticated, isInitialized } = useAuth();
-
-  // Show loading while initializing
-  if (!isInitialized) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-2 text-sm text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
-  }
+  const { isAuthenticated } = useAuth();
 
   // Redirect authenticated users to dashboard
   if (isAuthenticated) {

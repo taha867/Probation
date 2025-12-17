@@ -2,10 +2,10 @@
  * ForgotPasswordPage - Forgot password page route handler
  * Renders the ForgotPasswordContainer component
  */
-import ForgotPasswordContainer from "../../containers/ForgotPasswordContainer.jsx";
+import ForgotPassword from "../../components/auth/ForgotPassword.jsx";
 
 const ForgotPasswordPage = () => {
-  return <ForgotPasswordContainer />;
+  return <ForgotPassword />;
 };
 
 export default ForgotPasswordPage;
