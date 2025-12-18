@@ -6,17 +6,11 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { Form } from "@/components/ui/form";
+import { FormField } from "../../custom";
 import { resetPasswordSchema } from "../../../validations/authSchemas";
 import { useAuth } from "../../../hooks/authHooks";
+import { createSubmitHandlerWithToast } from "../../../utils/formSubmitWithToast";
 
 const ResetPasswordForm = ({ token }) => {
   const { resetUserPassword, isLoading } = useAuth();
@@ -44,45 +38,27 @@ const ResetPasswordForm = ({ token }) => {
     }
   };
 
+  const handleSubmit = createSubmitHandlerWithToast(form, onSubmit);
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <FormField
           control={form.control}
           name="newPassword"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>New Password</FormLabel>
-              <FormControl>
-                <Input
-                  type="password"
-                  placeholder="Enter your new password"
-                  autoComplete="new-password"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+          type="password"
+          label="New Password"
+          placeholder="Enter your new password"
+          autoComplete="new-password"
         />
 
         <FormField
           control={form.control}
           name="confirmPassword"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Confirm New Password</FormLabel>
-              <FormControl>
-                <Input
-                  type="password"
-                  placeholder="Confirm your new password"
-                  autoComplete="new-password"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+          type="password"
+          label="Confirm New Password"
+          placeholder="Confirm your new password"
+          autoComplete="new-password"
         />
 
         <Button type="submit" disabled={isLoading} size="lg" className="w-full">

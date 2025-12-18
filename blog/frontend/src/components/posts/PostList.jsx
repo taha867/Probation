@@ -1,8 +1,8 @@
 /**
  * PostList - Optimized component for displaying posts
- * Using centralized state management and memoization
+ * Using local search state with useTransition for smooth filtering
  */
-import { memo, useCallback } from "react";
+import { memo, useState, useTransition, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -19,18 +19,23 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Trash2, Edit, Eye, Search } from "lucide-react";
-import { usePosts, usePostOperations } from "../../hooks/postsHooks";
+import { usePostsContext } from "../../contexts/postsContext";
+import { useAuthContext } from "../../contexts/authContext";
+import {
+  deletePost,
+  changePage,
+  filterPosts,
+  calculateTotalPages,
+} from "../../services/postService";
 import { formatDistanceToNow } from "date-fns";
 import { POST_STATUS } from "../../utils/constants";
 
 // Memoized Post Item Component for better performance
 const PostItem = memo(({ post, onEdit, onView, onDelete }) => {
-  //change it
-  const getStatusColor = useCallback((status) => {
-    return status === POST_STATUS.PUBLISHED
+  const getStatusColor = (status) =>
+    status === POST_STATUS.PUBLISHED
       ? "bg-green-100 text-green-800"
       : "bg-yellow-100 text-yellow-800";
-  }, []);
 
   return (
     <div className="border rounded-lg p-4 hover:bg-muted/50 transition-colors">
@@ -92,7 +97,7 @@ const PostItem = memo(({ post, onEdit, onView, onDelete }) => {
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
 
                 <AlertDialogAction
-                  onClick={() => onDelete(post.id)}
+                  onClick={() => onDelete(post.id, post.title)}
                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                 >
                   Delete
@@ -109,46 +114,79 @@ const PostItem = memo(({ post, onEdit, onView, onDelete }) => {
 PostItem.displayName = "PostItem";
 
 const PostList = ({ onEditPost, onViewPost }) => {
-  const {
-    filteredPosts,
-    loading,
-    pagination,
-    searchQuery,
-    setSearchQuery,
-    changePage,
-  } = usePosts();
-  const { deletePost } = usePostOperations();
+  // Context and auth
+  const { state, dispatch } = usePostsContext();
+  const { state: authState } = useAuthContext();
+  const user = authState.user;
+  const { posts, pagination } = state;
 
-  const handleSearch = useCallback((e) => {
-    e.preventDefault();
-    // Client-side search is handled by the hook
-  }, []);
+  // Local UI state with useTransition
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filteredPosts, setFilteredPosts] = useState(posts);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isSearchPending, startSearchTransition] = useTransition();
+  const [isPaginationPending, startPaginationTransition] = useTransition();
+  const [isListUpdatePending, startListUpdateTransition] = useTransition();
 
-  const handleDeletePost = useCallback(
-    async (postId) => {
-      try {
-        await deletePost(postId);
-      } catch (error) {
-        // Error handling is done in the hook
+  // Calculate totalPages using service function
+  const totalPages = calculateTotalPages(pagination.total, pagination.limit);
+
+  // Handle search input changes with useTransition
+  const handleSearchChange = (e) => {
+    const query = e.target.value;
+    // Urgent: Update search input immediately
+    setSearchQuery(query);
+
+    // Non-urgent: Filter posts in background using service
+    startSearchTransition(() => {
+      if (query.trim()) {
+        const filtered = filterPosts(posts, query);
+        setFilteredPosts(filtered);
+      } else {
+        setFilteredPosts(posts);
       }
-    },
-    [deletePost],
-  );
+    });
+  };
 
-  if (loading && filteredPosts.length === 0) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Your Posts</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-center py-8">
-            <div className="text-muted-foreground">Loading posts...</div>
-          </div>
-        </CardContent>
-      </Card>
+  const handleSearch = (e) => {
+    e.preventDefault();
+    // Search is handled by onChange for better UX
+  };
+
+  const handleDeletePost = async (postId) => {
+    try {
+      await deletePost(postId, dispatch, startListUpdateTransition);
+    } catch (error) {
+      // Error handling is done in the service
+    }
+  };
+
+  // Handle page changes using service workflow
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+    changePage(
+      user?.id,
+      newPage,
+      pagination,
+      dispatch,
+      startPaginationTransition,
     );
-  }
+  };
+
+  // Update filtered posts when posts change
+  useEffect(() => {
+    if (!searchQuery) {
+      setFilteredPosts(posts);
+    } else {
+      const filtered = filterPosts(posts, searchQuery);
+      setFilteredPosts(filtered);
+    }
+  }, [posts, searchQuery]);
+
+  // Reset to first page when posts change (new data loaded)
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [posts]);
 
   return (
     <Card>
@@ -162,14 +200,21 @@ const PostList = ({ onEditPost, onViewPost }) => {
           )}
         </CardTitle>
 
-        {/* Search Form */}
+        {/* Search Form with Transition Feedback */}
         <form onSubmit={handleSearch} className="flex gap-2">
-          <Input
-            placeholder="Search posts..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="flex-1"
-          />
+          <div className="relative flex-1">
+            <Input
+              placeholder="Search posts..."
+              value={searchQuery}
+              onChange={handleSearchChange}
+              className="flex-1"
+            />
+            {isSearchPending && (
+              <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full"></div>
+              </div>
+            )}
+          </div>
           <Button type="submit" variant="outline" size="icon">
             <Search className="h-4 w-4" />
           </Button>
@@ -185,8 +230,14 @@ const PostList = ({ onEditPost, onViewPost }) => {
           </div>
         ) : (
           <>
-            {/* Posts List */}
-            <div className="space-y-4">
+            {/* Posts List with Transition Feedback */}
+            <div
+              className={`space-y-4 transition-opacity duration-200 ${
+                isSearchPending || isListUpdatePending
+                  ? "opacity-70"
+                  : "opacity-100"
+              }`}
+            >
               {filteredPosts.map((post) => (
                 <PostItem
                   key={post.id}
@@ -198,31 +249,38 @@ const PostList = ({ onEditPost, onViewPost }) => {
               ))}
             </div>
 
-            {/* Pagination - hide when searching since we're doing client-side filtering */}
-            {pagination.totalPages > 1 && !searchQuery && (
+            {/* Pagination with Transition Feedback */}
+            {totalPages > 1 && !searchQuery && (
               <div className="flex items-center justify-between pt-4 border-t">
                 <div className="text-sm text-muted-foreground">
-                  Page {pagination.page} of {pagination.totalPages}
+                  Page {currentPage} of {totalPages}
+                  {isPaginationPending && (
+                    <span className="ml-2 text-primary">Loading...</span>
+                  )}
                 </div>
 
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => changePage(pagination.page - 1)}
-                    disabled={pagination.page <= 1 || loading}
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage <= 1 || isPaginationPending}
                   >
+                    {isPaginationPending ? (
+                      <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full mr-2"></div>
+                    ) : null}
                     Previous
                   </Button>
 
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => changePage(pagination.page + 1)}
-                    disabled={
-                      pagination.page >= pagination.totalPages || loading
-                    }
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage >= totalPages || isPaginationPending}
                   >
+                    {isPaginationPending ? (
+                      <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full mr-2"></div>
+                    ) : null}
                     Next
                   </Button>
                 </div>

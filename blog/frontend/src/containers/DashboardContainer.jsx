@@ -1,126 +1,96 @@
 /**
- * DashboardContainer - Optimized dashboard with centralized state management
- * Following React 19 best practices with context and custom hooks
+ * DashboardContainer - Optimized dashboard showing user posts
+ * Clean interface with navigation to create post page
  */
-import {
-  usePosts,
-  usePostOperations,
-  usePostDialogs,
-} from "../hooks/postsHooks";
-import { POST_TABS } from "../utils/constants";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { useRef, useTransition } from "react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 
-import CreatePostForm from "../components/posts/CreatePostForm";
 import PostList from "../components/posts/PostList";
-import EditPostForm from "../components/posts/EditPostForm";
+import EditPostForm from "../components/posts/form/EditPostForm";
 import ViewPostDialog from "../components/posts/ViewPostDialog";
+import DeletePostDialog from "../components/posts/DeletePostDialog";
 
 /**
- * DashboardContainer - Main dashboard component
- * Uses posts context provided by DashboardPage
+ * DashboardContainer - Main dashboard component with minimal local state
+ * Shows user posts with navigation to create new posts
  */
 export const DashboardContainer = () => {
-  const { activeTab, setActiveTab } = usePosts();
-  const { deletePost } = usePostOperations();
-  const {
-    editDialog,
-    viewDialog,
-    deleteDialog,
-    openEditDialog,
-    closeEditDialog,
-    openViewDialog,
-    closeViewDialog,
-    openDeleteDialog,
-    closeDeleteDialog,
-  } = usePostDialogs();
+  const navigate = useNavigate();
 
-  // Handle delete confirmation
-  const handleConfirmDelete = async () => {
-    if (!deleteDialog.postId) return;
+  // Single useTransition for all operations
+  const [isPending, startTransition] = useTransition();
 
-    try {
-      await deletePost(deleteDialog.postId);
-      closeDeleteDialog();
-    } catch (error) {
-      // Error handling is done in the hook
-    }
+  // Dialog refs for controlling local dialog components
+  const editDialogRef = useRef(null);
+  const viewDialogRef = useRef(null);
+  const deleteDialogRef = useRef(null);
+
+  // Navigate to create post page
+  const handleCreatePost = () => {
+    navigate("/create-post");
+  };
+
+  // Dialog handlers - each dialog manages its own state
+  const handleEditPost = (post) => {
+    startTransition(() => {
+      editDialogRef.current?.openDialog(post);
+    });
+  };
+
+  const handleViewPost = (post) => {
+    startTransition(() => {
+      viewDialogRef.current?.openDialog(post);
+    });
+  };
+
+  const handleDeletePost = (postId, postTitle) => {
+    startTransition(() => {
+      deleteDialogRef.current?.openDialog(postId, postTitle);
+    });
   };
 
   return (
     <div className="container max-w-4xl mx-auto py-10 px-4">
       <div className="space-y-6">
-        <div className="space-y-6">
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value={POST_TABS.LIST}>My Posts</TabsTrigger>
-              <TabsTrigger value={POST_TABS.CREATE}>Create Post</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value={POST_TABS.LIST} className="space-y-4">
-              <PostList
-                onEditPost={openEditDialog}
-                onViewPost={openViewDialog}
-              />
-            </TabsContent>
-
-            <TabsContent value={POST_TABS.CREATE} className="space-y-4">
-              <CreatePostForm />
-            </TabsContent>
-          </Tabs>
-
-          {/* Edit Post Dialog */}
-          <EditPostForm
-            post={editDialog.post}
-            isOpen={editDialog.isOpen}
-            onClose={closeEditDialog}
-          />
-
-          {/* View Post Dialog */}
-          <ViewPostDialog
-            post={viewDialog.post}
-            fullPost={viewDialog.fullPost}
-            loading={viewDialog.loading}
-            isOpen={viewDialog.isOpen}
-            onClose={closeViewDialog}
-            onEditPost={openEditDialog}
-            onDeletePost={openDeleteDialog}
-          />
-
-          {/* Delete Confirmation Dialog */}
-          <AlertDialog
-            open={deleteDialog.isOpen}
-            onOpenChange={closeDeleteDialog}
+        {/* Header with Create Post Button */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">My Dashboard</h1>
+            <p className="text-muted-foreground">
+              Manage your posts and create new content
+            </p>
+          </div>
+          <Button
+            onClick={handleCreatePost}
+            disabled={isPending}
+            className="flex items-center gap-2"
           >
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete Post</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Are you sure you want to delete this post? This action cannot
-                  be undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={handleConfirmDelete}
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                >
-                  Delete
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+            <Plus className="h-4 w-4" />
+            Create Post
+          </Button>
         </div>
+
+        {/* Posts List */}
+        <div
+          className={`transition-opacity duration-200 ${
+            isPending ? "opacity-90" : "opacity-100"
+          }`}
+        >
+          <PostList onEditPost={handleEditPost} onViewPost={handleViewPost} />
+        </div>
+
+        {/* Local Dialog Components - Each manages its own state */}
+        <EditPostForm ref={editDialogRef} />
+
+        <ViewPostDialog
+          ref={viewDialogRef}
+          onEditPost={handleEditPost}
+          onDeletePost={handleDeletePost}
+        />
+
+        <DeletePostDialog ref={deleteDialogRef} />
       </div>
     </div>
   );

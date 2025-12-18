@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import DashboardPage from "./pages/DashboardPage.jsx";
+import CreatePostPage from "./pages/CreatePostPage.jsx";
 import HomePage from "./pages/HomePage.jsx";
 import BlogPage from "./pages/BlogPage.jsx";
 import SignInPage from "./pages/AuthPages/SignInPage.jsx";
@@ -75,6 +76,16 @@ const App = () => {
               element={
                 <ProtectedRoute>
                   <DashboardPage />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Protected create post route */}
+            <Route
+              path="/create-post"
+              element={
+                <ProtectedRoute>
+                  <CreatePostPage />
                 </ProtectedRoute>
               }
             />

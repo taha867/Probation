@@ -1,18 +1,12 @@
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form } from "@/components/ui/form";
+import { FormField } from "../../custom";
 import { forgotPasswordSchema } from "../../../validations/authSchemas";
 import { useAuth } from "../../../hooks/authHooks";
-import { Mail, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+import { createSubmitHandlerWithToast } from "../../../utils/formSubmitWithToast";
 
 const ForgotPasswordForm = () => {
   const { requestPasswordReset, isLoading } = useAuth();
@@ -33,6 +27,8 @@ const ForgotPasswordForm = () => {
     }
   };
 
+  const handleSubmit = createSubmitHandlerWithToast(form, onSubmit);
+
   const onBackToSignIn = () => {
     // This function was referenced but not defined - adding placeholder
     // You may need to implement navigation logic here
@@ -41,42 +37,14 @@ const ForgotPasswordForm = () => {
   return (
     <div className="space-y-4">
       <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(onSubmit, (errors) => {
-            const firstError = Object.values(errors)[0];
-            if (firstError?.message) {
-              toast.error(firstError.message);
-            }
-          })}
-          className="space-y-4"
-        >
+        <form onSubmit={handleSubmit} className="space-y-4">
           <FormField
             control={form.control}
             name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel
-                  htmlFor="forgot-email"
-                  className="text-sm font-medium text-slate-700"
-                >
-                  Email
-                </FormLabel>
-                <FormControl>
-                  <div className="relative">
-                    <Input
-                      id="forgot-email"
-                      placeholder="name@example.com"
-                      type="email"
-                      autoComplete="email"
-                      className="h-11 pl-10"
-                      {...field}
-                    />
-                    <Mail className="absolute left-3 top-3.5 h-4 w-4 text-gray-400" />
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            type="email"
+            label="Email"
+            showIcon
+            className="h-11"
           />
 
           <Button

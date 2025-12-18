@@ -113,33 +113,14 @@ export const TOAST_MESSAGES = {
   GITHUB_OAUTH_COMING_SOON: "GitHub OAuth coming soon! ",
 };
 
-// Posts Actions Constants
+// Posts Actions Constants - Essential data-only actions
 export const POSTS_ACTIONS = {
-  // Data actions
-  SET_LOADING: "SET_LOADING",
+  // Essential data actions only
   SET_POSTS: "SET_POSTS",
   SET_PAGINATION: "SET_PAGINATION",
   ADD_POST: "ADD_POST",
   UPDATE_POST: "UPDATE_POST",
   DELETE_POST: "DELETE_POST",
-
-  // UI actions
-  SET_SEARCH_QUERY: "SET_SEARCH_QUERY",
-  SET_ACTIVE_TAB: "SET_ACTIVE_TAB",
-
-  // Dialog actions
-  OPEN_EDIT_DIALOG: "OPEN_EDIT_DIALOG",
-  CLOSE_EDIT_DIALOG: "CLOSE_EDIT_DIALOG",
-  OPEN_VIEW_DIALOG: "OPEN_VIEW_DIALOG",
-  CLOSE_VIEW_DIALOG: "CLOSE_VIEW_DIALOG",
-  SET_VIEW_DIALOG_LOADING: "SET_VIEW_DIALOG_LOADING",
-  SET_FULL_POST: "SET_FULL_POST",
-  OPEN_DELETE_DIALOG: "OPEN_DELETE_DIALOG",
-  CLOSE_DELETE_DIALOG: "CLOSE_DELETE_DIALOG",
-
-  // Error actions
-  SET_ERROR: "SET_ERROR",
-  CLEAR_ERROR: "CLEAR_ERROR",
 };
 
 // Post Status Constants
@@ -148,11 +129,7 @@ export const POST_STATUS = {
   PUBLISHED: "published",
 };
 
-// Post Tab Constants
-export const POST_TABS = {
-  LIST: "list",
-  CREATE: "create",
-};
+// Post Tab Constants - REMOVED: No longer using tabs, separate pages instead
 
 // Default error messages for auth operations
 export const AUTH_ERROR_MESSAGES = {

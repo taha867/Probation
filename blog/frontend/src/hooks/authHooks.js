@@ -15,6 +15,7 @@ import {
 } from "../services/authService";
 import { TOAST_MESSAGES } from "../utils/constants";
 import { invalidateAuthPromise, updateAuthPromise } from "../utils/authPromise";
+import { invalidatePostsPromise } from "../utils/postsPromise";
 
 // Error messages are now handled globally by axios interceptors
 
@@ -92,8 +93,9 @@ export const useAuth = () => {
       // Always clear both tokens and state
       removeTokens();
       dispatch(logout());
-      // Invalidate auth promise cache for next login
+      // Invalidate promise caches for next login
       invalidateAuthPromise();
+      invalidatePostsPromise();
     }
   };
 

@@ -1,18 +1,33 @@
 /**
  * Posts Context - Centralized state management for posts
- * Following React 19 best practices with useReducer and context
  */
-import { createContext, useReducer, useContext, useMemo } from "react";
+import { createContext, useReducer, useContext, useMemo, use } from "react";
 import { postsReducer, initialPostsState } from "../reducers/postReducer";
+import { createInitialPostsPromise } from "../utils/postsPromise";
+import { useAuthContext } from "./authContext";
 
 // Context
 const PostsContext = createContext(null);
 
 /**
- * Posts Provider component
+ * Posts Provider component with Suspense integration
+ * Uses use() hook for initial data loading
  */
 export const PostsProvider = ({ children }) => {
-  const [state, dispatch] = useReducer(postsReducer, initialPostsState);
+  const { state: {user} ={} } = useAuthContext();
+
+  // This will suspend the component until posts data is resolved
+  const initialPostsData = use(createInitialPostsPromise(user?.id));
+
+  const {posts, pagination} = initialPostsData;
+  // Create initial state with resolved posts data
+  const initialStateWithData = {
+    ...initialPostsState,
+    posts,
+    pagination
+  };
+
+  const [state, dispatch] = useReducer(postsReducer, initialStateWithData);
 
   // Memoize context value to prevent unnecessary re-renders
   const contextValue = useMemo(

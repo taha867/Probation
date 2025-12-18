@@ -85,10 +85,9 @@ export const createInitialAuthPromise = () => {
         if (token) {
           let decodedUser = decodeAndValidateToken(token);
 
-          const { userId, email, tokenVersion } = decodedUser;
-
           if (decodedUser) {
             // Access token is valid
+            const { userId, email, tokenVersion } = decodedUser;
             const user = {
               id: userId,
               email,
@@ -107,8 +106,9 @@ export const createInitialAuthPromise = () => {
             if (newAccessToken) {
               // Successfully refreshed, decode the new token
               decodedUser = decodeAndValidateToken(newAccessToken);
-              const { userId, email, tokenVersion } = decodedUser;
+
               if (decodedUser) {
+                const { userId, email, tokenVersion } = decodedUser;
                 const user = {
                   id: userId,
                   email,

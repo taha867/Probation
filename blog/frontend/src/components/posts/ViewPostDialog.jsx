@@ -1,8 +1,8 @@
 /**
- * ViewPostDialog - Optimized component for viewing post details
- * Using centralized state management and memoization
+ * ViewPostDialog - Local dialog component for viewing a post in detail.
+ * Uses a shared imperative dialog hook with minimal local state.
  */
-import { memo, useCallback } from "react";
+import { memo, useState, forwardRef, useImperativeHandle } from "react";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
@@ -15,45 +15,86 @@ import { Button } from "@/components/ui/button";
 import { Edit, Trash2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { POST_STATUS } from "../../utils/constants";
+import { getPostDetails } from "../../services/postService";
+import { useImperativeDialog } from "../../hooks/useImperativeDialog";
 
-const ViewPostDialog = ({
-  post,
-  fullPost,
-  loading,
-  isOpen,
-  onClose,
-  onEditPost,
-  onDeletePost,
-}) => {
-  const getStatusColor = useCallback((status) => {
-    return status === POST_STATUS.PUBLISHED
+const ViewPostDialog = forwardRef(({ onEditPost, onDeletePost }, ref) => {
+  // Local dialog state via shared hook
+  const {
+    isOpen,
+    payload: currentPost,
+    openDialog: openDialogState,
+    closeDialog: closeDialogState,
+  } = useImperativeDialog(null);
+
+  const [fullPost, setFullPost] = useState(null);
+
+  // Expose methods to parent via ref
+  useImperativeHandle(
+    ref,
+    () => ({
+      openDialog: (post) => {
+        // Show dialog with basic info immediately
+        openDialogState(post);
+        setFullPost(null);
+
+        // Fetch full post details in the background
+        (async () => {
+          try {
+            const fullPostData = await getPostDetails(post.id);
+            setFullPost(fullPostData);
+          } catch (error) {
+            console.error("Failed to fetch full post details:", error);
+          }
+        })();
+      },
+      closeDialog: () => {
+        closeDialogState();
+        setFullPost(null);
+      },
+    }),
+    [openDialogState, closeDialogState],
+  );
+
+  const getStatusColor = (status) =>
+    status === POST_STATUS.PUBLISHED
       ? "bg-green-100 text-green-800"
       : "bg-yellow-100 text-yellow-800";
-  }, []);
 
-  const displayPost = fullPost || post;
+  const displayPost = fullPost || currentPost;
+
+  const handleEdit = () => {
+    if (displayPost && onEditPost) {
+      onEditPost(displayPost);
+    }
+  };
+
+  const handleDelete = () => {
+    if (displayPost?.id && onDeletePost) {
+      onDeletePost(displayPost.id, displayPost.title);
+    }
+  };
+
+  const handleClose = (open) => {
+    if (!open) {
+      closeDialogState();
+      setFullPost(null);
+    }
+  };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             <span>View Post</span>
             <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onEditPost(displayPost)}
-              >
+              <Button variant="outline" size="sm" onClick={handleEdit}>
                 <Edit className="h-4 w-4 mr-2" />
                 Edit
               </Button>
 
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onDeletePost(displayPost.id)}
-              >
+              <Button variant="outline" size="sm" onClick={handleDelete}>
                 <Trash2 className="h-4 w-4 mr-2" />
                 Delete
               </Button>
@@ -64,11 +105,7 @@ const ViewPostDialog = ({
           </DialogDescription>
         </DialogHeader>
 
-        {loading ? (
-          <div className="flex items-center justify-center py-8">
-            <div className="text-muted-foreground">Loading post details...</div>
-          </div>
-        ) : displayPost ? (
+        {displayPost ? (
           <div className="space-y-6">
             {/* Post Header */}
             <div className="space-y-4">
@@ -112,13 +149,19 @@ const ViewPostDialog = ({
             </div>
 
             {/* Post Stats */}
-            {fullPost && (
+            {fullPost ? (
               <div className="border-t pt-4">
                 <div className="text-sm text-muted-foreground">
                   <div>Post ID: {fullPost.id}</div>
                   {fullPost.comments && (
                     <div>Comments: {fullPost.comments.length}</div>
                   )}
+                </div>
+              </div>
+            ) : (
+              <div className="border-t pt-4">
+                <div className="text-sm text-muted-foreground">
+                  Loading full post details...
                 </div>
               </div>
             )}
@@ -131,6 +174,6 @@ const ViewPostDialog = ({
       </DialogContent>
     </Dialog>
   );
-};
+});
 
 export default memo(ViewPostDialog);

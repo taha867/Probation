@@ -2,24 +2,15 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form } from "@/components/ui/form";
+import { FormField } from "../../custom";
 import { signinSchema } from "../../../validations/authSchemas";
 import { useAuth } from "../../../hooks/authHooks";
-import { Eye, EyeOff } from "lucide-react";
-import { useState } from "react";
+import { createSubmitHandlerWithToast } from "../../../utils/formSubmitWithToast";
 
 const SignInForm = () => {
   const { signin, isLoading } = useAuth();
   const navigate = useNavigate();
-  const [showPassword, setShowPassword] = useState(false);
 
   const form = useForm({
     resolver: yupResolver(signinSchema),
@@ -38,90 +29,28 @@ const SignInForm = () => {
     }
   };
 
+  const handleSubmit = createSubmitHandlerWithToast(form, onSubmit);
+
   return (
     <div className="space-y-4">
       <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(onSubmit, (errors) => {
-            const firstError = Object.values(errors)[0];
-            if (firstError?.message) {
-              toast.error(firstError.message);
-            }
-          })}
-          className="space-y-4"
-        >
+        <form onSubmit={handleSubmit} className="space-y-4">
           <FormField
             control={form.control}
             name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel
-                  htmlFor="signin-email"
-                  className="text-sm font-medium text-slate-700"
-                >
-                  Email
-                </FormLabel>
-                <FormControl>
-                  <Input
-                    id="signin-email"
-                    placeholder="name@example.com"
-                    type="email"
-                    autoComplete="email"
-                    className="h-11"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            type="email"
+            label="Email"
+            className="h-11"
           />
 
           <FormField
             control={form.control}
             name="password"
-            render={({ field }) => (
-              <FormItem>
-                <div className="flex items-center justify-between">
-                  <FormLabel
-                    htmlFor="signin-password"
-                    className="text-sm font-medium text-slate-700"
-                  >
-                    Password
-                  </FormLabel>
-                  <button
-                    type="button"
-                    onClick={() => navigate("/forgot-password")}
-                    className="text-xs text-blue-600 hover:text-blue-700 font-medium"
-                  >
-                    Forgot password?
-                  </button>
-                </div>
-                <FormControl>
-                  <div className="relative">
-                    <Input
-                      id="signin-password"
-                      placeholder="••••••••"
-                      type={showPassword ? "text" : "password"}
-                      autoComplete="current-password"
-                      className="h-11 pr-10"
-                      {...field}
-                    />
-                    <button
-                      type="button"
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4 text-gray-400" />
-                      ) : (
-                        <Eye className="h-4 w-4 text-gray-400" />
-                      )}
-                    </button>
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            type="password"
+            label="Password"
+            showToggle
+            showForgotLink
+            className="h-11"
           />
 
           <Button

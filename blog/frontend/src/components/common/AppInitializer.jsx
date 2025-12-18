@@ -1,6 +1,7 @@
 /**
- * AppInitializer - Loading component for app-level Suspense fallback
- * Shows while the app is initializing authentication state
+ * AppInitializer - Global loading component for app-level Suspense fallback
+ * Shows while the app is loading any async data (auth, posts, etc.)
+ * Single global Suspense boundary for consistent loading experience
  */
 
 const AppInitializer = () => {
@@ -9,10 +10,10 @@ const AppInitializer = () => {
       <div className="text-center">
         <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto"></div>
         <h2 className="mt-6 text-xl font-semibold text-gray-900">
-          Initializing Blogify
+          Loading Blogify
         </h2>
         <p className="mt-2 text-sm text-gray-600">
-          Setting up your experience...
+          Please wait while we load your data...
         </p>
       </div>
     </div>
