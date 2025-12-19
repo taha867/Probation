@@ -14,7 +14,10 @@ import { usePostsContext } from "../../../contexts/postsContext";
 import { createPost } from "../../../services/postService";
 import { POST_STATUS, TOAST_MESSAGES } from "../../../utils/constants";
 import { createSubmitHandlerWithToast } from "../../../utils/formSubmitWithToast";
-import { invalidatePostsPromise } from "../../../utils/postsPromise";
+import {
+  invalidatePostsPromise,
+  invalidateHomePostsPromise,
+} from "../../../utils/postsPromise";
 
 const CreatePostForm = ({ onPostCreated }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -36,10 +39,15 @@ const CreatePostForm = ({ onPostCreated }) => {
     setIsSubmitting(true);
 
     try {
-      await createPost(data, dispatch, startListUpdateTransition);
+      const newPost = await createPost(data, dispatch, startListUpdateTransition);
 
       // Ensure next dashboard mount fetches fresh posts including this one
       invalidatePostsPromise();
+
+      // If post is published, invalidate home posts promise so home page shows it
+      if (newPost?.status === POST_STATUS.PUBLISHED) {
+        invalidateHomePostsPromise();
+      }
 
       // Non-urgent: Form reset and tab switch can be deferred for smooth UX
       startFormTransition(() => {

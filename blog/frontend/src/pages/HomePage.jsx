@@ -1,11 +1,7 @@
-/**
- * HomePage - Home page route handler
- * Renders the HomeContainer component
- */
-import HomeContainer from "../containers/HomeContainer";
+import Home from "../components/home/Home";
 
 const HomePage = () => {
-  return <HomeContainer />;
+  return <Home />;
 };
 
 export default HomePage;

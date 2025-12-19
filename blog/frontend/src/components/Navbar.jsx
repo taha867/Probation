@@ -36,10 +36,7 @@ const Navbar = () => {
 
   // Dynamic navigation links based on authentication status
   const getNavigationLinks = () => {
-    const baseLinks = [
-      { label: "Home", to: "/" },
-      { label: "Blog", to: "/blog" },
-    ];
+    const baseLinks = [{ label: "Home", to: "/" }];
 
     if (isAuthenticated) {
       return [...baseLinks, { label: "Dashboard", to: "/dashboard" }];

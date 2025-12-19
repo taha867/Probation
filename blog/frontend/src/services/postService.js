@@ -1,5 +1,5 @@
 import axiosInstance from "../utils/axiosInstance";
-import { POSTS_ACTIONS } from "../utils/constants";
+import { POSTS_ACTIONS, POST_STATUS } from "../utils/constants";
 
 // Original API function for fetching user posts (used by postsPromise.js)
 export const fetchUserPosts = async (userId, options = {}) => {
@@ -220,4 +220,38 @@ export const filterPosts = (posts, searchQuery) => {
 // Calculate total pages - pure function
 export const calculateTotalPages = (total, limit) => {
   return Math.ceil(total / limit);
+};
+
+/**
+ * Fetch all public posts (for home page)
+ * Business logic: Fetches all posts from the API
+ * Filters published posts on client side if needed
+ */
+export const fetchAllPosts = async (options = {}) => {
+  try {
+    const response = await axiosInstance.get("/posts", {
+      params: options,
+    });
+    const { data: { data } = {} } = response;
+    // Backend returns "items" not "posts" - align with backend response structure
+    const { items = [], meta = {} } = data;
+
+    // Filter only published posts on client side (if backend doesn't support status filter)
+    const publishedPosts = items.filter(
+      (post) => post.status === POST_STATUS.PUBLISHED
+    );
+
+    return {
+      posts: publishedPosts,
+      pagination: {
+        ...meta,
+        // Keep backend's total (includes drafts) - pagination will work correctly
+        // Some pages may have fewer items if drafts are filtered out
+      },
+    };
+  } catch (error) {
+    const { response: { data: { message } = {} } = {} } = error || {};
+    const errorMessage = message || "Failed to fetch posts. Please try again.";
+    throw new Error(errorMessage);
+  }
 };

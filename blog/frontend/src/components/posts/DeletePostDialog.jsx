@@ -16,6 +16,8 @@ import {
 import { usePostsContext } from "../../contexts/postsContext";
 import { deletePost } from "../../services/postService";
 import { useImperativeDialog } from "../../hooks/useImperativeDialog";
+import { invalidateHomePostsPromise } from "../../utils/postsPromise";
+import { POST_STATUS } from "../../utils/constants";
 
 const DeletePostDialog = forwardRef((props, ref) => {
   // Local dialog state via shared hook
@@ -29,7 +31,7 @@ const DeletePostDialog = forwardRef((props, ref) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [, startTransition] = useTransition();
 
-  const { dispatch } = usePostsContext();
+  const { dispatch, state } = usePostsContext();
 
   // Expose methods to parent via ref
   useImperativeHandle(
@@ -53,7 +55,17 @@ const DeletePostDialog = forwardRef((props, ref) => {
     setIsDeleting(true);
 
     try {
+      // Check if the post being deleted is published (to invalidate home posts)
+      const post = state.posts.find((p) => p.id === postToDelete.id);
+      const isPublished = post?.status === POST_STATUS.PUBLISHED;
+
       await deletePost(postToDelete.id, dispatch, startTransition);
+
+      // If deleted post was published, invalidate home posts promise
+      if (isPublished) {
+        invalidateHomePostsPromise();
+      }
+
       // Close dialog after successful deletion
       closeDialogState();
     } catch (error) {

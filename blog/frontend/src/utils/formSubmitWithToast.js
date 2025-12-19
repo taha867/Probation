@@ -7,11 +7,6 @@ import toast from "react-hot-toast";
  *
  * This does NOT replace axios interceptors; those still handle
  * server-side success/error toasts.
- *
- * @param {import("react-hook-form").UseFormReturn} form - useForm() return object
- * @param {Function} onValid - called when form is valid
- * @param {Object} [options]
- * @param {string} [options.successMessage] - optional success toast message
  */
 export const createSubmitHandlerWithToast = (form, onValid, options = {}) => {
   const { successMessage } = options;

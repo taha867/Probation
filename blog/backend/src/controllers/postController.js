@@ -33,7 +33,7 @@ export async function create(req, res) {
   const validatedBody = validateRequest(createPostSchema, req.body, res);
   if (!validatedBody) return;
   const { title, body, status } = validatedBody; // Already validated by Joi
-  const { id: userId } = req.user; // Get userId from authenticated user
+  const { id: userId} = req.user; // Get userId from authenticated user
 
   try {
     const post = await postService.createPost({ title, body, status, userId });
@@ -103,7 +103,7 @@ export async function get(req, res) {
       { convert: true }
     );
     if (!validatedParams) return;
-    const { id } = validatedParams;
+    const { id ={}} = validatedParams;
     const post = await postService.findPostWithAuthor(id);
     if (!post) {
       return res.status(HTTP_STATUS.NOT_FOUND).send({

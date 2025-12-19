@@ -17,14 +17,11 @@ import { TOAST_MESSAGES } from "../utils/constants";
 import { invalidateAuthPromise, updateAuthPromise } from "../utils/authPromise";
 import { invalidatePostsPromise } from "../utils/postsPromise";
 
-// Error messages are now handled globally by axios interceptors
-
 /**
  * Custom hook for authentication operations
  * @returns {object} - Authentication methods and state
  */
 export const useAuth = () => {
-  // Use single context following React 19 best practices
   const { state, dispatch } = useAuthContext();
   const [isPending, startTransition] = useTransition();
 

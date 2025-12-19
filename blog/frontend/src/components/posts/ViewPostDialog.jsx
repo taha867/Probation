@@ -53,7 +53,7 @@ const ViewPostDialog = forwardRef(({ onEditPost, onDeletePost }, ref) => {
         setFullPost(null);
       },
     }),
-    [openDialogState, closeDialogState],
+    [openDialogState, closeDialogState]
   );
 
   const getStatusColor = (status) =>
@@ -61,6 +61,7 @@ const ViewPostDialog = forwardRef(({ onEditPost, onDeletePost }, ref) => {
       ? "bg-green-100 text-green-800"
       : "bg-yellow-100 text-yellow-800";
 
+  // Prefer fullPost when available, otherwise fall back to basic currentPost
   const displayPost = fullPost || currentPost;
 
   const handleEdit = () => {
@@ -70,7 +71,7 @@ const ViewPostDialog = forwardRef(({ onEditPost, onDeletePost }, ref) => {
   };
 
   const handleDelete = () => {
-    if (displayPost?.id && onDeletePost) {
+    if (displayPost && onDeletePost) {
       onDeletePost(displayPost.id, displayPost.title);
     }
   };
@@ -107,53 +108,71 @@ const ViewPostDialog = forwardRef(({ onEditPost, onDeletePost }, ref) => {
 
         {displayPost ? (
           <div className="space-y-6">
-            {/* Post Header */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-bold">{displayPost.title}</h1>
-                <Badge className={getStatusColor(displayPost.status)}>
-                  {displayPost.status}
-                </Badge>
-              </div>
+            {/*
+              Destructure only when displayPost is guaranteed to be non-null.
+              Use optional chaining for nested author to avoid runtime errors.
+            */}
+            {(() => {
+              const {
+                title,
+                status,
+                createdAt,
+                updatedAt,
+                author,
+                body,
+              } = displayPost;
+              const {name:authorName, email:authorEmail}={} = author;
 
-              <div className="text-sm text-muted-foreground space-y-1">
-                <div>
-                  Created{" "}
-                  {formatDistanceToNow(new Date(displayPost.createdAt), {
-                    addSuffix: true,
-                  })}
-                </div>
-                {displayPost.updatedAt !== displayPost.createdAt && (
-                  <div>
-                    Updated{" "}
-                    {formatDistanceToNow(new Date(displayPost.updatedAt), {
-                      addSuffix: true,
-                    })}
-                  </div>
-                )}
-                {displayPost.author && (
-                  <div>
-                    By {displayPost.author.name} ({displayPost.author.email})
-                  </div>
-                )}
-              </div>
-            </div>
+              return (
+                <>
+                  {/* Post Header */}
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <h1 className="text-2xl font-bold">{title}</h1>
+                      <Badge className={getStatusColor(status)}>{status}</Badge>
+                    </div>
 
-            {/* Post Content */}
-            <div className="border-t pt-6">
-              <div className="prose max-w-none">
-                <div className="whitespace-pre-wrap text-sm leading-relaxed">
-                  {displayPost.body}
-                </div>
-              </div>
-            </div>
+                    <div className="text-sm text-muted-foreground space-y-1">
+                      <div>
+                        Created{" "}
+                        {formatDistanceToNow(new Date(createdAt), {
+                          addSuffix: true,
+                        })}
+                      </div>
+                      {updatedAt !== createdAt && (
+                        <div>
+                          Updated{" "}
+                          {formatDistanceToNow(new Date(updatedAt), {
+                            addSuffix: true,
+                          })}
+                        </div>
+                      )}
+                      {author && (
+                        <div>
+                          By {authorName} ({authorEmail})
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Post Content */}
+                  <div className="border-t pt-6">
+                    <div className="prose max-w-none">
+                      <div className="whitespace-pre-wrap text-sm leading-relaxed">
+                        {body}
+                      </div>
+                    </div>
+                  </div>
+                </>
+              );
+            })()}
 
             {/* Post Stats */}
             {fullPost ? (
               <div className="border-t pt-4">
                 <div className="text-sm text-muted-foreground">
                   <div>Post ID: {fullPost.id}</div>
-                  {fullPost.comments && (
+                  {Array.isArray(fullPost.comments) && (
                     <div>Comments: {fullPost.comments.length}</div>
                   )}
                 </div>

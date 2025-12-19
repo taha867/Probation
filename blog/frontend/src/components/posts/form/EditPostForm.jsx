@@ -27,6 +27,7 @@ import { usePostsContext } from "../../../contexts/postsContext";
 import { updatePost } from "../../../services/postService";
 import { POST_STATUS, TOAST_MESSAGES } from "../../../utils/constants";
 import { createSubmitHandlerWithToast } from "../../../utils/formSubmitWithToast";
+import { invalidateHomePostsPromise } from "../../../utils/postsPromise";
 
 const EditPostForm = forwardRef((_props, ref) => {
   // Local dialog state (no global state needed)
@@ -93,12 +94,19 @@ const EditPostForm = forwardRef((_props, ref) => {
     setIsSubmitting(true);
 
     try {
-      await updatePost(
+      const updatedPost = await updatePost(
         currentPost.id,
         data,
         dispatch,
         startListUpdateTransition,
       );
+
+      // If post status changed to/from published, invalidate home posts promise
+      const wasPublished = currentPost.status === POST_STATUS.PUBLISHED;
+      const isNowPublished = data.status === POST_STATUS.PUBLISHED;
+      if (wasPublished || isNowPublished) {
+        invalidateHomePostsPromise();
+      }
 
       // Non-urgent: Dialog closing can be deferred for smooth UX
       startFormTransition(() => {

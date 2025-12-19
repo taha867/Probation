@@ -2,7 +2,6 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import DashboardPage from "./pages/DashboardPage.jsx";
 import CreatePostPage from "./pages/CreatePostPage.jsx";
 import HomePage from "./pages/HomePage.jsx";
-import BlogPage from "./pages/BlogPage.jsx";
 import SignInPage from "./pages/AuthPages/SignInPage.jsx";
 import SignUpPage from "./pages/AuthPages/SignUpPage.jsx";
 import ForgotPasswordPage from "./pages/AuthPages/ForgotPasswordPage.jsx";
@@ -22,9 +21,6 @@ const App = () => {
           <Routes>
             {/* Home route */}
             <Route path="/" element={<HomePage />} />
-
-            {/* Blog route */}
-            <Route path="/blog" element={<BlogPage />} />
 
             {/* Authentication routes - redirect if already authenticated */}
             <Route

@@ -1,11 +1,14 @@
 //Handles initial posts data loading using cached promises with Suspense
 
-import { fetchUserPosts } from "../services/postService";
+import { fetchUserPosts, fetchAllPosts } from "../services/postService";
 
 // Cache for the posts promise to prevent infinite suspense
 // This variable is acting as a cache.
 // It lives outside React components, It survives re-renders, It holds the result of a previous operation
 let postsPromise = null;
+
+// Cache for the home posts promise to prevent infinite suspense
+let homePostsPromise = null;
 
 /**
  * Creates a cached promise for initial posts data loading
@@ -85,4 +88,54 @@ export const updatePostsPromise = (userId, postsData) => {
     postsPromise = Promise.resolve(postsData);
     postsPromise.cacheKey = cacheKey;
   }
+};
+
+/**
+ * Creates a cached promise for home page posts (all published posts)
+ * Uses React 19 Suspense pattern with use() hook
+ * This promise resolves once with all published posts for a specific page
+ */
+export const createHomePostsPromise = (page = 1, limit = 10) => {
+  // Create cache key based on page to handle page changes
+  const cacheKey = `home_posts_${page}_${limit}`;
+
+  // If promise already exists for this page, reuse it
+  if (!homePostsPromise || homePostsPromise.cacheKey !== cacheKey) {
+    homePostsPromise = new Promise(async (resolve, reject) => {
+      try {
+        // Fetch posts for specific page using service (service filters published posts)
+        const result = await fetchAllPosts({ page, limit });
+        const { posts = [], pagination = {} } = result || {};
+        resolve({
+          posts,
+          pagination,
+        });
+      } catch (error) {
+        console.error("Error loading home posts:", error);
+        // On error, resolve with empty data instead of rejecting
+        // This prevents Suspense from showing error boundary
+        resolve({
+          posts: [],
+          pagination: {
+            limit,
+            total: 0,
+            page,
+          },
+        });
+      }
+    });
+
+    // Add cache key to promise for tracking
+    homePostsPromise.cacheKey = cacheKey;
+  }
+
+  return homePostsPromise;
+};
+
+/**
+ * Invalidates the home posts promise cache
+ * Call this when posts are created/updated/deleted to refresh home page
+ */
+export const invalidateHomePostsPromise = () => {
+  homePostsPromise = null;
 };

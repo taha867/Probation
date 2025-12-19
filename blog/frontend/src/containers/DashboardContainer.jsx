@@ -1,8 +1,9 @@
 /**
- * DashboardContainer - Optimized dashboard showing user posts
- * Clean interface with navigation to create post page
+ * DashboardContainer - Optimized dashboard with React 19 best practices
+ * Uses useCallback to stabilize handlers and prevent unnecessary re-renders
+ * 
  */
-import { useRef, useTransition } from "react";
+import { useRef, useTransition, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
@@ -13,8 +14,10 @@ import ViewPostDialog from "../components/posts/ViewPostDialog";
 import DeletePostDialog from "../components/posts/DeletePostDialog";
 
 /**
- * DashboardContainer - Main dashboard component with minimal local state
- * Shows user posts with navigation to create new posts
+ * DashboardContainer - Main dashboard component with React 19 optimizations
+ * - Stable handlers via useCallback prevent child re-renders
+ * - useRef for dialogs (no re-renders)
+ * - useTransition for smooth UX
  */
 export const DashboardContainer = () => {
   const navigate = useNavigate();
@@ -22,34 +25,44 @@ export const DashboardContainer = () => {
   // Single useTransition for all operations
   const [isPending, startTransition] = useTransition();
 
-  // Dialog refs for controlling local dialog components
+  // Dialog refs for controlling local dialog components (refs don't cause re-renders)
   const editDialogRef = useRef(null);
   const viewDialogRef = useRef(null);
   const deleteDialogRef = useRef(null);
 
-  // Navigate to create post page
-  const handleCreatePost = () => {
+  // Navigate to create post page - stable reference
+  const handleCreatePost = useCallback(() => {
     navigate("/create-post");
-  };
+  }, [navigate]);
 
-  // Dialog handlers - each dialog manages its own state
-  const handleEditPost = (post) => {
-    startTransition(() => {
-      editDialogRef.current?.openDialog(post);
-    });
-  };
+  // Dialog handlers - stabilized with useCallback to prevent child re-renders
+  // React 19 best practice: stabilize handlers passed as props
+  const handleEditPost = useCallback(
+    (post) => {
+      startTransition(() => {
+        editDialogRef.current?.openDialog(post);
+      });
+    },
+    [startTransition]
+  );
 
-  const handleViewPost = (post) => {
-    startTransition(() => {
-      viewDialogRef.current?.openDialog(post);
-    });
-  };
+  const handleViewPost = useCallback(
+    (post) => {
+      startTransition(() => {
+        viewDialogRef.current?.openDialog(post);
+      });
+    },
+    [startTransition]
+  );
 
-  const handleDeletePost = (postId, postTitle) => {
-    startTransition(() => {
-      deleteDialogRef.current?.openDialog(postId, postTitle);
-    });
-  };
+  const handleDeletePost = useCallback(
+    (postId, postTitle) => {
+      startTransition(() => {
+        deleteDialogRef.current?.openDialog(postId, postTitle);
+      });
+    },
+    [startTransition]
+  );
 
   return (
     <div className="container max-w-4xl mx-auto py-10 px-4">
@@ -78,7 +91,11 @@ export const DashboardContainer = () => {
             isPending ? "opacity-90" : "opacity-100"
           }`}
         >
-          <PostList onEditPost={handleEditPost} onViewPost={handleViewPost} />
+          <PostList
+            onEditPost={handleEditPost}
+            onViewPost={handleViewPost}
+            onDeletePost={handleDeletePost}
+          />
         </div>
 
         {/* Local Dialog Components - Each manages its own state */}
