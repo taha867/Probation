@@ -24,6 +24,7 @@ import { handleAppError } from "../utils/errors.js";
  * @param {string} req.body.title - The title of the post.
  * @param {string} req.body.body - The content of the post.
  * @param {string} [req.body.status] - The status of the post (draft or published).
+ * @param {string} [req.body.image] - The image URL of the post (optional).
  * @param {Object} req.user - The authenticated user from JWT token.
  * @returns {Object} The created post with 201 status code.
  * @throws {400} If title or body are missing.
@@ -32,11 +33,11 @@ import { handleAppError } from "../utils/errors.js";
 export async function create(req, res) {
   const validatedBody = validateRequest(createPostSchema, req.body, res);
   if (!validatedBody) return;
-  const { title, body, status } = validatedBody; // Already validated by Joi
+  const { title, body, status, image } = validatedBody; // Already validated by Joi
   const { id: userId} = req.user; // Get userId from authenticated user
 
   try {
-    const post = await postService.createPost({ title, body, status, userId });
+    const post = await postService.createPost({ title, body, status, image, userId });
     return res.status(HTTP_STATUS.CREATED).send({ data: post });
   } catch (error) {
     console.error(error);
@@ -182,6 +183,7 @@ export async function listForPost(req, res) {
  * @param {string} [req.body.title] - The new title of the post.
  * @param {string} [req.body.body] - The new content of the post.
  * @param {string} [req.body.status] - The new status of the post.
+ * @param {string} [req.body.image] - The new image URL of the post (optional).
  * @param {Object} req.user - The authenticated user from JWT token.
  * @returns {Object} The updated post with 200 status code.
  * @throws {403} If the user is not the owner of the post.
@@ -201,11 +203,11 @@ export async function update(req, res) {
     const { id: userId } = req.user;
     const validatedBody = validateRequest(updatePostSchema, req.body, res);
     if (!validatedBody) return;
-    const { title, body, status } = validatedBody;
+    const { title, body, status, image } = validatedBody;
     const result = await postService.updatePostForUser({
       postId,
       userId,
-      data: { title, body, status },
+      data: { title, body, status, image },
     });
     return res.status(HTTP_STATUS.OK).send({ data: result.post });
   } catch (err) {

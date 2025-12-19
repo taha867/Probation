@@ -11,8 +11,8 @@ export class PostService {
     this.User = models.User;
   }
 
-  async createPost({ title, body, status, userId }) {
-    return this.Post.create({ title, body, userId, status });
+  async createPost({ title, body, status, image, userId }) {
+    return this.Post.create({ title, body, status, image, userId });
   }
 
   async listPosts({ page, limit, search, userId }) {

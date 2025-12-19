@@ -39,6 +39,10 @@ export default (sequelize, DataTypes) => {
         type: DataTypes.ENUM("draft", "published"),
         defaultValue: "draft",
       },
+      image: {
+        type: DataTypes.STRING,
+        allowNull: true, // Optional field - posts can exist without images
+      },
     },
     {
       sequelize,
