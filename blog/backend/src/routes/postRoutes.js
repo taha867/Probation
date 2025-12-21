@@ -12,7 +12,7 @@ import { authenticateToken } from "../middleware/authMiddleware.js";
 const router = Router();
 
 router.post("/", authenticateToken, create);
-router.get("/",authenticateToken, list);
+router.get("/", list);
 router.get("/:postId/comments",authenticateToken, listForPost);
 router.get("/:id",authenticateToken, get);
 router.put("/:id", authenticateToken, update);
