@@ -105,7 +105,7 @@ export async function signIn(req, res) {
  */
 export async function signOut(req, res) {
   try {
-    const { id: authUser } = req.user;
+    const { id: authUser ={} } = req.user;
     await authService.logoutUser(authUser);
 
     return res.status(HTTP_STATUS.OK).send({

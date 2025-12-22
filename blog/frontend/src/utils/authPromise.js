@@ -18,7 +18,6 @@ let authPromise = null;
 
 /**
  * Refreshes access token using refresh token during app initialization
- * @returns {Promise<string|null>} New access token or null if refresh failed
  */
 const refreshTokenDuringInit = async () => {
   try {

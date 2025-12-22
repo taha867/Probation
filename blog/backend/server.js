@@ -11,8 +11,7 @@ const App = async () => {
   // Enable CORS for your frontend
   app.use(
     cors({
-      origin: ["http://localhost:5173", "http://localhost:5174"], // frontend origins
-      credentials: true, // if you use cookies or sessions
+      origin: ["http://localhost:5173", "http://localhost:5174"] // frontend origins
     }),
   );
 

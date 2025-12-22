@@ -17,7 +17,7 @@ const Home = () => {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [isPaginationPending, startPaginationTransition] = useTransition();
-  const limit = 5; // Default limit
+  const limit = 3; // Increased to show more posts per page (matching design reference)
 
   // use() hook suspends until promise resolves
   // Pass currentPage to fetch correct page data
@@ -28,10 +28,7 @@ const Home = () => {
 
   // Calculate total pages from pagination metadata 
   const totalPages = useMemo(
-    () => 
-    {
-      calculateTotalPages(pagination.total || 0, pagination.limit || limit)
-    },
+    () => calculateTotalPages(pagination.total || 0, pagination.limit || limit),
     [pagination.total, pagination.limit, limit]
   );
 
@@ -50,38 +47,33 @@ const Home = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto px-4 py-12">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Recent Posts</h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Discover stories, thinking, and expertise from writers on any topic.
-          </p>
-        </div>
-
+    <div className="min-h-screen bg-white">
+      <div className="max-w-6xl mx-auto px-4 py-8 sm:py-12">
         {/* Blog Posts */}
-        <div className="space-y-8">
+        <div className="space-y-6">
           {!hasPosts ? (
             <div className="text-center py-12 text-gray-500">
               No posts found. Check back later.
             </div>
           ) : (
             <>
-              <div className="space-y-8">
+              {/* Posts List */}
+              <div className="space-y-6">
                 {posts.map((post) => (
                   <PostCard key={post.id} post={post} />
                 ))}
               </div>
 
-              {/* Pagination Controls */}
+              {/* Pagination Controls - Always at bottom */}
               {totalPages > 1 && (
-                <PaginationControls
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  isPending={isPaginationPending}
-                  onPageChange={handlePageChange}
-                />
+                <div className="mt-8 pt-6 border-t border-gray-200">
+                  <PaginationControls
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    isPending={isPaginationPending}
+                    onPageChange={handlePageChange}
+                  />
+                </div>
               )}
             </>
           )}

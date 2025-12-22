@@ -25,13 +25,13 @@ class EmailService {
       ];
       //checks: If any variable is missing
       const missingVars = requiredEnvVars.filter(
-        (varName) => !process.env[varName],
+        (varName) => !process.env[varName]
       );
 
       if (missingVars.length > 0) {
         console.error(
           "Missing required email environment variables:",
-          missingVars,
+          missingVars
         );
         return;
       }
@@ -70,7 +70,7 @@ class EmailService {
   async sendPasswordResetEmail(email, resetToken, userName = "User") {
     if (!this.transporter) {
       console.error(
-        "Email transporter not initialized - check environment variables",
+        "Email transporter not initialized - check environment variables"
       );
       throw new Error("Email transporter not initialized");
     }
@@ -94,7 +94,7 @@ class EmailService {
     };
 
     try {
-      const info = await this.transporter.sendMail(mailOptions);
+      const info = this.transporter.sendMail(mailOptions);
       console.log("Password reset email sent successfully:", info.messageId);
       return { success: true, messageId: info.messageId };
     } catch (error) {
@@ -285,25 +285,6 @@ class EmailService {
 </body>
 </html>
     `;
-  }
-
-  /**
-   * Test email configuration
-   * @returns {Promise<boolean>} True if configuration is valid
-   */
-  async testConnection() {
-    if (!this.transporter) {
-      return false;
-    }
-
-    try {
-      await this.transporter.verify();
-      console.log("Email configuration is valid");
-      return true;
-    } catch (error) {
-      console.error("Email configuration test failed:", error);
-      return false;
-    }
   }
 }
 

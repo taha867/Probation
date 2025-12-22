@@ -20,7 +20,7 @@ export class AuthService {
       // Service throws a domain error; controller decides how to respond.
       throw new AppError(
         "USER_ALREADY_EXISTS",
-        HTTP_STATUS.UNPROCESSABLE_ENTITY,
+        HTTP_STATUS.UNPROCESSABLE_ENTITY
       );
     }
 
@@ -60,12 +60,12 @@ export class AuthService {
         tokenVersion: user.tokenVersion,
         type: "access",
       },
-      { expiresIn: "15m" },
+      { expiresIn: "15m" }
     );
 
     const refreshToken = signToken(
       { userId: user.id, tokenVersion: user.tokenVersion, type: "refresh" },
-      { expiresIn: "7d" },
+      { expiresIn: "7d" }
     );
 
     const { id, name, email: userEmail, phone: userPhone, status } = user;
@@ -120,15 +120,15 @@ export class AuthService {
     if (user.tokenVersion !== decoded.tokenVersion) {
       throw new AppError("INVALID_REFRESH_TOKEN", HTTP_STATUS.UNAUTHORIZED);
     }
-
+    const { id, email, tokenVersion } = user;
     const accessToken = signToken(
       {
-        userId: user.id,
-        email: user.email,
-        tokenVersion: user.tokenVersion,
+        userId: id,
+        email,
+        tokenVersion,
         type: "access",
       },
-      { expiresIn: "15m" },
+      { expiresIn: "15m" }
     );
 
     return {
@@ -148,7 +148,7 @@ export class AuthService {
 
     const resetToken = signToken(
       { userId: user.id, type: "password_reset" },
-      { expiresIn: "1h" },
+      { expiresIn: "1h" }
     );
 
     try {
@@ -160,7 +160,7 @@ export class AuthService {
       console.error("Failed to send password reset email:", error);
       throw new AppError(
         "EMAIL_SEND_FAILED",
-        HTTP_STATUS.INTERNAL_SERVER_ERROR,
+        HTTP_STATUS.INTERNAL_SERVER_ERROR
       );
     }
   }
