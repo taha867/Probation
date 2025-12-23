@@ -1,34 +1,25 @@
-/**
- * PostList - Container component for displaying posts (React 19 best practices)
- * - Keeps data + UI logic
- * - Delegates pure UI to small presentational components
- */
-import { useState, useTransition, useEffect, useMemo, useCallback } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Search } from "lucide-react";
-import { usePostsContext } from "../../contexts/postsContext";
-import { useAuthContext } from "../../contexts/authContext";
-import {
-  changePage,
-  filterPosts,
-  calculateTotalPages,
-} from "../../services/postService";
-import EmptyPostsState from "./postList/EmptyPostsState";
-import PostsListContent from "./postList/PostsListContent";
+import { useState, useEffect, useMemo, useCallback, useTransition } from "react";
+import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useUserPosts } from "../../hooks/useUserPosts";
+import { filterPosts, calculateTotalPages } from "../../services/postService";
+import PostCard from "../common/PostCard.jsx";
+import PaginationControls from "../common/PaginationControls.jsx";
+import PostFilter from "../common/PostFilter.jsx";
 
-const PostList = ({ onEditPost, onViewPost, onDeletePost }) => {
-  // Context and auth
-  const { state, dispatch } = usePostsContext();
-  const { state: authState } = useAuthContext();
-  const user = authState.user;
-  const { posts, pagination } = state;
-
+const PostList = ({ onEditPost, onDeletePost }) => {
   // Local UI state
+  const [inputValue, setInputValue] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [isPaginationPending, startPaginationTransition] = useTransition();
+  const [isPendingTransition, startTransition] = useTransition();
+
+  // React Query hook - handles fetching, caching, and refetching automatically
+  const { data, isLoading, isFetching } = useUserPosts(currentPage, 10);
+  const posts = data?.posts || [];
+  const pagination = data?.pagination || {};
+
+  // Combined loading state (initial load + refetching)
+  const isPaginationPending = isLoading || isFetching;
 
   // React 19 best practice: Use useMemo for derived state instead of useState + useEffect
   const filteredPosts = useMemo(() => {
@@ -39,18 +30,17 @@ const PostList = ({ onEditPost, onViewPost, onDeletePost }) => {
     return filterPosts(posts, searchQuery);
   }, [posts, searchQuery]);
 
-  // Calculate totalPages using service function - memoized to prevent recalculation
-  const totalPages = useMemo(
-    () => calculateTotalPages(pagination.total, pagination.limit),
-    [pagination.total, pagination.limit]
-  );
+  // Calculate totalPages using service function - trivial derivation (no memo needed)
+  const totalPages = calculateTotalPages(pagination.total, pagination.limit);
 
-  // Handle search input changes - no useCallback needed (not passed to memoized child)
   const handleSearchChange = (e) => {
     const query = e.target.value;
-    // Urgent: Update search input immediately
-    setSearchQuery(query);
-    // Filtering happens automatically via useMemo
+    // Urgent: keep input responsive
+    setInputValue(query);
+    // Non-urgent: update query used for filtering in a transition
+    startTransition(() => {
+      setSearchQuery(query);
+    });
   };
 
   const handleSearch = (e) => {
@@ -58,10 +48,10 @@ const PostList = ({ onEditPost, onViewPost, onDeletePost }) => {
     // Search is handled by onChange for better UX
   };
 
-  // Stabilized handler - prevents PostItem re-renders
+  // Stabilized handler - prevents PostCard re-renders
   const handleDeleteClick = useCallback(
-    (postId, postTitle) => {
-      onDeletePost(postId, postTitle);
+    (post) => {
+      onDeletePost(post);
     },
     [onDeletePost]
   );
@@ -74,81 +64,64 @@ const PostList = ({ onEditPost, onViewPost, onDeletePost }) => {
     [onEditPost]
   );
 
-  // Stabilized handler - prevents PostItem re-renders
-  const handleViewClick = useCallback(
-    (post) => {
-      onViewPost(post);
-    },
-    [onViewPost]
-  );
-
-  // Handle page changes using service workflow
-  const handlePageChange = useCallback(
-    (newPage) => {
-      setCurrentPage(newPage);
-      changePage(
-        user?.id,
-        newPage,
-        pagination,
-        dispatch,
-        startPaginationTransition,
-      );
-    },
-    [user?.id, pagination, dispatch, startPaginationTransition]
-  );
+  // Handle page changes - React Query handles fetching automatically
+  const handlePageChange = useCallback((newPage) => {
+    setCurrentPage(newPage);
+  }, []);
 
   // Reset to first page when posts change (new data loaded)
   useEffect(() => {
     setCurrentPage(1);
   }, [posts]);
 
-  // Memoize showPagination to prevent recalculation
-  const showPagination = useMemo(() => !searchQuery, [searchQuery]);
+  // Simple derived flag - no memoization needed
+  const showPagination = !searchQuery;
 
   return (
-    <Card>
+    <>
       <CardHeader>
-        <CardTitle>
-          Your Posts ({searchQuery ? filteredPosts.length : pagination.total})
-          {searchQuery && (
-            <span className="text-sm font-normal text-muted-foreground ml-2">
-              (filtered from {pagination.total})
-            </span>
-          )}
-        </CardTitle>
 
-        {/* Search Form */}
-        <form onSubmit={handleSearch} className="flex gap-2">
-          <Input
-            placeholder="Search posts..."
-            value={searchQuery}
-            onChange={handleSearchChange}
-            className="flex-1"
-          />
-          <Button type="submit" variant="outline" size="icon">
-            <Search className="h-4 w-4" />
-          </Button>
-        </form>
+        <PostFilter
+          value={inputValue}
+          onChange={handleSearchChange}
+          onSubmit={handleSearch}
+          isPending={isPendingTransition}
+        />
       </CardHeader>
 
       <CardContent className="space-y-4">
         {filteredPosts.length === 0 ? (
-          <EmptyPostsState searchQuery={searchQuery} />
+          <div className="text-center py-8 text-muted-foreground">
+            {searchQuery
+              ? "No posts found matching your search."
+              : "No posts yet. Create your first post!"}
+          </div>
         ) : (
-          <PostsListContent
-            posts={filteredPosts}
-            currentPage={currentPage}
-            totalPages={totalPages}
-            isPaginationPending={isPaginationPending}
-            showPagination={showPagination}
-            onEdit={handleEditClick}
-            onView={handleViewClick}
-            onDelete={handleDeleteClick}
-            onPageChange={handlePageChange}
-          />
+          <>
+            <div className="space-y-4">
+              {filteredPosts.map((post) => (
+                <PostCard
+                  key={post.id}
+                  post={post}
+                  variant="dashboard"
+                  onEdit={handleEditClick}
+                  onDelete={handleDeleteClick}
+                />
+              ))}
+            </div>
+
+            {showPagination && totalPages > 1 && (
+              <PaginationControls
+                currentPage={currentPage}
+                totalPages={totalPages}
+                isPending={isPaginationPending}
+                onPageChange={handlePageChange}
+              />
+            )}
+          </>
         )}
       </CardContent>
-    </Card>
+    </>
   );
 };
 

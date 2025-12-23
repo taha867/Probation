@@ -1,6 +1,13 @@
-import { HTTP_STATUS, SUCCESS_MESSAGES, ERROR_MESSAGES } from "../utils/constants.js";
+import {
+  HTTP_STATUS,
+  SUCCESS_MESSAGES,
+  ERROR_MESSAGES,
+} from "../utils/constants.js";
 import { validateRequest } from "../utils/validations.js";
-import { getPaginationParams, buildPaginationMeta } from "../utils/pagination.js";
+import {
+  getPaginationParams,
+  buildPaginationMeta,
+} from "../utils/pagination.js";
 import {
   getUserPostsQuerySchema,
   updateUserSchema,
@@ -9,6 +16,16 @@ import {
 } from "../validations/userValidation.js";
 import { userService } from "../services/userService.js";
 import { handleAppError } from "../utils/errors.js";
+
+const { INTERNAL_SERVER_ERROR, OK, NOT_FOUND } = HTTP_STATUS;
+const {
+  UNABLE_TO_FETCH_USERS,
+  UNABLE_TO_FETCH_USER_POSTS,
+  USER_NOT_FOUND,
+  UNABLE_TO_UPDATE_USER,
+  UNABLE_TO_DELETE_USER,
+} = ERROR_MESSAGES;
+const { USER_UPDATED } = SUCCESS_MESSAGES;
 
 /**
  * Gets paginated list of all users.
@@ -19,19 +36,16 @@ import { handleAppError } from "../utils/errors.js";
  * @throws {500} If there's an error during the retrieval process.
  */
 export async function list(req, res) {
-  const validatedQuery = validateRequest(
-    listUsersQuerySchema,
-    req.query,
-    res,
-    { convert: true }
-  );
+  const validatedQuery = validateRequest(listUsersQuerySchema, req.query, res, {
+    convert: true,
+  });
   if (!validatedQuery) return;
   const { page, limit } = getPaginationParams(validatedQuery);
 
   try {
     const { rows, count } = await userService.listUsers({ page, limit });
 
-    return res.status(HTTP_STATUS.OK).send({
+    return res.status(OK).send({
       data: {
         users: rows,
         meta: buildPaginationMeta({ total: count, page, limit }),
@@ -40,8 +54,8 @@ export async function list(req, res) {
   } catch (error) {
     console.error(error);
     return res
-      .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
-      .send({ message: ERROR_MESSAGES.UNABLE_TO_FETCH_USERS });
+      .status(INTERNAL_SERVER_ERROR)
+      .send({ message: UNABLE_TO_FETCH_USERS });
   }
 }
 
@@ -57,12 +71,9 @@ export async function list(req, res) {
  * @throws {500} If there's an error during the retrieval process.
  */
 export async function getUserPostsWithComment(req, res) {
-  const validatedParams = validateRequest(
-    userIdParamSchema,
-    req.params,
-    res,
-    { convert: true }
-  );
+  const validatedParams = validateRequest(userIdParamSchema, req.params, res, {
+    convert: true,
+  });
   if (!validatedParams) return;
   const { id: requestedUserId } = validatedParams;
 
@@ -74,25 +85,27 @@ export async function getUserPostsWithComment(req, res) {
   );
   if (!validatedQuery) return;
   const { page, limit } = getPaginationParams(validatedQuery);
+  const { search } = validatedQuery;
 
   try {
     const result = await userService.getUserPostsWithComments({
       userId: requestedUserId,
       page,
       limit,
+      search,
     });
 
     if (!result.user) {
-      return res.status(HTTP_STATUS.NOT_FOUND).send({
-        data: { message: ERROR_MESSAGES.USER_NOT_FOUND },
+      return res.status(NOT_FOUND).send({
+        data: { message: USER_NOT_FOUND },
       });
     }
 
-    return res.status(HTTP_STATUS.OK).send({ data: result });
+    return res.status(OK).send({ data: result });
   } catch (error) {
     console.error(error);
-    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send({
-      data: { message: ERROR_MESSAGES.UNABLE_TO_FETCH_USER_POSTS },
+    return res.status(INTERNAL_SERVER_ERROR).send({
+      data: { message: UNABLE_TO_FETCH_USER_POSTS },
     });
   }
 }
@@ -105,6 +118,7 @@ export async function getUserPostsWithComment(req, res) {
  * @param {string} [req.body.email] - The new email address of the user.
  * @param {string} [req.body.phone] - The new phone number of the user.
  * @param {string} [req.body.password] - The new password for the user account.
+ * @param {string} [req.body.image] - Optional profile image URL for the user.
  * @param {Object} req.user - The authenticated user from JWT token.
  * @returns {Object} The updated user information with 200 status code.
  * @throws {400} If the user id is invalid.
@@ -114,22 +128,24 @@ export async function getUserPostsWithComment(req, res) {
  * @throws {500} If there's an error during the update process.
  */
 export async function update(req, res) {
-  const validatedParams = validateRequest(
-    userIdParamSchema,
-    req.params,
-    res,
-    { convert: true }
-  );
+  const validatedParams = validateRequest(userIdParamSchema, req.params, res, {
+    convert: true,
+  });
   if (!validatedParams) return;
   const { id: requestedUserId } = validatedParams;
-  const {id: authUser} = req.user;
+  const { id: authUser } = req.user;
   try {
-    const updateBody = validateRequest(updateUserSchema, req.body, res);
-    if (!updateBody) return;
+    // Validate request body - Joi schema handles:
+    // - Empty object check (.min(1))
+    // - Field format validation (email, phone, name regex, etc.)
+    // - Empty string filtering and validation
+    const updateData = validateRequest(updateUserSchema, req.body, res);
+    if (!updateData) return;
+
     const result = await userService.updateUserForSelf({
       requestedUserId,
       authUserId: authUser,
-      data: updateBody,
+      data: updateData,
     });
 
     const { user } = result;
@@ -138,16 +154,18 @@ export async function update(req, res) {
       name: userName,
       email: userEmail,
       phone: userPhone,
+      image: userImage,
       status,
     } = user;
-    return res.status(HTTP_STATUS.OK).send({
+    return res.status(OK).send({
       data: {
-        message: SUCCESS_MESSAGES.USER_UPDATED,
+        message: USER_UPDATED,
         user: {
           id,
           name: userName,
           email: userEmail,
           phone: userPhone,
+          image: userImage,
           status,
         },
       },
@@ -157,8 +175,8 @@ export async function update(req, res) {
 
     // eslint-disable-next-line no-console
     console.error(err);
-    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send({
-      data: { message: ERROR_MESSAGES.UNABLE_TO_UPDATE_USER },
+    return res.status(INTERNAL_SERVER_ERROR).send({
+      data: { message: UNABLE_TO_UPDATE_USER },
     });
   }
 }
@@ -174,15 +192,12 @@ export async function update(req, res) {
  * @throws {500} If there's an error during the deletion process.
  */
 export async function remove(req, res) {
-  const validatedParams = validateRequest(
-    userIdParamSchema,
-    req.params,
-    res,
-    { convert: true }
-  );
+  const validatedParams = validateRequest(userIdParamSchema, req.params, res, {
+    convert: true,
+  });
   if (!validatedParams) return;
   const { id: requestedUserId } = validatedParams;
-  const {id: authUser} = req.user;
+  const { id: authUser } = req.user;
   try {
     const result = await userService.deleteUserForSelf({
       requestedUserId,
@@ -197,8 +212,8 @@ export async function remove(req, res) {
 
     // eslint-disable-next-line no-console
     console.error(err);
-    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send({
-      data: { message: ERROR_MESSAGES.UNABLE_TO_DELETE_USER },
+    return res.status(INTERNAL_SERVER_ERROR).send({
+      data: { message: UNABLE_TO_DELETE_USER },
     });
   }
 }

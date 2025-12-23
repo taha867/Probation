@@ -1,8 +1,3 @@
-/**
- * PaginationControls - Presentational component for pagination UI
- * Single responsibility: render page info and navigation buttons.
- * Shows numbered pages with Prev/Next buttons (matching design reference)
- */
 import { Button } from "@/components/ui/button";
 import { useMemo } from "react";
 
@@ -15,19 +10,19 @@ const PaginationControls = ({
   // Generate page numbers to display (show up to 5 pages around current)
   const pageNumbers = useMemo(() => {
     const pages = [];
-    const maxVisible = 5;
+    const maxVisible = 5; // max buttons shown (UX decision)
     let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
     let end = Math.min(totalPages, start + maxVisible - 1);
-    
+
     // Adjust start if we're near the end
     if (end - start < maxVisible - 1) {
       start = Math.max(1, end - maxVisible + 1);
     }
-    
+
     for (let i = start; i <= end; i++) {
       pages.push(i);
     }
-    
+
     return pages;
   }, [currentPage, totalPages]);
 
@@ -41,7 +36,7 @@ const PaginationControls = ({
         className="flex items-center gap-1"
       >
         {isPending && currentPage > 1 ? (
-          <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full"></div>
+          <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
         ) : (
           <span>←</span>
         )}
@@ -73,7 +68,7 @@ const PaginationControls = ({
       >
         <span>Next</span>
         {isPending && currentPage < totalPages ? (
-          <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full"></div>
+          <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
         ) : (
           <span>→</span>
         )}

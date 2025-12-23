@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import Sequelize from "sequelize";
 import { fileURLToPath } from "url";
-import enVariables from "../../config.js";
+import envVariables from "../../config.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -10,7 +10,7 @@ const __dirname = path.dirname(__filename);
 // Load environment config
 const basename = path.basename(__filename);
 const env = process.env.NODE_ENV || "development";
-const config = enVariables[env];
+const config = envVariables[env];
 
 const db = {};
 

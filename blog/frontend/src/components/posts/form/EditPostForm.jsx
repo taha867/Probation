@@ -1,15 +1,4 @@
-/**
- * EditPostForm - Local dialog component with useTransition optimization
- * Self-contained dialog state management for better performance
- */
-import {
-  memo,
-  useState,
-  useEffect,
-  useTransition,
-  forwardRef,
-  useImperativeHandle,
-} from "react";
+import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Button } from "@/components/ui/button";
@@ -21,47 +10,34 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { FormField, FormSelect } from "../../custom";
+import { FormField, FormSelect, FormFileInput } from "../../custom";
 import { postSchema } from "../../../validations/postSchemas";
-import { usePostsContext } from "../../../contexts/postsContext";
-import { updatePost } from "../../../services/postService";
+import { useUpdatePost } from "../../../hooks/usePostMutations";
 import { POST_STATUS, TOAST_MESSAGES } from "../../../utils/constants";
 import { createSubmitHandlerWithToast } from "../../../utils/formSubmitWithToast";
-import { invalidateHomePostsPromise } from "../../../utils/postsPromise";
 
 const EditPostForm = forwardRef((_props, ref) => {
   // Local dialog state (no global state needed)
   const [isOpen, setIsOpen] = useState(false);
   const [currentPost, setCurrentPost] = useState(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isFormPending, startFormTransition] = useTransition();
-  const [isDialogPending, startDialogTransition] = useTransition();
-  const [isListUpdatePending, startListUpdateTransition] = useTransition();
 
-  const { dispatch } = usePostsContext();
+  // React Query mutation - handles API call and cache invalidation automatically
+  const updatePostMutation = useUpdatePost();
 
   // Expose methods to parent via ref
   useImperativeHandle(
     ref,
     () => ({
       openDialog: (post) => {
-        // Urgent: Show dialog immediately
         setIsOpen(true);
-
-        // Non-urgent: Populate form data in background
-        startDialogTransition(() => {
-          setCurrentPost(post);
-        });
+        setCurrentPost(post);
       },
       closeDialog: () => {
-        // Non-urgent: Close dialog smoothly
-        startDialogTransition(() => {
-          setIsOpen(false);
-          setCurrentPost(null);
-        });
+        setIsOpen(false);
+        setCurrentPost(null);
       },
     }),
-    [startDialogTransition],
+    [],
   );
 
   const form = useForm({
@@ -70,53 +46,60 @@ const EditPostForm = forwardRef((_props, ref) => {
       title: "",
       body: "",
       status: POST_STATUS.DRAFT,
+      image: null, // Cloudinary upload result: {image: url, imagePublicId: id} or existing URL string
     },
     mode: "onChange",
   });
 
-  // Update form when post changes with useTransition
+  // Update form when post changes
   useEffect(() => {
     if (currentPost) {
-      // Non-urgent: Form population can be deferred for smooth dialog opening
-      startFormTransition(() => {
-        form.reset({
-          title: currentPost.title || "",
-          body: currentPost.body || "",
-          status: currentPost.status || POST_STATUS.DRAFT,
-        });
+      form.reset({
+        title: currentPost.title || "",
+        body: currentPost.body || "",
+        status: currentPost.status || POST_STATUS.DRAFT,
+        image: currentPost.image || null, // Set existing image URL for preview
       });
     }
-  }, [currentPost, form, startFormTransition]);
+  }, [currentPost, form]);
 
   const onSubmit = async (data) => {
     if (!currentPost?.id) return;
 
-    setIsSubmitting(true);
-
     try {
-      const updatedPost = await updatePost(
-        currentPost.id,
-        data,
-        dispatch,
-        startListUpdateTransition,
-      );
+      // Prepare JSON payload (no FormData needed - image already uploaded to Cloudinary)
+      const payload = {
+        title: data.title,
+        body: data.body,
+        status: data.status,
+      };
 
-      // If post status changed to/from published, invalidate home posts promise
-      const wasPublished = currentPost.status === POST_STATUS.PUBLISHED;
-      const isNowPublished = data.status === POST_STATUS.PUBLISHED;
-      if (wasPublished || isNowPublished) {
-        invalidateHomePostsPromise();
+      // Handle image: if new upload (object with image property), include it
+      // If unchanged (string URL), don't include (backend keeps existing)
+      // If null/removed, set to null
+      if (data.image === null) {
+        // Image was removed
+        payload.image = null;
+        payload.imagePublicId = null;
+      } else if (data.image && typeof data.image === "object" && data.image.image) {
+        // New image uploaded to Cloudinary
+        payload.image = data.image.image;
+        payload.imagePublicId = data.image.imagePublicId;
       }
+      // If data.image is a string (existing URL), don't include in payload (backend keeps existing)
 
-      // Non-urgent: Dialog closing can be deferred for smooth UX
-      startFormTransition(() => {
-        setIsOpen(false);
-        setCurrentPost(null);
+      // React Query mutation handles API call and cache invalidation automatically
+      // Pass previousStatus so mutation can check if home posts need invalidation
+      await updatePostMutation.mutateAsync({
+        postId: currentPost.id,
+        data: payload,
+        previousStatus: currentPost.status,
       });
+
+      setIsOpen(false);
+      setCurrentPost(null);
     } catch (error) {
-      // Error handling is done in the service
-    } finally {
-      setIsSubmitting(false);
+      // Error handling is done by React Query and axios interceptor
     }
   };
 
@@ -125,11 +108,9 @@ const EditPostForm = forwardRef((_props, ref) => {
   });
 
   const handleClose = () => {
-    if (!isSubmitting && !isFormPending) {
-      startDialogTransition(() => {
-        setIsOpen(false);
-        setCurrentPost(null);
-      });
+    if (!updatePostMutation.isPending) {
+      setIsOpen(false);
+      setCurrentPost(null);
     }
   };
 
@@ -174,12 +155,21 @@ const EditPostForm = forwardRef((_props, ref) => {
               ]}
             />
 
+            <FormFileInput
+              control={form.control}
+              name="image"
+              label="Post Image (Optional)"
+              maxSizeMB={5}
+              existingImageUrl={currentPost?.image || null}
+              folder="blog/posts"
+            />
+
             <div className="flex gap-2 pt-4">
               <Button
                 type="button"
                 variant="outline"
                 onClick={handleClose}
-                disabled={isSubmitting || isFormPending || isDialogPending}
+                disabled={updatePostMutation.isPending}
                 className="flex-1"
               >
                 Cancel
@@ -187,18 +177,10 @@ const EditPostForm = forwardRef((_props, ref) => {
 
               <Button
                 type="submit"
-                disabled={isSubmitting || isFormPending || isDialogPending}
+                disabled={updatePostMutation.isPending}
                 className="flex-1"
               >
-                {isSubmitting
-                  ? "Updating..."
-                  : isListUpdatePending
-                    ? "Updating list..."
-                    : isFormPending
-                      ? "Processing..."
-                      : isDialogPending
-                        ? "Loading..."
-                        : "Update Post"}
+                {updatePostMutation.isPending ? "Updating..." : "Update Post"}
               </Button>
             </div>
           </form>
@@ -208,4 +190,4 @@ const EditPostForm = forwardRef((_props, ref) => {
   );
 });
 
-export default memo(EditPostForm);
+export default EditPostForm;

@@ -3,6 +3,7 @@ import models from "../models/index.js";
 import { HTTP_STATUS } from "../utils/constants.js";
 import { AppError } from "../utils/errors.js";
 import { getPaginationParams, buildPaginationMeta } from "../utils/pagination.js";
+import { deleteImageFromCloudinary } from "./cloudinaryService.js";
 
 export class PostService {
   constructor(models) {
@@ -11,16 +12,26 @@ export class PostService {
     this.User = models.User;
   }
 
-  async createPost({ title, body, status, image, userId }) {
-    return this.Post.create({ title, body, status, image, userId });
+  async createPost({ title, body, status, image, imagePublicId, userId }) {
+    return this.Post.create({ 
+      title, 
+      body, 
+      status, 
+      image, 
+      imagePublicId,
+      userId 
+    });
   }
 
-  async listPosts({ page, limit, search, userId }) {
+  async listPosts({ page, limit, search, userId, status }) {
     const { offset } = getPaginationParams({ page, limit });
 
     const where = {};
     if (userId) {
       where.userId = userId;
+    }
+    if (status) {
+      where.status = status;
     }
     if (search) {
       where[Op.or] = [
@@ -31,7 +42,13 @@ export class PostService {
 
     const { rows, count } = await this.Post.findAndCountAll({
       where,
-      include: [{ model: this.User, as: "author", attributes: ["id", "name", "email"] }],
+      include: [
+        {
+          model: this.User,
+          as: "author",
+          attributes: ["id", "name", "email", "image"],
+        },
+      ],
       order: [["createdAt", "DESC"]],
       limit,
       offset,
@@ -42,7 +59,13 @@ export class PostService {
 
   async findPostWithAuthor(id) {
     return this.Post.findByPk(id, {
-      include: [{ model: this.User, as: "author", attributes: ["id", "name", "email"] }],
+      include: [
+        {
+          model: this.User,
+          as: "author",
+          attributes: ["id", "name", "email", "image"],
+        },
+      ],
     });
   }
 
@@ -60,7 +83,7 @@ export class PostService {
         {
           model: this.User,
           as: "author",
-          attributes: ["id", "name", "email"],
+          attributes: ["id", "name", "email", "image"],
         },
         {
           model: this.Comment,
@@ -69,7 +92,7 @@ export class PostService {
             {
               model: this.User,
               as: "author",
-              attributes: ["id", "name", "email"],
+              attributes: ["id", "name", "email", "image"],
             },
           ],
           separate: true,
@@ -97,6 +120,11 @@ export class PostService {
       throw new AppError("CANNOT_UPDATE_OTHER_POST", HTTP_STATUS.FORBIDDEN);
     }
 
+    // If new image is being uploaded, delete old image from Cloudinary
+    if (data.image && post.image && data.image !== post.image && post.imagePublicId) {
+      await deleteImageFromCloudinary(post.imagePublicId);
+    }
+
     await post.update(data);
     return { ok: true, post };
   }
@@ -108,6 +136,11 @@ export class PostService {
     }
     if (post.userId !== userId) {
       throw new AppError("CANNOT_DELETE_OTHER_POST", HTTP_STATUS.FORBIDDEN);
+    }
+
+    // Delete associated image from Cloudinary before deleting post
+    if (post.imagePublicId) {
+      await deleteImageFromCloudinary(post.imagePublicId);
     }
 
     await post.destroy();

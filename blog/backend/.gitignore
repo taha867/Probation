@@ -29,3 +29,6 @@ Thumbs.db
 coverage/
 .nyc_output/
 
+# Uploaded files (user-generated content)
+uploads/
+

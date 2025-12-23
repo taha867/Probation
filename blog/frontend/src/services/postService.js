@@ -1,5 +1,4 @@
 import axiosInstance from "../utils/axiosInstance";
-import { POSTS_ACTIONS, POST_STATUS } from "../utils/constants";
 
 // Original API function for fetching user posts (used by postsPromise.js)
 export const fetchUserPosts = async (userId, options = {}) => {
@@ -38,7 +37,6 @@ export const searchPosts = (posts, searchQuery) => {
   );
 };
 
-// Keep getPostDetails as it's used by ViewPostDialog
 export const getPostDetails = async (postId) => {
   try {
     const response = await axiosInstance.get(`/posts/${postId}`);
@@ -76,137 +74,11 @@ export const getPostComments = async (postId, params = {}) => {
   }
 };
 
-const { SET_POSTS, SET_PAGINATION, ADD_POST, UPDATE_POST, DELETE_POST } =
-  POSTS_ACTIONS;
-
 /**
- * Fetch posts with state management and transitions
- * Handles the complete flow: API call → state update → UI feedback
+ * Pure service functions - no React dependencies
+ * These functions only handle API calls and return data
+ * State management is handled by React Query hooks
  */
-export const fetchPosts = async (
-  userId,
-  options,
-  dispatch,
-  startTransition
-) => {
-  if (!userId) {
-    return;
-  }
-
-  try {
-    // Delegate API call to service function
-    const result = await fetchUserPosts(userId, options);
-
-    // Non-urgent: Update posts data in background for smooth UX
-    startTransition(() => {
-      dispatch({ type: SET_POSTS, payload: result.posts });
-      dispatch({
-        type: SET_PAGINATION,
-        payload: {
-          limit: result.pagination.limit,
-          total: result.pagination.total,
-        },
-      });
-    });
-
-    return result;
-  } catch (error) {
-    // Error handled by axios interceptor (toast notification)
-    console.error("Error fetching posts:", error);
-    const { response: { data: { message } = {} } = {} } = error || {};
-    const errorMessage = message || "Failed to fetch posts. Please try again.";
-    throw new Error(errorMessage);
-  }
-};
-
-/**
- * Create post with optimistic updates and transitions
- */
-export const createPost = async (postData, dispatch, startTransition) => {
-  try {
-    // Direct axios call integrated into workflow
-    const response = await axiosInstance.post("/posts", postData);
-    const { data: { data } = {} } = response;
-    const newPost = data;
-
-    // Non-urgent: Update post list in background
-    startTransition(() => {
-      dispatch({ type: ADD_POST, payload: newPost });
-    });
-
-    return newPost;
-  } catch (error) {
-    // Error handling is done by axios interceptor, just re-throw for component
-    throw error;
-  }
-};
-
-/**
- * Update post with optimistic updates and transitions
- */
-export const updatePost = async (
-  postId,
-  postData,
-  dispatch,
-  startTransition
-) => {
-  try {
-    // Direct axios call integrated into workflow
-    const response = await axiosInstance.put(`/posts/${postId}`, postData);
-    const { data: { data } = {} } = response;
-    const updatedPost = data;
-
-    // Non-urgent: Update post list in background
-    startTransition(() => {
-      dispatch({ type: UPDATE_POST, payload: updatedPost });
-    });
-
-    return updatedPost;
-  } catch (error) {
-    // Error handling is done by axios interceptor, just re-throw for component
-    throw error;
-  }
-};
-
-/**
- * Delete post with optimistic updates and transitions
- */
-export const deletePost = async (postId, dispatch, startTransition) => {
-  try {
-    // Direct axios call integrated into workflow
-    await axiosInstance.delete(`/posts/${postId}`);
-
-    // Non-urgent: Update post list in background
-    startTransition(() => {
-      dispatch({ type: DELETE_POST, payload: postId });
-    });
-  } catch (error) {
-    // Error handling is done by axios interceptor, just re-throw for component
-    throw error;
-  }
-};
-
-/**
- * Page change with transitions
- * Handles: pagination update → fetch new data → UI feedback
- */
-export const changePage = async (
-  userId,
-  newPage,
-  pagination,
-  dispatch,
-  startTransition
-) => {
-  // Fetch new data with transition
-  startTransition(() => {
-    fetchPosts(
-      userId,
-      { page: newPage, limit: pagination.limit },
-      dispatch,
-      startTransition
-    );
-  });
-};
 
 /**
  * Pure business logic functions (no React dependencies)
@@ -233,21 +105,12 @@ export const fetchAllPosts = async (options = {}) => {
       params: options,
     });
     const { data: { data } = {} } = response;
-    // Backend returns "items" not "posts" - align with backend response structure
+    // Backend returns "items" and "meta"
     const { items = [], meta = {} } = data;
 
-    // Filter only published posts on client side (if backend doesn't support status filter)
-    const publishedPosts = items.filter(
-      (post) => post.status === POST_STATUS.PUBLISHED
-    );
-
     return {
-      posts: publishedPosts,
-      pagination: {
-        ...meta,
-        // Keep backend's total (includes drafts) - pagination will work correctly
-        // Some pages may have fewer items if drafts are filtered out
-      },
+      posts: items,
+      pagination: meta,
     };
   } catch (error) {
     const { response: { data: { message } = {} } = {} } = error || {};

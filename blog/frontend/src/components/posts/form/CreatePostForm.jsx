@@ -1,29 +1,25 @@
 /**
  * CreatePostForm - Optimized form component for creating new posts with useTransition
+ * Handles file uploads using FormData for multipart/form-data requests
  * Using centralized state management and custom hooks
  */
-import { useState, useTransition } from "react";
+import { useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FormField, FormSelect } from "../../custom";
+import { FormField, FormSelect, FormFileInput } from "../../custom";
 import { postSchema } from "../../../validations/postSchemas";
-import { usePostsContext } from "../../../contexts/postsContext";
-import { createPost } from "../../../services/postService";
+import { useCreatePost } from "../../../hooks/usePostMutations";
 import { POST_STATUS, TOAST_MESSAGES } from "../../../utils/constants";
 import { createSubmitHandlerWithToast } from "../../../utils/formSubmitWithToast";
-import {
-  invalidatePostsPromise,
-  invalidateHomePostsPromise,
-} from "../../../utils/postsPromise";
 
 const CreatePostForm = ({ onPostCreated }) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isFormPending, startFormTransition] = useTransition();
-  const [isListUpdatePending, startListUpdateTransition] = useTransition();
-  const { dispatch } = usePostsContext();
+  
+  // React Query mutation - handles API call and cache invalidation automatically
+  const createPostMutation = useCreatePost();
 
   const form = useForm({
     resolver: yupResolver(postSchema),
@@ -31,23 +27,28 @@ const CreatePostForm = ({ onPostCreated }) => {
       title: "",
       body: "",
       status: POST_STATUS.DRAFT,
+      image: null, // Cloudinary upload result: {image: url, imagePublicId: id} or null
     },
-    mode: "onChange",
+    mode: "onChange", //validates fields as the user types
   });
 
   const onSubmit = async (data) => {
-    setIsSubmitting(true);
-
     try {
-      const newPost = await createPost(data, dispatch, startListUpdateTransition);
+      // Prepare JSON payload (no FormData needed - image already uploaded to Cloudinary)
+      const payload = {
+        title: data.title,
+        body: data.body,
+        status: data.status,
+      };
 
-      // Ensure next dashboard mount fetches fresh posts including this one
-      invalidatePostsPromise();
-
-      // If post is published, invalidate home posts promise so home page shows it
-      if (newPost?.status === POST_STATUS.PUBLISHED) {
-        invalidateHomePostsPromise();
+      // Add image URL and publicId if image was uploaded
+      if (data.image && typeof data.image === "object" && data.image.image) {
+        payload.image = data.image.image;
+        payload.imagePublicId = data.image.imagePublicId;
       }
+
+      // React Query mutation handles API call and cache invalidation automatically
+      await createPostMutation.mutateAsync(payload);
 
       // Non-urgent: Form reset and tab switch can be deferred for smooth UX
       startFormTransition(() => {
@@ -56,9 +57,7 @@ const CreatePostForm = ({ onPostCreated }) => {
         onPostCreated?.();
       });
     } catch (error) {
-      // Error handling is done in the service
-    } finally {
-      setIsSubmitting(false);
+      // Error handling is done by React Query and axios interceptor
     }
   };
 
@@ -103,15 +102,21 @@ const CreatePostForm = ({ onPostCreated }) => {
               ]}
             />
 
+            <FormFileInput
+              control={form.control}
+              name="image"
+              label="Post Image (Optional)"
+              maxSizeMB={5}
+              folder="blog/posts"
+            />
+
             <Button
               type="submit"
-              disabled={isSubmitting || isFormPending}
+              disabled={createPostMutation.isPending || isFormPending}
               className="w-full"
             >
-              {isSubmitting
+              {createPostMutation.isPending
                 ? "Creating..."
-                : isListUpdatePending
-                ? "Updating list..."
                 : isFormPending
                 ? "Processing..."
                 : "Create Post"}

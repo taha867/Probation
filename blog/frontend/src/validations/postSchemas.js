@@ -29,6 +29,29 @@ export const postSchema = yup.object({
       "Status must be either draft or published",
     )
     .default(POST_STATUS.DRAFT),
+
+  // Image can be an object with {image: url, imagePublicId: id} (Cloudinary upload result)
+  // or string (existing URL) or null
+  image: yup
+    .mixed()
+    .nullable()
+    .optional()
+    .test(
+      "image-format",
+      "Image must be a valid Cloudinary upload result or URL",
+      (value) => {
+        if (!value) return true; // Optional field
+        if (typeof value === "object" && value.image && value.imagePublicId) {
+          // Cloudinary upload result - validate URL format
+          return typeof value.image === "string" && value.image.length > 0;
+        }
+        if (typeof value === "string") {
+          // Existing image URL - just validate it's not empty
+          return value.length > 0;
+        }
+        return false;
+      }
+    ),
 });
 
 /**

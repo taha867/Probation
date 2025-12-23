@@ -1,51 +1,26 @@
 /**
  * Navigation bar component
  * Shows different navigation based on authentication status
+ * Optimized with React 19 best practices
  */
-import { useState } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { memo, useMemo } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "../hooks/authHooks";
-import {
-  getCurrentUser,
-  isAuthenticated as checkAuth,
-} from "../utils/tokenUtils";
-import { TOAST_MESSAGES } from "../utils/constants";
+import UserProfileMenu from "./profile/UserProfileMenu";
 
-const Navbar = () => {
-  const { signout } = useAuth();
-  const user = getCurrentUser();
-  const isAuthenticated = checkAuth();
-  const navigate = useNavigate();
+const Navbar = memo(() => {
+  const { isAuthenticated } = useAuth();
   const location = useLocation();
-  const [isSigningOut, setIsSigningOut] = useState(false);
-
-  const handleSignout = async () => {
-    setIsSigningOut(true);
-    try {
-      await signout();
-      navigate("/signin");
-    } catch (error) {
-      // Signout handles errors internally, but we still navigate
-      console.error(TOAST_MESSAGES.SIGNOUT_ERROR_CONSOLE, error);
-      navigate("/signin");
-    } finally {
-      setIsSigningOut(false);
-    }
-  };
 
   // Dynamic navigation links based on authentication status
-  const getNavigationLinks = () => {
+  const links = useMemo(() => {
     const baseLinks = [{ label: "Home", to: "/" }];
-
     if (isAuthenticated) {
       return [...baseLinks, { label: "Dashboard", to: "/dashboard" }];
     }
-
     return baseLinks;
-  };
-
-  const links = getNavigationLinks();
+  }, [isAuthenticated]);
 
   const isActive = (path) => location.pathname === path;
 
@@ -88,19 +63,7 @@ const Navbar = () => {
         <div className="flex-shrink-0">
           <div className="flex items-center gap-3">
             {isAuthenticated ? (
-              <>
-                <span className="hidden text-sm text-slate-600 sm:inline">
-                  Welcome, {user?.name || user?.email}
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleSignout}
-                  disabled={isSigningOut}
-                >
-                  {isSigningOut ? "Signing out..." : "Logout"}
-                </Button>
-              </>
+              <UserProfileMenu />
             ) : (
               <div className="flex items-center gap-2">
                 <Link to="/signin">
@@ -118,6 +81,8 @@ const Navbar = () => {
       </div>
     </nav>
   );
-};
+});
+
+Navbar.displayName = "Navbar";
 
 export default Navbar;

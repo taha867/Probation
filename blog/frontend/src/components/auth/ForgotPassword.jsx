@@ -1,7 +1,4 @@
-/**
- * ForgotPasswordContainer - Container for forgot password functionality
- * Contains business logic and layout for forgot password page
- */
+
 import { Link } from "react-router-dom";
 import {
   Card,

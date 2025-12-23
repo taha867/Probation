@@ -1,4 +1,8 @@
-import { HTTP_STATUS, ERROR_MESSAGES, SUCCESS_MESSAGES } from "../utils/constants.js";
+import {
+  HTTP_STATUS,
+  ERROR_MESSAGES,
+  SUCCESS_MESSAGES,
+} from "../utils/constants.js";
 import { validateRequest } from "../utils/validations.js";
 import {
   createCommentSchema,
@@ -8,6 +12,15 @@ import {
 } from "../validations/commentValidation.js";
 import { commentService } from "../services/commentService.js";
 import { handleAppError } from "../utils/errors.js";
+
+const { INTERNAL_SERVER_ERROR, OK, NOT_FOUND, CREATED } = HTTP_STATUS;
+const {
+  UNABLE_TO_CREATE_COMMENT,
+  UNABLE_TO_FETCH_COMMENT,
+  UNABLE_TO_DELETE_COMMENT,
+  UNABLE_TO_UPDATE_COMMENT,
+} = ERROR_MESSAGES;
+const { COMMENT_DELETED } = SUCCESS_MESSAGES;
 
 /**
  * Creates a new comment or reply to an existing comment.
@@ -22,14 +35,12 @@ import { handleAppError } from "../utils/errors.js";
  * @throws {500} If there's an error during the creation process.
  */
 export async function create(req, res) {
-
   const validatedBody = validateRequest(createCommentSchema, req.body, res);
   if (!validatedBody) return;
   const { body, postId, parentId } = validatedBody; // Already validated by Joi
   const { id: userId } = req.user;
 
   try {
-
     const result = await commentService.createCommentOrReply({
       body,
       postId,
@@ -37,16 +48,15 @@ export async function create(req, res) {
       userId,
     });
 
-    return res.status(HTTP_STATUS.CREATED).send({ data: result.comment });
-
+    return res.status(CREATED).send({ data: result.comment });
   } catch (err) {
     if (handleAppError(err, res, ERROR_MESSAGES)) return;
 
     // eslint-disable-next-line no-console
     console.error(err);
     return res
-      .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
-      .send({ message: ERROR_MESSAGES.UNABLE_TO_CREATE_COMMENT });
+      .status(INTERNAL_SERVER_ERROR)
+      .send({ message: UNABLE_TO_CREATE_COMMENT });
   }
 }
 
@@ -58,7 +68,6 @@ export async function create(req, res) {
  * @throws {500} If there's an error during the retrieval process.
  */
 export async function list(req, res) {
-
   const validatedQuery = validateRequest(
     listCommentsQuerySchema,
     req.query,
@@ -70,15 +79,13 @@ export async function list(req, res) {
   const { postId } = validatedQuery;
 
   try {
-
     const comments = await commentService.listTopLevelComments({ postId });
-    return res.status(HTTP_STATUS.OK).send({ data: comments });
-
+    return res.status(OK).send({ data: comments });
   } catch (error) {
     console.error(error);
     return res
-      .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
-      .send({ message: ERROR_MESSAGES.UNABLE_TO_FETCH_COMMENTS });
+      .status(INTERNAL_SERVER_ERROR)
+      .send({ message: UNABLE_TO_FETCH_COMMENTS });
   }
 }
 
@@ -91,7 +98,6 @@ export async function list(req, res) {
  */
 export async function get(req, res) {
   try {
-
     const validatedParams = validateRequest(
       commentIdParamSchema,
       req.params,
@@ -103,17 +109,16 @@ export async function get(req, res) {
     const { id } = validatedParams;
     const comment = await commentService.findCommentWithRelations(id);
     if (!comment) {
-      return res.status(HTTP_STATUS.NOT_FOUND).send({
+      return res.status(NOT_FOUND).send({
         data: { message: ERROR_MESSAGES.COMMENT_NOT_FOUND },
       });
     }
 
-    return res.status(HTTP_STATUS.OK).send({ data: comment });
-
+    return res.status(OK).send({ data: comment });
   } catch (error) {
     console.error(error);
-    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send({
-      data: { message: ERROR_MESSAGES.UNABLE_TO_FETCH_COMMENT },
+    return res.status(INTERNAL_SERVER_ERROR).send({
+      data: { message: UNABLE_TO_FETCH_COMMENT },
     });
   }
 }
@@ -132,7 +137,6 @@ export async function get(req, res) {
  */
 export async function update(req, res) {
   try {
-
     const validatedParams = validateRequest(
       commentIdParamSchema,
       req.params,
@@ -152,15 +156,14 @@ export async function update(req, res) {
       body,
     });
 
-    return res.status(HTTP_STATUS.OK).send({ data: result.comment });
-    
+    return res.status(OK).send({ data: result.comment });
   } catch (err) {
     if (handleAppError(err, res, ERROR_MESSAGES)) return;
 
     // eslint-disable-next-line no-console
     console.error(err);
-    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send({
-      data: { message: ERROR_MESSAGES.UNABLE_TO_UPDATE_COMMENT },
+    return res.status(INTERNAL_SERVER_ERROR).send({
+      data: { message: UNABLE_TO_UPDATE_COMMENT },
     });
   }
 }
@@ -176,7 +179,6 @@ export async function update(req, res) {
  */
 export async function remove(req, res) {
   try {
-
     const validatedParams = validateRequest(
       commentIdParamSchema,
       req.params,
@@ -189,17 +191,16 @@ export async function remove(req, res) {
     const { id: userId } = req.user;
     await commentService.deleteCommentForUser({ id, userId });
 
-    return res.status(HTTP_STATUS.OK).send({
-      data: { message: SUCCESS_MESSAGES.COMMENT_DELETED },
+    return res.status(OK).send({
+      data: { message: COMMENT_DELETED },
     });
-    
   } catch (err) {
     if (handleAppError(err, res, ERROR_MESSAGES)) return;
 
     // eslint-disable-next-line no-console
     console.error(err);
-    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send({
-      data: { message: ERROR_MESSAGES.UNABLE_TO_DELETE_COMMENT },
+    return res.status(INTERNAL_SERVER_ERROR).send({
+      data: { message: UNABLE_TO_DELETE_COMMENT },
     });
   }
 }

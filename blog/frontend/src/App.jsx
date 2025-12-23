@@ -19,74 +19,25 @@ const App = () => {
         <Navbar />
         <main className="flex-1">
           <Routes>
-            {/* Home route */}
+            {/* ---------- Public routes ---------- */}
             <Route path="/" element={<HomePage />} />
 
             {/* Authentication routes - redirect if already authenticated */}
-            <Route
-              path="/signin"
-              element={
-                <AuthRoute>
-                  <SignInPage />
-                </AuthRoute>
-              }
-            />
-            <Route
-              path="/signup"
-              element={
-                <AuthRoute>
-                  <SignUpPage />
-                </AuthRoute>
-              }
-            />
-            <Route
-              path="/forgot-password"
-              element={
-                <AuthRoute>
-                  <ForgotPasswordPage />
-                </AuthRoute>
-              }
-            />
-            <Route
-              path="/reset-password"
-              element={
-                <AuthRoute>
-                  <ResetPasswordPage />
-                </AuthRoute>
-              }
-            />
+            <Route element={<AuthRoute />}>
+              <Route path="/signin" element={<SignInPage />} />
+              <Route path="/signup" element={<SignUpPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
+              <Route path="/auth" element={<SignInPage />} />
+            </Route>
 
-            {/* Legacy auth route - redirect to signin */}
-            <Route
-              path="/auth"
-              element={
-                <AuthRoute>
-                  <SignInPage />
-                </AuthRoute>
-              }
-            />
+            {/* ---------- Protected routes (auth required) ---------- */}
+            <Route element={<ProtectedRoute />}>
+              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/create-post" element={<CreatePostPage />} />
+            </Route>
 
-            {/* Protected dashboard route */}
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <DashboardPage />
-                </ProtectedRoute>
-              }
-            />
-
-            {/* Protected create post route */}
-            <Route
-              path="/create-post"
-              element={
-                <ProtectedRoute>
-                  <CreatePostPage />
-                </ProtectedRoute>
-              }
-            />
-
-            {/* Catch all route - redirect to home */}
+            {/* ---------- Fallback route ---------- */}
             <Route path="*" element={<HomePage />} />
           </Routes>
         </main>

@@ -13,8 +13,8 @@ const router = Router();
 
 router.post("/", authenticateToken, create);
 router.get("/", list);
-router.get("/:postId/comments",authenticateToken, listForPost);
-router.get("/:id",authenticateToken, get);
+router.get("/:postId/comments", authenticateToken, listForPost);
+router.get("/:id", authenticateToken, get);
 router.put("/:id", authenticateToken, update);
 router.delete("/:id", authenticateToken, remove);
 

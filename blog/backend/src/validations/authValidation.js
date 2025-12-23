@@ -31,6 +31,13 @@ export const signUpSchema = Joi.object({
   email: emailSchema,
   phone: phoneSchema,
   password: passwordSchema,
+  image: Joi.string()
+    .uri()
+    .optional()
+    .allow("", null)
+    .messages({
+      "string.uri": "Image must be a valid URL",
+    }),
 });
 
 export const signInSchema = Joi.object({

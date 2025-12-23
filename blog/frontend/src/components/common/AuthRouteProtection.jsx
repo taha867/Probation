@@ -1,10 +1,15 @@
+import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "../../hooks/authHooks.js";
-import { Navigate } from "react-router-dom";
+import AppInitializer from "./AppInitializer.jsx";
 
 // Component to handle auth route protection
-const AuthRoute = ({ children }) => {
-  // isAuthenticated → user logged in?
-  const { isAuthenticated } = useAuth();
+const AuthRoute = () => {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  // Show global app initializer while checking authentication
+  if (isLoading) {
+    return <AppInitializer />;
+  }
 
   // Redirect authenticated users to dashboard
   if (isAuthenticated) {
@@ -12,7 +17,7 @@ const AuthRoute = ({ children }) => {
   }
 
   // Show the specific auth page for non-authenticated users
-  return children;
+  return <Outlet />;
 };
 
 export default AuthRoute;

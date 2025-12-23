@@ -20,30 +20,49 @@ import { handleAppError } from "../utils/errors.js";
 
 /**
  * Creates a new post.
- * @param {Object} req.body - The request body containing post data.
+ * @param {Object} req.body - The request body containing post data (multipart/form-data).
  * @param {string} req.body.title - The title of the post.
  * @param {string} req.body.body - The content of the post.
  * @param {string} [req.body.status] - The status of the post (draft or published).
- * @param {string} [req.body.image] - The image URL of the post (optional).
+ * @param {Object} req.file - The uploaded image file (from multer).
  * @param {Object} req.user - The authenticated user from JWT token.
  * @returns {Object} The created post with 201 status code.
- * @throws {400} If title or body are missing.
+ * @throws {400} If title or body are missing or file validation fails.
  * @throws {500} If there's an error during the creation process.
  */
+
+const { INTERNAL_SERVER_ERROR, OK, NOT_FOUND, CREATED } = HTTP_STATUS;
+const {
+  UNABLE_TO_CREATE_POST,
+  UNABLE_TO_FETCH_POST,
+  POST_NOT_FOUND,
+  UNABLE_TO_FETCH_POST_COMMENTS,
+  UNABLE_TO_DELETE_POST,
+  UNABLE_TO_UPDATE_POST,
+} = ERROR_MESSAGES;
+const { POST_DELETED } = SUCCESS_MESSAGES;
+
 export async function create(req, res) {
   const validatedBody = validateRequest(createPostSchema, req.body, res);
   if (!validatedBody) return;
-  const { title, body, status, image } = validatedBody; // Already validated by Joi
-  const { id: userId} = req.user; // Get userId from authenticated user
+  const { title, body, status, image, imagePublicId } = validatedBody;
+  const { id: userId } = req.user;
 
   try {
-    const post = await postService.createPost({ title, body, status, image, userId });
-    return res.status(HTTP_STATUS.CREATED).send({ data: post });
+    const post = await postService.createPost({
+      title,
+      body,
+      status,
+      image: image || null,
+      imagePublicId: imagePublicId || null,
+      userId,
+    });
+    return res.status(CREATED).send({ data: post });
   } catch (error) {
     console.error(error);
     return res
-      .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
-      .send({ message: ERROR_MESSAGES.UNABLE_TO_CREATE_POST });
+      .status(INTERNAL_SERVER_ERROR)
+      .send({ message: UNABLE_TO_CREATE_POST });
   }
 }
 
@@ -64,7 +83,7 @@ export async function list(req, res) {
   if (!validatedQuery) return;
 
   const { page, limit } = getPaginationParams(validatedQuery);
-  const { search, userId } = validatedQuery; // Already validated by Joi
+  const { search, userId, status } = validatedQuery; // Already validated by Joi
 
   try {
     const { rows, count } = await postService.listPosts({
@@ -72,9 +91,10 @@ export async function list(req, res) {
       limit,
       search,
       userId,
+      status,
     });
 
-    return res.status(HTTP_STATUS.OK).send({
+    return res.status(OK).send({
       data: {
         items: rows,
         meta: buildPaginationMeta({ total: count, page, limit }),
@@ -83,8 +103,8 @@ export async function list(req, res) {
   } catch (error) {
     console.error(error);
     return res
-      .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
-      .send({ message: ERROR_MESSAGES.UNABLE_TO_FETCH_POST });
+      .status(INTERNAL_SERVER_ERROR)
+      .send({ message: UNABLE_TO_FETCH_POST });
   }
 }
 
@@ -104,20 +124,20 @@ export async function get(req, res) {
       { convert: true }
     );
     if (!validatedParams) return;
-    const { id ={}} = validatedParams;
+    const { id = {} } = validatedParams;
     const post = await postService.findPostWithAuthor(id);
     if (!post) {
-      return res.status(HTTP_STATUS.NOT_FOUND).send({
-        data: { message: ERROR_MESSAGES.POST_NOT_FOUND },
+      return res.status(NOT_FOUND).send({
+        data: { message: POST_NOT_FOUND },
       });
     }
 
-    return res.status(HTTP_STATUS.OK).send({ data: post });
+    return res.status(OK).send({ data: post });
   } catch (error) {
     console.error(error);
     return res
-      .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
-      .send({ message: ERROR_MESSAGES.UNABLE_TO_FETCH_POST });
+      .status(INTERNAL_SERVER_ERROR)
+      .send({ message: UNABLE_TO_FETCH_POST });
   }
 }
 
@@ -156,12 +176,12 @@ export async function listForPost(req, res) {
     });
 
     if (!post) {
-      return res.status(HTTP_STATUS.NOT_FOUND).send({
-        data: { message: ERROR_MESSAGES.POST_NOT_FOUND },
+      return res.status(NOT_FOUND).send({
+        data: { message: POST_NOT_FOUND },
       });
     }
 
-    return res.status(HTTP_STATUS.OK).send({
+    return res.status(OK).send({
       data: {
         post,
         comments,
@@ -171,19 +191,19 @@ export async function listForPost(req, res) {
   } catch (error) {
     console.error(error);
     return res
-      .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
-      .send({ message: ERROR_MESSAGES.UNABLE_TO_FETCH_POST_COMMENTS });
+      .status(INTERNAL_SERVER_ERROR)
+      .send({ message: UNABLE_TO_FETCH_POST_COMMENTS });
   }
 }
 
 /**
  * Updates a post's content and status.
  * @param {string} req.params.id - The ID of the post to update.
- * @param {Object} req.body - The request body containing updated post data.
+ * @param {Object} req.body - The request body containing updated post data (multipart/form-data).
  * @param {string} [req.body.title] - The new title of the post.
  * @param {string} [req.body.body] - The new content of the post.
  * @param {string} [req.body.status] - The new status of the post.
- * @param {string} [req.body.image] - The new image URL of the post (optional).
+ * @param {Object} req.file - The uploaded image file (from multer, optional).
  * @param {Object} req.user - The authenticated user from JWT token.
  * @returns {Object} The updated post with 200 status code.
  * @throws {403} If the user is not the owner of the post.
@@ -203,20 +223,31 @@ export async function update(req, res) {
     const { id: userId } = req.user;
     const validatedBody = validateRequest(updatePostSchema, req.body, res);
     if (!validatedBody) return;
-    const { title, body, status, image } = validatedBody;
+    const { title, body, status, image, imagePublicId } = validatedBody;
+
+    // Build update data - only include fields that are provided
+    const updateData = {};
+    if (title !== undefined) updateData.title = title;
+    if (body !== undefined) updateData.body = body;
+    if (status !== undefined) updateData.status = status;
+    if (image !== undefined) {
+      updateData.image = image || null;
+      updateData.imagePublicId = imagePublicId || null;
+    }
+
     const result = await postService.updatePostForUser({
       postId,
       userId,
-      data: { title, body, status, image },
+      data: updateData,
     });
-    return res.status(HTTP_STATUS.OK).send({ data: result.post });
+    return res.status(OK).send({ data: result.post });
   } catch (err) {
     if (handleAppError(err, res, ERROR_MESSAGES)) return;
 
     // eslint-disable-next-line no-console
     console.error(err);
-    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send({
-      data: { message: ERROR_MESSAGES.UNABLE_TO_UPDATE_POST },
+    return res.status(INTERNAL_SERVER_ERROR).send({
+      data: { message: UNABLE_TO_UPDATE_POST },
     });
   }
 }
@@ -244,16 +275,16 @@ export async function remove(req, res) {
     await postService.deletePostForUser({ postId: id, userId });
 
     // Return a JSON message so clients can see confirmation
-    return res.status(HTTP_STATUS.OK).send({
-      data: { message: SUCCESS_MESSAGES.POST_DELETED },
+    return res.status(OK).send({
+      data: { message: POST_DELETED },
     });
   } catch (err) {
     if (handleAppError(err, res, ERROR_MESSAGES)) return;
 
     // eslint-disable-next-line no-console
     console.error(err);
-    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send({
-      data: { message: ERROR_MESSAGES.UNABLE_TO_DELETE_POST },
+    return res.status(INTERNAL_SERVER_ERROR).send({
+      data: { message: UNABLE_TO_DELETE_POST },
     });
   }
 }

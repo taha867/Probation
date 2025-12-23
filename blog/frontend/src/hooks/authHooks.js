@@ -13,9 +13,9 @@ import {
   forgotPassword,
   resetPassword,
 } from "../services/authService";
+import { updateUserProfile } from "../services/userService";
 import { TOAST_MESSAGES } from "../utils/constants";
 import { invalidateAuthPromise, updateAuthPromise } from "../utils/authPromise";
-import { invalidatePostsPromise } from "../utils/postsPromise";
 
 /**
  * Custom hook for authentication operations
@@ -32,6 +32,7 @@ export const useAuth = () => {
     logout,
     forgotPasswordSuccess,
     resetPasswordSuccess,
+    setUserFromToken,
   } = authActions;
 
   const signin = async (credentials) => {
@@ -90,9 +91,8 @@ export const useAuth = () => {
       // Always clear both tokens and state
       removeTokens();
       dispatch(logout());
-      // Invalidate promise caches for next login
+      // Invalidate auth promise cache for next login
       invalidateAuthPromise();
-      invalidatePostsPromise();
     }
   };
 
@@ -130,6 +130,38 @@ export const useAuth = () => {
     });
   };
 
+  const updateProfileImage = async (imageData) => {
+    return new Promise((resolve, reject) => {
+      startTransition(async () => {
+        try {
+          if (!user?.id) {
+            throw new Error("User not authenticated");
+          }
+
+          // Prepare JSON payload (image already uploaded to Cloudinary)
+          const payload = {
+            image: imageData.image,
+            imagePublicId: imageData.imagePublicId,
+          };
+
+          // Call API to update profile image
+          const response = await updateUserProfile(user.id, payload);
+          const updatedUser = response.data.user;
+
+          // Update auth state with new user data
+          dispatch(setUserFromToken(updatedUser));
+          // Update the auth promise cache with new user
+          updateAuthPromise(updatedUser);
+
+          resolve(response);
+        } catch (error) {
+          dispatch(authError());
+          reject(error);
+        }
+      });
+    });
+  };
+
   const { user } = state;
 
   return {
@@ -144,5 +176,6 @@ export const useAuth = () => {
     signout,
     requestPasswordReset,
     resetUserPassword,
+    updateProfileImage,
   };
 };

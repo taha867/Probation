@@ -43,6 +43,10 @@ export default (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         allowNull: true, // Optional field - posts can exist without images
       },
+      imagePublicId: {
+        type: DataTypes.STRING,
+        allowNull: true, // Cloudinary public_id for image deletion
+      },
     },
     {
       sequelize,

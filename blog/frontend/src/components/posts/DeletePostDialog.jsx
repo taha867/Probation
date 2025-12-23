@@ -2,7 +2,7 @@
  * DeletePostDialog - Local dialog component for delete confirmation
  * Uses a small imperative dialog hook to keep state minimal and focused.
  */
-import { memo, useState, useTransition, forwardRef, useImperativeHandle } from "react";
+import { forwardRef, useImperativeHandle } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,10 +13,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { usePostsContext } from "../../contexts/postsContext";
-import { deletePost } from "../../services/postService";
+import { useDeletePost } from "../../hooks/usePostMutations";
 import { useImperativeDialog } from "../../hooks/useImperativeDialog";
-import { invalidateHomePostsPromise } from "../../utils/postsPromise";
 import { POST_STATUS } from "../../utils/constants";
 
 const DeletePostDialog = forwardRef((props, ref) => {
@@ -28,55 +26,54 @@ const DeletePostDialog = forwardRef((props, ref) => {
     closeDialog: closeDialogState,
   } = useImperativeDialog(null);
 
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [, startTransition] = useTransition();
-
-  const { dispatch, state } = usePostsContext();
+  // React Query mutation - handles API call and cache invalidation automatically
+  const deletePostMutation = useDeletePost();
 
   // Expose methods to parent via ref
   useImperativeHandle(
     ref,
     () => ({
-      openDialog: (postId, postTitle) => {
-        openDialogState({ id: postId, title: postTitle });
+      // Expect full post object so we don't need extra queries here
+      openDialog: (post) => {
+        if (!post) return;
+        openDialogState({
+          id: post.id,
+          title: post.title,
+          status: post.status,
+        });
       },
       closeDialog: () => {
-        if (!isDeleting) {
+        if (!deletePostMutation.isPending) {
           closeDialogState();
         }
       },
     }),
-    [openDialogState, closeDialogState, isDeleting],
+    [openDialogState, closeDialogState, deletePostMutation.isPending],
   );
 
   const handleConfirmDelete = async () => {
     if (!postToDelete?.id) return;
 
-    setIsDeleting(true);
-
     try {
       // Check if the post being deleted is published (to invalidate home posts)
-      const post = state.posts.find((p) => p.id === postToDelete.id);
-      const isPublished = post?.status === POST_STATUS.PUBLISHED;
+      const isPublished = postToDelete?.status === POST_STATUS.PUBLISHED;
 
-      await deletePost(postToDelete.id, dispatch, startTransition);
-
-      // If deleted post was published, invalidate home posts promise
-      if (isPublished) {
-        invalidateHomePostsPromise();
-      }
+      // React Query mutation handles API call and cache invalidation automatically
+      // Pass wasPublished so mutation can invalidate home posts if needed
+      await deletePostMutation.mutateAsync({
+        postId: postToDelete.id,
+        wasPublished: isPublished || false,
+      });
 
       // Close dialog after successful deletion
       closeDialogState();
     } catch (error) {
-      // Error handling is done in the service
-    } finally {
-      setIsDeleting(false);
+      // Error handling is done by React Query and axios interceptor
     }
   };
 
   const handleCancel = () => {
-    if (!isDeleting) {
+    if (!deletePostMutation.isPending) {
       closeDialogState();
     }
   };
@@ -100,15 +97,15 @@ const DeletePostDialog = forwardRef((props, ref) => {
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isDeleting}>
+          <AlertDialogCancel disabled={deletePostMutation.isPending}>
             Cancel
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={handleConfirmDelete}
-            disabled={isDeleting}
+            disabled={deletePostMutation.isPending}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
-            {isDeleting ? "Deleting..." : "Delete"}
+            {deletePostMutation.isPending ? "Deleting..." : "Delete"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
@@ -118,4 +115,4 @@ const DeletePostDialog = forwardRef((props, ref) => {
 
 DeletePostDialog.displayName = "DeletePostDialog";
 
-export default memo(DeletePostDialog);
+export default DeletePostDialog;

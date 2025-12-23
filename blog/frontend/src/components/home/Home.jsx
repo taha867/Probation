@@ -1,88 +1,109 @@
-/**
- * Home - Main UI component for home page (React 19 optimized)
- * Uses use() hook with Suspense for data fetching
- * Optimized with memo, useMemo, useCallback for minimal re-renders
- * Includes pagination support
- */
-import { use, useMemo, memo, useState, useTransition, useCallback } from "react";
-import {
-  createHomePostsPromise,
-  invalidateHomePostsPromise,
-} from "../../utils/postsPromise";
+import { useState, useCallback, useMemo, useTransition } from "react";
+import { useHomePosts } from "../../hooks/useHomePosts";
 import { calculateTotalPages } from "../../services/postService";
-import PostCard from "./PostCard";
-import PaginationControls from "../posts/postList/PaginationControls";
+import PostCard from "../common/PostCard.jsx";
+import PaginationControls from "../common/PaginationControls.jsx";
+import AppInitializer from "../common/AppInitializer.jsx";
+import PostFilter from "../common/PostFilter.jsx";
 
 const Home = () => {
-  // Pagination state
+  // Pagination + filter state
   const [currentPage, setCurrentPage] = useState(1);
-  const [isPaginationPending, startPaginationTransition] = useTransition();
-  const limit = 3; // Increased to show more posts per page (matching design reference)
+  const [inputValue, setInputValue] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isPendingTransition, startTransition] = useTransition();
+  const limit = 5; // Posts per page
 
-  // use() hook suspends until promise resolves
-  // Pass currentPage to fetch correct page data
-  const { posts, pagination } = use(createHomePostsPromise(currentPage, limit));
-
-  // Memoize empty state check to prevent recalculation
-  const hasPosts = useMemo(() => posts.length > 0, [posts.length]);
-
-  // Calculate total pages from pagination metadata 
-  const totalPages = useMemo(
-    () => calculateTotalPages(pagination.total || 0, pagination.limit || limit),
-    [pagination.total, pagination.limit, limit]
+  // React Query hook - handles fetching, caching, and refetching automatically
+  const { data, isLoading, isFetching } = useHomePosts(
+    currentPage,
+    limit,
+    searchQuery
   );
+  const posts = data?.posts || [];
+  const pagination = data?.pagination || {};
 
-  // Handle page changes with React 19 useTransition
-  const handlePageChange = useCallback(
-    (newPage) => {
-      // Invalidate promise to force new fetch
-      invalidateHomePostsPromise();
+  const { total, limit: pageLimit } = pagination;
 
-      // Non-urgent: Update page in background for smooth UX
-      startPaginationTransition(() => {
-        setCurrentPage(newPage);
+  const hasPosts = posts.length > 0;
+  const totalPages = calculateTotalPages(total || 0, pageLimit || limit);
+  const showPagination = hasPosts && totalPages > 1;
+
+  // Handle page changes - React Query handles fetching automatically
+  const handlePageChange = useCallback((newPage) => {
+    setCurrentPage(newPage);
+  }, []);
+
+  const handleSearchChange = useCallback(
+    (e) => {
+      const query = e.target.value;
+      setInputValue(query);
+      startTransition(() => {
+        setSearchQuery(query);
       });
+      // whenever search changes, reset to first page
+      setCurrentPage(1);
     },
-    [startPaginationTransition]
+    [startTransition]
   );
+
+  const handleSearch = useCallback((e) => {
+    e.preventDefault();
+  }, []);
+
+  // Combined loading state (initial load + refetching)
+  const isPaginationPending = isLoading || isFetching;
+  const isFilterPending = isPendingTransition || isFetching;
+
+  // Show loading state on initial load
+  if (isLoading) {
+    return <AppInitializer />;
+  }
 
   return (
     <div className="min-h-screen bg-white">
-      <div className="max-w-6xl mx-auto px-4 py-8 sm:py-12">
-        {/* Blog Posts */}
-        <div className="space-y-6">
+      <div className="max-w-6xl mx-auto px-4 py-8 sm:py-12 flex flex-col min-h-[calc(100vh-4rem)]">
+        {/* Filter + Blog Posts */}
+        <div className="space-y-6 flex-1">
+          <div className="w-full">
+            <PostFilter
+              value={inputValue}
+              onChange={handleSearchChange}
+              onSubmit={handleSearch}
+              isPending={isFilterPending}
+              placeholder="Search blog posts..."
+            />
+          </div>
+
           {!hasPosts ? (
-            <div className="text-center py-12 text-gray-500">
-              No posts found. Check back later.
+            <div className="flex items-center justify-center h-full">
+              <p className="text-gray-500 text-center">
+                No posts found. Check back later.
+              </p>
             </div>
           ) : (
-            <>
-              {/* Posts List */}
-              <div className="space-y-6">
-                {posts.map((post) => (
-                  <PostCard key={post.id} post={post} />
-                ))}
-              </div>
-
-              {/* Pagination Controls - Always at bottom */}
-              {totalPages > 1 && (
-                <div className="mt-8 pt-6 border-t border-gray-200">
-                  <PaginationControls
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    isPending={isPaginationPending}
-                    onPageChange={handlePageChange}
-                  />
-                </div>
-              )}
-            </>
+            <div className="space-y-6">
+              {posts.map((post) => (
+                <PostCard key={post.id} post={post} />
+              ))}
+            </div>
           )}
         </div>
+
+        {/* Pagination Controls - pinned to bottom area when present */}
+        {showPagination && (
+          <div className="mt-8 pt-6 border-t border-gray-200">
+            <PaginationControls
+              currentPage={currentPage}
+              totalPages={totalPages}
+              isPending={isPaginationPending}
+              onPageChange={handlePageChange}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
-// Memoize Home component to prevent unnecessary re-renders
-export default memo(Home);
-
+export default Home;

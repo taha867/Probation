@@ -40,6 +40,14 @@ export default (sequelize, DataTypes) => {
   User.init(
     {
       name: DataTypes.STRING,
+      image: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      imagePublicId: {
+        type: DataTypes.STRING,
+        allowNull: true, // Cloudinary public_id for image deletion
+      },
       email: {
         type: DataTypes.STRING,
         allowNull: {
@@ -63,7 +71,10 @@ export default (sequelize, DataTypes) => {
       },
       password: DataTypes.STRING,
       status: DataTypes.STRING,
-      last_login_at: DataTypes.DATE,
+      lastLoginAt: {
+        type: DataTypes.DATE,
+        field: "last_login_at", // Map camelCase to snake_case database column
+      },
       tokenVersion: {
         type: DataTypes.INTEGER,
         defaultValue: 0,

@@ -21,6 +21,7 @@ import { authService } from "../services/authService.js";
  * @param {string} req.body.email - The email address of the user.
  * @param {string} req.body.phone - The phone number of the user.
  * @param {string} req.body.password - The password for the user account.
+ * @param {string} [req.body.image] - Optional profile image URL for the user.
  * @returns {Object} Success message with 201 status code.
  * @throws {422} If email or phone already exists in the database.
  * @throws {500} If there's an error during the registration process.
@@ -28,9 +29,9 @@ import { authService } from "../services/authService.js";
 export async function signUp(req, res) {
   const validatedBody = validateRequest(signUpSchema, req.body, res);
   if (!validatedBody) return;
-  const { email, password, name, phone } = validatedBody;
+  const { email, password, name, phone, image } = validatedBody;
   try {
-    await authService.registerUser({ name, email, phone, password });
+    await authService.registerUser({ name, email, phone, password, image });
 
     return res.status(HTTP_STATUS.OK).send({
       data: { message: SUCCESS_MESSAGES.ACCOUNT_CREATED },
@@ -70,7 +71,7 @@ export async function signIn(req, res) {
       password,
     });
     const { user, accessToken, refreshToken } = result;
-    const { id, name, email: userEmail, phone: userPhone, status } = user;
+    const { id, name, email: userEmail, phone: userPhone, status, image } = user;
     return res.status(HTTP_STATUS.OK).send({
       data: {
         message: SUCCESS_MESSAGES.SIGNED_IN,
@@ -81,6 +82,7 @@ export async function signIn(req, res) {
           name,
           email: userEmail,
           phone: userPhone,
+          image,
           status,
         },
       },

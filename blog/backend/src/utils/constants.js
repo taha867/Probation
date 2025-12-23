@@ -85,6 +85,12 @@ export const ERROR_MESSAGES = {
   UNABLE_TO_UPDATE_COMMENT: "Unable to update the requested comment",
   UNABLE_TO_DELETE_COMMENT: "Unable to delete the requested comment",
 
+  // Upload Errors
+  UNABLE_TO_GENERATE_UPLOAD_SIGNATURE: "Failed to generate upload signature",
+
+  // Validation Errors
+  VALIDATION_ERROR: "Validation error",
+
   // General Errors
   OPERATION_FAILED:
     "Could not perform operation at this time, kindly try again later.",

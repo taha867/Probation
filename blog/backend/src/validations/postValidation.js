@@ -22,6 +22,12 @@ const basePaginationQuerySchema = paginationQuerySchema({
     "number.integer": "User ID must be an integer",
     "number.positive": "User ID must be a positive number",
   }),
+  status: Joi.string()
+    .valid("draft", "published")
+    .optional()
+    .messages({
+      "any.only": "Status must be either 'draft' or 'published'",
+    }),
 });
 
 export const createPostSchema = Joi.object({
@@ -53,13 +59,10 @@ export const createPostSchema = Joi.object({
   status: Joi.string().valid("draft", "published").optional().default("draft").messages({
     "any.only": "Status must be either 'draft' or 'published'",
   }),
-  image: Joi.string()
-    .uri()
-    .optional()
-    .allow("", null)
-    .messages({
-      "string.uri": "Image must be a valid URL",
-    }),
+  image: Joi.string().uri().optional().allow("", null).messages({
+    "string.uri": "Image must be a valid URL",
+  }),
+  imagePublicId: Joi.string().optional().allow("", null),
 });
 
 export const updatePostSchema = Joi.object({
@@ -89,13 +92,10 @@ export const updatePostSchema = Joi.object({
   status: Joi.string().valid("draft", "published").optional().messages({
     "any.only": "Status must be either 'draft' or 'published'",
   }),
-  image: Joi.string()
-    .uri()
-    .optional()
-    .allow("", null)
-    .messages({
-      "string.uri": "Image must be a valid URL",
-    }),
+  image: Joi.string().uri().optional().allow("", null).messages({
+    "string.uri": "Image must be a valid URL",
+  }),
+  imagePublicId: Joi.string().optional().allow("", null),
 }).min(1).messages({
   "object.min": "At least one field must be provided to update",
 });

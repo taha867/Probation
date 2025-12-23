@@ -6,22 +6,22 @@ import { signToken, verifyToken } from "../utils/jwt.js";
 import { comparePassword } from "../utils/bcrypt.js";
 import { emailService } from "./emailService.js";
 
+const { UNPROCESSABLE_ENTITY, UNAUTHORIZED, NOT_FOUND } = HTTP_STATUS;
+const { LOGGED_IN, LOGGED_OUT } = USER_STATUS;
+
 export class AuthService {
   constructor(models) {
     this.User = models.User;
   }
 
-  async registerUser({ name, email, phone, password }) {
+  async registerUser({ name, email, phone, password, image }) {
     const existing = await this.User.findOne({
       where: { [Op.or]: [{ phone }, { email }] },
     });
 
     if (existing) {
       // Service throws a domain error; controller decides how to respond.
-      throw new AppError(
-        "USER_ALREADY_EXISTS",
-        HTTP_STATUS.UNPROCESSABLE_ENTITY
-      );
+      throw new AppError("USER_ALREADY_EXISTS", UNPROCESSABLE_ENTITY);
     }
 
     await this.User.create({
@@ -29,7 +29,8 @@ export class AuthService {
       email,
       password,
       phone,
-      status: USER_STATUS.LOGGED_OUT,
+      image,
+      status: LOGGED_OUT,
     });
 
     return { ok: true };
@@ -40,17 +41,17 @@ export class AuthService {
       where: email ? { email } : { phone },
     });
     if (!user) {
-      throw new AppError("INVALID_CREDENTIALS", HTTP_STATUS.UNAUTHORIZED);
+      throw new AppError("INVALID_CREDENTIALS", UNAUTHORIZED);
     }
 
     const isPasswordValid = await comparePassword(password, user.password);
     if (!isPasswordValid) {
-      throw new AppError("INVALID_CREDENTIALS", HTTP_STATUS.UNAUTHORIZED);
+      throw new AppError("INVALID_CREDENTIALS", UNAUTHORIZED);
     }
 
     await user.update({
-      status: USER_STATUS.LOGGED_IN,
-      last_login_at: new Date(),
+      status: LOGGED_IN,
+      lastLoginAt: new Date(),
     });
 
     const accessToken = signToken(
@@ -68,7 +69,14 @@ export class AuthService {
       { expiresIn: "7d" }
     );
 
-    const { id, name, email: userEmail, phone: userPhone, status } = user;
+    const {
+      id,
+      name,
+      email: userEmail,
+      phone: userPhone,
+      status,
+      image,
+    } = user;
     return {
       ok: true,
       user: {
@@ -76,6 +84,7 @@ export class AuthService {
         name,
         email: userEmail,
         phone: userPhone,
+        image,
         status,
       },
       accessToken,
@@ -86,11 +95,11 @@ export class AuthService {
   async logoutUser(userId) {
     const user = await this.User.findByPk(userId);
     if (!user) {
-      throw new AppError("USER_NOT_FOUND", HTTP_STATUS.NOT_FOUND);
+      throw new AppError("USER_NOT_FOUND", NOT_FOUND);
     }
 
     await user.update({
-      status: USER_STATUS.LOGGED_OUT,
+      status: LOGGED_OUT,
       tokenVersion: user.tokenVersion + 1,
     });
 
@@ -103,22 +112,22 @@ export class AuthService {
       decoded = verifyToken(refreshToken);
     } catch (error) {
       if (error.name === "TokenExpiredError") {
-        throw new AppError("REFRESH_TOKEN_EXPIRED", HTTP_STATUS.UNAUTHORIZED);
+        throw new AppError("REFRESH_TOKEN_EXPIRED", UNAUTHORIZED);
       }
-      throw new AppError("INVALID_REFRESH_TOKEN", HTTP_STATUS.UNAUTHORIZED);
+      throw new AppError("INVALID_REFRESH_TOKEN", UNAUTHORIZED);
     }
 
     if (decoded.type !== "refresh") {
-      throw new AppError("INVALID_REFRESH_TOKEN", HTTP_STATUS.UNAUTHORIZED);
+      throw new AppError("INVALID_REFRESH_TOKEN", UNAUTHORIZED);
     }
 
     const user = await this.User.findByPk(decoded.userId);
     if (!user) {
-      throw new AppError("USER_NOT_FOUND", HTTP_STATUS.NOT_FOUND);
+      throw new AppError("USER_NOT_FOUND", NOT_FOUND);
     }
 
     if (user.tokenVersion !== decoded.tokenVersion) {
-      throw new AppError("INVALID_REFRESH_TOKEN", HTTP_STATUS.UNAUTHORIZED);
+      throw new AppError("INVALID_REFRESH_TOKEN", UNAUTHORIZED);
     }
     const { id, email, tokenVersion } = user;
     const accessToken = signToken(
@@ -171,18 +180,18 @@ export class AuthService {
       decoded = verifyToken(token);
     } catch (error) {
       if (error.name === "TokenExpiredError") {
-        throw new AppError("RESET_TOKEN_EXPIRED", HTTP_STATUS.UNAUTHORIZED);
+        throw new AppError("RESET_TOKEN_EXPIRED", UNAUTHORIZED);
       }
-      throw new AppError("INVALID_RESET_TOKEN", HTTP_STATUS.UNAUTHORIZED);
+      throw new AppError("INVALID_RESET_TOKEN", UNAUTHORIZED);
     }
 
     if (decoded.type !== "password_reset") {
-      throw new AppError("INVALID_RESET_TOKEN", HTTP_STATUS.UNAUTHORIZED);
+      throw new AppError("INVALID_RESET_TOKEN", UNAUTHORIZED);
     }
 
     const user = await this.User.findByPk(decoded.userId);
     if (!user) {
-      throw new AppError("USER_NOT_FOUND", HTTP_STATUS.NOT_FOUND);
+      throw new AppError("USER_NOT_FOUND", NOT_FOUND);
     }
 
     await user.update({ password: newPassword });

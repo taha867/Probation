@@ -3,23 +3,19 @@
  * Redirects to auth page if user is not authenticated
  */
 
-import { Navigate, useLocation } from "react-router-dom";
+import { Navigate, useLocation, Outlet } from "react-router-dom";
 import { useAuth } from "../../hooks/authHooks";
+import AppInitializer from "./AppInitializer.jsx";
 
-const ProtectedRoute = ({ children }) => {
+const ProtectedRoute = () => {
   const { isAuthenticated, isLoading } = useAuth();
+  // useLocation() is used to capture the current URL so you can remember it and potentially redirect
+  // the user back there after they authenticate
   const location = useLocation();
 
-  // Show loading while checking authentication
+  // Show global app initializer while checking authentication
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-2 text-sm text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
+    return <AppInitializer />;
   }
 
   // Redirect to auth page if not authenticated
@@ -27,7 +23,7 @@ const ProtectedRoute = ({ children }) => {
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
-  return children;
+  return <Outlet />;
 };
 
 export default ProtectedRoute;
