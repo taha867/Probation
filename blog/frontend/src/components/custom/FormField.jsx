@@ -121,6 +121,7 @@ export const FormField = ({
               // Textarea for multi-line input
               <Textarea
                 id={fieldId}
+                name={name}
                 placeholder={config.placeholder}
                 disabled={disabled}
                 rows={rows}
@@ -133,6 +134,7 @@ export const FormField = ({
               <div className="relative">
                 <Input
                   id={fieldId}
+                  name={name}
                   type={config.inputType}
                   placeholder={config.placeholder}
                   autoComplete={config.autoComplete}

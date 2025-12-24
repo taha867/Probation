@@ -7,7 +7,7 @@ const AuthContext = createContext(null);
 
 /**
  * Auth Provider component that wraps the app with authentication context
- * Integrates React 19's use() hook for auth initialization with Suspense
+ * Integrates use() hook for auth initialization with Suspense
  */
 export const AuthProvider = ({ children }) => {
   // This will suspend the component until auth state is resolved

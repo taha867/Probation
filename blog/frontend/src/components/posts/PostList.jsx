@@ -1,54 +1,53 @@
-import { useState, useEffect, useMemo, useCallback, useTransition } from "react";
-import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect, useCallback, useTransition } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useUserPosts } from "../../hooks/useUserPosts";
-import { filterPosts, calculateTotalPages } from "../../services/postService";
+import { calculateTotalPages } from "../../services/postService";
 import PostCard from "../common/PostCard.jsx";
 import PaginationControls from "../common/PaginationControls.jsx";
 import PostFilter from "../common/PostFilter.jsx";
 
+const POSTS_PER_PAGE = 3;
+
 const PostList = ({ onEditPost, onDeletePost }) => {
-  // Local UI state
   const [inputValue, setInputValue] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [isPendingTransition, startTransition] = useTransition();
 
-  // React Query hook - handles fetching, caching, and refetching automatically
-  const { data, isLoading, isFetching } = useUserPosts(currentPage, 10);
+  // Backend-driven pagination + search
+  const { data, isLoading, isFetching } = useUserPosts(
+    currentPage,
+    POSTS_PER_PAGE,
+    searchQuery
+  );
+
   const posts = data?.posts || [];
   const pagination = data?.pagination || {};
 
-  // Combined loading state (initial load + refetching)
   const isPaginationPending = isLoading || isFetching;
 
-  // React 19 best practice: Use useMemo for derived state instead of useState + useEffect
-  const filteredPosts = useMemo(() => {
-    if (!searchQuery.trim()) {
-      return posts;
-    }
-    // Non-urgent filtering can be done in transition
-    return filterPosts(posts, searchQuery);
-  }, [posts, searchQuery]);
+  const totalPages = calculateTotalPages(
+    pagination.total || 0,
+    pagination.limit || POSTS_PER_PAGE
+  );
 
-  // Calculate totalPages using service function - trivial derivation (no memo needed)
-  const totalPages = calculateTotalPages(pagination.total, pagination.limit);
+  const handleSearchChange = useCallback(
+    (e) => {
+      const query = e.target.value;
+      // Urgent: keep input responsive
+      setInputValue(query);
+      // Non-urgent: update query used for backend search
+      startTransition(() => {
+        setSearchQuery(query);
+      });
+    },
+    [startTransition]
+  );
 
-  const handleSearchChange = (e) => {
-    const query = e.target.value;
-    // Urgent: keep input responsive
-    setInputValue(query);
-    // Non-urgent: update query used for filtering in a transition
-    startTransition(() => {
-      setSearchQuery(query);
-    });
-  };
-
-  const handleSearch = (e) => {
+  const handleSearch = useCallback((e) => {
     e.preventDefault();
-    // Search is handled by onChange for better UX
-  };
+  }, []);
 
-  // Stabilized handler - prevents PostCard re-renders
   const handleDeleteClick = useCallback(
     (post) => {
       onDeletePost(post);
@@ -56,7 +55,6 @@ const PostList = ({ onEditPost, onDeletePost }) => {
     [onDeletePost]
   );
 
-  // Stabilized handler - prevents PostItem re-renders
   const handleEditClick = useCallback(
     (post) => {
       onEditPost(post);
@@ -64,23 +62,21 @@ const PostList = ({ onEditPost, onDeletePost }) => {
     [onEditPost]
   );
 
-  // Handle page changes - React Query handles fetching automatically
   const handlePageChange = useCallback((newPage) => {
     setCurrentPage(newPage);
   }, []);
 
-  // Reset to first page when posts change (new data loaded)
+  // Reset to first page when search query changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [posts]);
+  }, [searchQuery]);
 
-  // Simple derived flag - no memoization needed
-  const showPagination = !searchQuery;
+  const hasPosts = posts.length > 0;
+  const showPagination = hasPosts && totalPages > 1;
 
   return (
-    <>
+    <div className="flex flex-col min-h-[calc(100vh-18rem)]">
       <CardHeader>
-
         <PostFilter
           value={inputValue}
           onChange={handleSearchChange}
@@ -89,17 +85,17 @@ const PostList = ({ onEditPost, onDeletePost }) => {
         />
       </CardHeader>
 
-      <CardContent className="space-y-4">
-        {filteredPosts.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
+      <CardContent className="flex flex-col flex-1 space-y-4">
+        {!hasPosts ? (
+          <div className="text-center py-8 text-muted-foreground flex-1 flex items-center justify-center">
             {searchQuery
               ? "No posts found matching your search."
               : "No posts yet. Create your first post!"}
           </div>
         ) : (
           <>
-            <div className="space-y-4">
-              {filteredPosts.map((post) => (
+            <div className="space-y-4 flex-1">
+              {posts.map((post) => (
                 <PostCard
                   key={post.id}
                   post={post}
@@ -110,18 +106,20 @@ const PostList = ({ onEditPost, onDeletePost }) => {
               ))}
             </div>
 
-            {showPagination && totalPages > 1 && (
-              <PaginationControls
-                currentPage={currentPage}
-                totalPages={totalPages}
-                isPending={isPaginationPending}
-                onPageChange={handlePageChange}
-              />
+            {showPagination && (
+              <div className="mt-auto pt-6 border-t border-gray-200">
+                <PaginationControls
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  isPending={isPaginationPending}
+                  onPageChange={handlePageChange}
+                />
+              </div>
             )}
           </>
         )}
       </CardContent>
-    </>
+    </div>
   );
 };
 

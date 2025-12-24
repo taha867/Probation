@@ -27,13 +27,16 @@ export const FormSelect = ({
   className = "",
   ...props
 }) => {
+  // Generate unique ID for accessibility
+  const fieldId = `${name}-select`;
+
   return (
     <FormField
       control={control}
       name={name}
       render={({ field }) => (
         <FormItem>
-          <FormLabel className="text-sm font-medium text-slate-700">
+          <FormLabel htmlFor={fieldId} className="text-sm font-medium text-slate-700">
             {label}
           </FormLabel>
           <Select
@@ -43,7 +46,7 @@ export const FormSelect = ({
             {...props}
           >
             <FormControl>
-              <SelectTrigger className={className}>
+              <SelectTrigger id={fieldId} className={className}>
                 <SelectValue placeholder={placeholder} />
               </SelectTrigger>
             </FormControl>

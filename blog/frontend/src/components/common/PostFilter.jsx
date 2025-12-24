@@ -9,13 +9,19 @@ const PostFilter = ({
   placeholder = "Search posts...",
   isPending = false,
 }) => {
+  const inputId = "post-search-input";
+  
   return (
     <form onSubmit={onSubmit} className="flex gap-2 w-full">
       <Input
+        id={inputId}
+        name="search"
+        type="search"
         placeholder={placeholder}
         value={value}
         onChange={onChange}
         className="flex-1"
+        aria-label="Search posts"
       />
       <Button
         type="submit"

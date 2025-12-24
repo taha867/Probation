@@ -12,7 +12,7 @@ const Home = () => {
   const [inputValue, setInputValue] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [isPendingTransition, startTransition] = useTransition();
-  const limit = 5; // Posts per page
+  const limit = 3; // Posts per page
 
   // React Query hook - handles fetching, caching, and refetching automatically
   const { data, isLoading, isFetching } = useHomePosts(

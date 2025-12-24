@@ -28,7 +28,7 @@ export const userPostsKeys = {
  * @param {number} limit - Number of posts per page (default: 10)
  * @returns {Object} React Query result with posts data, loading, error states
  */
-export const useUserPosts = (page = 1, limit = 10, search) => {
+export const useUserPosts = (page = 1, limit, search) => {
   const { state: { user } } = useAuthContext();
   const userId = user?.id;
 

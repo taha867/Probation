@@ -24,6 +24,7 @@ const {
   USER_NOT_FOUND,
   UNABLE_TO_UPDATE_USER,
   UNABLE_TO_DELETE_USER,
+  UNABLE_TO_FETCH_CURRENT_USER,
 } = ERROR_MESSAGES;
 const { USER_UPDATED } = SUCCESS_MESSAGES;
 
@@ -56,6 +57,45 @@ export async function list(req, res) {
     return res
       .status(INTERNAL_SERVER_ERROR)
       .send({ message: UNABLE_TO_FETCH_USERS });
+  }
+}
+
+/**
+ * Gets the current authenticated user's profile.
+ * @param {Object} req.user - The authenticated user from JWT token.
+ * @returns {Object} Current user's profile information.
+ * @throws {404} If the user is not found.
+ * @throws {500} If there's an error during the retrieval process.
+ */
+export async function getCurrentUser(req, res) {
+  const { id: userId } = req.user;
+
+  try {
+    const user = await userService.findUserById(userId);
+
+    if (!user) {
+      return res.status(NOT_FOUND).send({
+        data: { message: USER_NOT_FOUND },
+      });
+    }
+
+    const { id, name, email, image } = user;
+
+    return res.status(OK).send({
+      data: {
+        user: {
+          id,
+          name,
+          email,
+          image,
+        },
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(INTERNAL_SERVER_ERROR).send({
+      data: { message: UNABLE_TO_FETCH_CURRENT_USER },
+    });
   }
 }
 

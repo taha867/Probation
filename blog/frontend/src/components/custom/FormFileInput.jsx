@@ -86,13 +86,16 @@ export const FormFileInput = ({
     fileInputRef.current?.click();
   }, []);
 
+  // Generate unique ID for accessibility
+  const fieldId = `${name}-file-input`;
+
   return (
     <ShadcnFormField
       control={control}
       name={name}
       render={({ field }) => (
         <FormItem>
-          <FormLabel className="text-sm font-medium text-slate-700">
+          <FormLabel htmlFor={fieldId} className="text-sm font-medium text-slate-700">
             {label}
           </FormLabel>
 
@@ -101,6 +104,8 @@ export const FormFileInput = ({
               {/* Hidden file input */}
               <input
                 ref={fileInputRef}
+                id={fieldId}
+                name={name}
                 type="file"
                 accept={accept}
                 className="hidden"

@@ -57,6 +57,7 @@ export const ERROR_MESSAGES = {
   UNABLE_TO_FETCH_USER_POSTS: "Unable to fetch posts for this user",
   UNABLE_TO_UPDATE_USER: "Unable to update user at this time",
   UNABLE_TO_DELETE_USER: "Unable to delete user at this time",
+  UNABLE_TO_FETCH_CURRENT_USER: "Unable to fetch current user",
 
   // Post Errors
   POST_NOT_FOUND: "Post not found",

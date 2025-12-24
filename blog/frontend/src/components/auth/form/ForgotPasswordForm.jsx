@@ -5,7 +5,6 @@ import { Form } from "@/components/ui/form";
 import { FormField } from "../../custom";
 import { forgotPasswordSchema } from "../../../validations/authSchemas";
 import { useAuth } from "../../../hooks/authHooks";
-import { ArrowLeft } from "lucide-react";
 import { createSubmitHandlerWithToast } from "../../../utils/formSubmitWithToast";
 
 const ForgotPasswordForm = () => {
@@ -56,17 +55,6 @@ const ForgotPasswordForm = () => {
           </Button>
         </form>
       </Form>
-
-      <div className="text-center text-sm text-slate-600">
-        <button
-          type="button"
-          onClick={onBackToSignIn}
-          className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium"
-        >
-          <ArrowLeft className="w-4 h-4 mr-1" />
-          Back to sign in
-        </button>
-      </div>
     </div>
   );
 };

@@ -2,16 +2,26 @@
  * UserProfileMenu - Profile icon with dropdown menu
  * Optimized with React 19 best practices and minimal re-renders
  */
-import { memo, useState, useRef, useEffect, useCallback } from "react";
+import { memo, useState, useRef, useEffect, useCallback, useTransition } from "react";
 import { useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
 import { LogOut, Edit2 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Form } from "@/components/ui/form";
+import { FormFileInput } from "../custom";
 import { useAuth } from "../../hooks/authHooks";
-import ProfileImageDialog from "./ProfileImageDialog";
+import { useImperativeDialog } from "../../hooks/useImperativeDialog";
+import { createSubmitHandlerWithToast } from "../../utils/formSubmitWithToast";
+import { profileImageSchema } from "../../validations/userSchemas";
 
-/**
- * Gets user initials from name or email
- */
 const getUserInitials = (user) => {
   if (user?.name) {
     const names = user.name.trim().split(/\s+/);
@@ -32,16 +42,41 @@ const getUserInitials = (user) => {
 const getImageUrl = (imagePath) => {
   if (!imagePath) return null;
   if (imagePath.startsWith("http")) return imagePath;
-  const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
+  const baseUrl = import.meta.env.VITE_API_BASE_URL ;
   return `${baseUrl}${imagePath}`;
 };
 
 const UserProfileMenu = memo(() => {
-  const { user, signout } = useAuth();
+  const { user, signout, updateProfileImage } = useAuth();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const menuRef = useRef(null);
+
+  // Dialog state via shared hook
+  const {
+    isOpen: isDialogOpen,
+    openDialog: openDialogState,
+    closeDialog: closeDialogState,
+  } = useImperativeDialog(null);
+
+  // Form setup for profile image upload
+  const form = useForm({
+    resolver: yupResolver(profileImageSchema),
+    defaultValues: {
+      image: null, // Always start with null, FormFileInput will handle showing existing image via preview
+    },
+    mode: "onChange",
+  });
+
+  // Reset form when dialog opens
+  useEffect(() => {
+    if (isDialogOpen) {
+      // When dialog opens, reset to null (not the user image URL)
+      // The FormFileInput will handle showing the existing image via preview
+      form.reset({ image: null });
+    }
+  }, [isDialogOpen, form]);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -53,7 +88,8 @@ const UserProfileMenu = memo(() => {
 
     if (isMenuOpen) {
       document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
     }
   }, [isMenuOpen]);
 
@@ -69,13 +105,43 @@ const UserProfileMenu = memo(() => {
   }, [signout, navigate]);
 
   const handleEditImage = useCallback(() => {
-    setIsDialogOpen(true);
+    openDialogState(null); // No payload needed for this dialog
     setIsMenuOpen(false);
-  }, []);
+  }, [openDialogState]);
 
   const handleCloseDialog = useCallback(() => {
-    setIsDialogOpen(false);
-  }, []);
+    form.reset({ image: user?.image || null });
+    closeDialogState();
+  }, [form, user?.image, closeDialogState]);
+
+  // Handle form submission for profile image update
+  const onSubmit = useCallback(
+    async (data) => {
+      try {
+        // Normalize the image value - handle empty objects or null
+        const imageValue = data.image;
+
+        // Only submit if a new image was uploaded to Cloudinary
+        if (imageValue && typeof imageValue === "object" && imageValue.image) {
+          await updateProfileImage(imageValue);
+
+          // Non-urgent: Form reset and dialog close can be deferred
+          startTransition(() => {
+            form.reset({ image: null });
+            closeDialogState();
+          });
+        } else {
+          // No new image uploaded, just close
+          closeDialogState();
+        }
+      } catch (error) {
+        // Error handling is done by axios interceptor
+      }
+    },
+    [updateProfileImage, form, startTransition]
+  );
+
+  const handleSubmit = createSubmitHandlerWithToast(form, onSubmit);
 
   if (!user) return null;
 
@@ -141,12 +207,45 @@ const UserProfileMenu = memo(() => {
       </div>
 
       {/* Profile Image Dialog */}
-      <ProfileImageDialog isOpen={isDialogOpen} onClose={handleCloseDialog} />
+      <Dialog open={isDialogOpen} onOpenChange={handleCloseDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Update Profile Image</DialogTitle>
+            <DialogDescription>
+              Upload a new profile image. Supported formats: JPEG, PNG, WebP, GIF. Max size: 5MB.
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <FormFileInput
+                control={form.control}
+                name="image"
+                label="Profile Image"
+                accept="image/*"
+                maxSizeMB={5}
+                disabled={isPending}
+                existingImageUrl={user?.image || null}
+                folder="blog/users"
+              />
+              <div className="flex justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleCloseDialog}
+                  disabled={isPending}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isPending}>
+                  {isPending ? "Updating..." : "Update Image"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </>
   );
 });
 
-UserProfileMenu.displayName = "UserProfileMenu";
-
 export default UserProfileMenu;
-

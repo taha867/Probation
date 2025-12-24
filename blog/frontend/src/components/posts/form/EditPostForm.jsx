@@ -1,4 +1,4 @@
-import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
+import { useEffect, forwardRef, useImperativeHandle } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Button } from "@/components/ui/button";
@@ -13,13 +13,18 @@ import {
 import { FormField, FormSelect, FormFileInput } from "../../custom";
 import { postSchema } from "../../../validations/postSchemas";
 import { useUpdatePost } from "../../../hooks/usePostMutations";
+import { useImperativeDialog } from "../../../hooks/useImperativeDialog";
 import { POST_STATUS, TOAST_MESSAGES } from "../../../utils/constants";
 import { createSubmitHandlerWithToast } from "../../../utils/formSubmitWithToast";
 
 const EditPostForm = forwardRef((_props, ref) => {
-  // Local dialog state (no global state needed)
-  const [isOpen, setIsOpen] = useState(false);
-  const [currentPost, setCurrentPost] = useState(null);
+  // Dialog state via shared hook
+  const {
+    isOpen,
+    payload: currentPost,
+    openDialog: openDialogState,
+    closeDialog: closeDialogState,
+  } = useImperativeDialog(null);
 
   // React Query mutation - handles API call and cache invalidation automatically
   const updatePostMutation = useUpdatePost();
@@ -29,15 +34,16 @@ const EditPostForm = forwardRef((_props, ref) => {
     ref,
     () => ({
       openDialog: (post) => {
-        setIsOpen(true);
-        setCurrentPost(post);
+        if (!post) return;
+        openDialogState(post);
       },
       closeDialog: () => {
-        setIsOpen(false);
-        setCurrentPost(null);
+        if (!updatePostMutation.isPending) {
+          closeDialogState();
+        }
       },
     }),
-    [],
+    [openDialogState, closeDialogState, updatePostMutation.isPending],
   );
 
   const form = useForm({
@@ -96,8 +102,7 @@ const EditPostForm = forwardRef((_props, ref) => {
         previousStatus: currentPost.status,
       });
 
-      setIsOpen(false);
-      setCurrentPost(null);
+      closeDialogState();
     } catch (error) {
       // Error handling is done by React Query and axios interceptor
     }
@@ -109,8 +114,7 @@ const EditPostForm = forwardRef((_props, ref) => {
 
   const handleClose = () => {
     if (!updatePostMutation.isPending) {
-      setIsOpen(false);
-      setCurrentPost(null);
+      closeDialogState();
     }
   };
 
