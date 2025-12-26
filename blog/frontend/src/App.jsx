@@ -2,10 +2,12 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import DashboardPage from "./pages/DashboardPage.jsx";
 import CreatePostPage from "./pages/CreatePostPage.jsx";
 import HomePage from "./pages/HomePage.jsx";
+import PostDetailPage from "./pages/PostDetailPage.jsx";
 import SignInPage from "./pages/AuthPages/SignInPage.jsx";
 import SignUpPage from "./pages/AuthPages/SignUpPage.jsx";
 import ForgotPasswordPage from "./pages/AuthPages/ForgotPasswordPage.jsx";
 import ResetPasswordPage from "./pages/AuthPages/ResetPasswordPage.jsx";
+import ChangePasswordPage from "./pages/AuthPages/ChangePasswordPage.jsx";
 import Navbar from "./components/Navbar.jsx";
 import Footer from "./components/Footer.jsx";
 import ProtectedRoute from "./components/common/ProtectedRoute.jsx";
@@ -21,6 +23,7 @@ const App = () => {
           <Routes>
             {/* ---------- Public routes ---------- */}
             <Route path="/" element={<HomePage />} />
+            <Route path="/posts/:id" element={<PostDetailPage />} />
 
             {/* Authentication routes - redirect if already authenticated */}
             <Route element={<AuthRoute />}>
@@ -35,6 +38,7 @@ const App = () => {
             <Route element={<ProtectedRoute />}>
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/create-post" element={<CreatePostPage />} />
+              <Route path="/change-password" element={<ChangePasswordPage />} />
             </Route>
 
             {/* ---------- Fallback route ---------- */}

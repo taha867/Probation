@@ -2,7 +2,7 @@ import { memo, useMemo, useState, useEffect, useCallback } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
-import { useAuth } from "../hooks/authHooks";
+import { useAuth } from "../hooks/authHooks/authHooks";
 import UserProfileMenu from "./profile/UserProfileMenu";
 
 const Navbar = memo(() => {
@@ -154,9 +154,7 @@ const Navbar = memo(() => {
           <div className="flex flex-col h-full">
             {/* Menu Header */}
             <div className="flex items-center justify-between p-6 border-b">
-              <span className="text-lg font-semibold text-slate-900">
-                Menu
-              </span>
+              <span className="text-lg font-semibold text-slate-900">Menu</span>
               <button
                 type="button"
                 onClick={closeMobileMenu}
@@ -209,7 +207,6 @@ const Navbar = memo(() => {
           </div>
         </div>
       </div>
-
     </>
   );
 });

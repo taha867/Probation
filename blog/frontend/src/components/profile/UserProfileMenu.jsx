@@ -2,11 +2,18 @@
  * UserProfileMenu - Profile icon with dropdown menu
  * Optimized with React 19 best practices and minimal re-renders
  */
-import { memo, useState, useRef, useEffect, useCallback, useTransition } from "react";
+import {
+  memo,
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  useTransition,
+} from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { LogOut, Edit2 } from "lucide-react";
+import { LogOut, Edit2, KeyRound } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -17,34 +24,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { FormFileInput } from "../custom";
-import { useAuth } from "../../hooks/authHooks";
+import { useAuth } from "../../hooks/authHooks/authHooks";
 import { useImperativeDialog } from "../../hooks/useImperativeDialog";
 import { createSubmitHandlerWithToast } from "../../utils/formSubmitWithToast";
 import { profileImageSchema } from "../../validations/userSchemas";
-
-const getUserInitials = (user) => {
-  if (user?.name) {
-    const names = user.name.trim().split(/\s+/);
-    if (names.length >= 2) {
-      return `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase();
-    }
-    return user.name[0]?.toUpperCase() || "U";
-  }
-  if (user?.email) {
-    return user.email[0]?.toUpperCase() || "U";
-  }
-  return "U";
-};
-
-/**
- * Gets full image URL from relative path
- */
-const getImageUrl = (imagePath) => {
-  if (!imagePath) return null;
-  if (imagePath.startsWith("http")) return imagePath;
-  const baseUrl = import.meta.env.VITE_API_BASE_URL ;
-  return `${baseUrl}${imagePath}`;
-};
+import { getImageUrl } from "../../utils/imageUtils";
+import { getUserInitials } from "../../utils/authorUtils";
 
 const UserProfileMenu = memo(() => {
   const { user, signout, updateProfileImage } = useAuth();
@@ -103,6 +88,11 @@ const UserProfileMenu = memo(() => {
       setIsMenuOpen(false);
     }
   }, [signout, navigate]);
+
+  const handleChangePassword = useCallback(() => {
+    setIsMenuOpen(false);
+    navigate("/change-password");
+  }, [navigate]);
 
   const handleEditImage = useCallback(() => {
     openDialogState(null); // No payload needed for this dialog
@@ -196,6 +186,14 @@ const UserProfileMenu = memo(() => {
             </button>
             <button
               type="button"
+              onClick={handleChangePassword}
+              className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-100 flex items-center gap-2"
+            >
+              <KeyRound className="h-4 w-4" />
+              Change Password
+            </button>
+            <button
+              type="button"
               onClick={handleSignout}
               className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
             >
@@ -212,7 +210,8 @@ const UserProfileMenu = memo(() => {
           <DialogHeader>
             <DialogTitle>Update Profile Image</DialogTitle>
             <DialogDescription>
-              Upload a new profile image. Supported formats: JPEG, PNG, WebP, GIF. Max size: 5MB.
+              Upload a new profile image. Supported formats: JPEG, PNG, WebP,
+              GIF. Max size: 5MB.
             </DialogDescription>
           </DialogHeader>
           <Form {...form}>
@@ -236,7 +235,7 @@ const UserProfileMenu = memo(() => {
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={isPending}>
+                <Button type="submit" variant="success" disabled={isPending}>
                   {isPending ? "Updating..." : "Update Image"}
                 </Button>
               </div>

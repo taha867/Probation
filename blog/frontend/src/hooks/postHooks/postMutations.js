@@ -1,18 +1,16 @@
 /**
- * usePostMutations - React Query hooks for post mutations (create, update, delete)
- * Automatically invalidates relevant queries to keep UI in sync
+ * Post Mutations - React Query hooks for post-related mutations
  * Follows React 19 best practices with proper cache invalidation
+ * Single responsibility: All post-related mutation operations (write)
  */
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import axiosInstance from "../utils/axiosInstance";
-import { homePostsKeys } from "./useHomePosts";
-import { userPostsKeys } from "./useUserPosts";
-import { POST_STATUS } from "../utils/constants";
+import axiosInstance from "../../utils/axiosInstance";
+import { homePostsKeys, userPostsKeys } from "./postQueries";
+import { POST_STATUS } from "../../utils/constants";
 
 /**
  * Hook for creating a new post
  * Automatically invalidates user posts and home posts (if published)
- * Sends JSON payload (image already uploaded to Cloudinary)
  */
 export const useCreatePost = () => {
   const queryClient = useQueryClient();
@@ -24,10 +22,7 @@ export const useCreatePost = () => {
       return data;
     },
     onSuccess: (newPost) => {
-      // Invalidate user posts to refetch dashboard
       queryClient.invalidateQueries({ queryKey: userPostsKeys.all });
-      
-      // If post is published, invalidate home posts too
       if (newPost?.status === POST_STATUS.PUBLISHED) {
         queryClient.invalidateQueries({ queryKey: homePostsKeys.all });
       }
@@ -38,7 +33,6 @@ export const useCreatePost = () => {
 /**
  * Hook for updating an existing post
  * Automatically invalidates user posts and home posts (if status changed)
- * Sends JSON payload (image already uploaded to Cloudinary)
  */
 export const useUpdatePost = () => {
   const queryClient = useQueryClient();
@@ -50,13 +44,9 @@ export const useUpdatePost = () => {
       return { updatedPost, previousStatus };
     },
     onSuccess: ({ updatedPost, previousStatus }) => {
-      // Invalidate user posts to refetch dashboard
       queryClient.invalidateQueries({ queryKey: userPostsKeys.all });
-      
-      // If post status changed to/from published, invalidate home posts
       const wasPublished = previousStatus === POST_STATUS.PUBLISHED;
       const isNowPublished = updatedPost?.status === POST_STATUS.PUBLISHED;
-      
       if (wasPublished || isNowPublished) {
         queryClient.invalidateQueries({ queryKey: homePostsKeys.all });
       }
@@ -74,13 +64,10 @@ export const useDeletePost = () => {
   return useMutation({
     mutationFn: async ({ postId, wasPublished }) => {
       await axiosInstance.delete(`/posts/${postId}`);
-      return { postId, wasPublished }; // Return for onSuccess context
+      return { postId, wasPublished };
     },
     onSuccess: ({ wasPublished }) => {
-      // Invalidate user posts to refetch dashboard
       queryClient.invalidateQueries({ queryKey: userPostsKeys.all });
-      
-      // If deleted post was published, invalidate home posts
       if (wasPublished) {
         queryClient.invalidateQueries({ queryKey: homePostsKeys.all });
       }

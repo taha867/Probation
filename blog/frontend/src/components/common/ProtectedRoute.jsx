@@ -4,7 +4,7 @@
  */
 
 import { Navigate, useLocation, Outlet } from "react-router-dom";
-import { useAuth } from "../../hooks/authHooks";
+import { useAuth } from "../../hooks/authHooks/authHooks";
 import AppInitializer from "./AppInitializer.jsx";
 
 const ProtectedRoute = () => {

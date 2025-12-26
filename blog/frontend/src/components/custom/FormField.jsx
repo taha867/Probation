@@ -11,6 +11,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -29,6 +30,7 @@ export const FormField = ({
   disabled = false,
   autoComplete,
   rows = 4, // For textarea type
+  helperText,
   ...props
 }) => {
   const [showPassword, setShowPassword] = useState(false);
@@ -141,7 +143,7 @@ export const FormField = ({
                   disabled={disabled}
                   className={`${className} ${
                     config.icon ? "pl-10" : ""
-                  } ${showToggle && type === "password" ? "pr-10" : ""}`}
+                  } ${showToggle && type === "password" ? "pr-20" : ""}`}
                   {...field}
                   {...props}
                 />
@@ -155,13 +157,19 @@ export const FormField = ({
                 {showToggle && type === "password" && (
                   <button
                     type="button"
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center gap-1.5 text-gray-500 hover:text-gray-700 text-sm"
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? (
-                      <EyeOff className="h-4 w-4 text-gray-400" />
+                      <>
+                        <EyeOff className="h-4 w-4" />
+                        <span>Hide</span>
+                      </>
                     ) : (
-                      <Eye className="h-4 w-4 text-gray-400" />
+                      <>
+                        <Eye className="h-4 w-4" />
+                        <span>Show</span>
+                      </>
                     )}
                   </button>
                 )}
@@ -169,6 +177,11 @@ export const FormField = ({
             )}
           </FormControl>
 
+          {helperText && (
+            <FormDescription className="text-xs text-gray-500">
+              {helperText}
+            </FormDescription>
+          )}
           <FormMessage />
         </FormItem>
       )}

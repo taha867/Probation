@@ -2,6 +2,7 @@
  * Yup validation schemas for user forms
  */
 import * as yup from "yup";
+import { VALIDATION_MESSAGES } from "../utils/constants";
 
 /**
  * Profile Image Validation Schema
@@ -29,3 +30,19 @@ export const profileImageSchema = yup.object({
     }),
 });
 
+/**
+ * Change Password Validation Schema
+ * For authenticated users changing their password
+ */
+export const changePasswordSchema = yup.object({
+  newPassword: yup
+    .string()
+    .required(VALIDATION_MESSAGES.PASSWORD_REQUIRED)
+    .min(8, VALIDATION_MESSAGES.PASSWORD_TOO_SHORT)
+    .max(128, VALIDATION_MESSAGES.PASSWORD_TOO_LONG),
+
+  confirmPassword: yup
+    .string()
+    .required(VALIDATION_MESSAGES.CONFIRM_PASSWORD_REQUIRED)
+    .oneOf([yup.ref("newPassword")], VALIDATION_MESSAGES.PASSWORDS_DONT_MATCH),
+});

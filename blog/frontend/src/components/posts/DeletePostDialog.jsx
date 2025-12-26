@@ -13,7 +13,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useDeletePost } from "../../hooks/usePostMutations";
+import { useDeletePost } from "../../hooks/postHooks/postMutations";
 import { useImperativeDialog } from "../../hooks/useImperativeDialog";
 import { POST_STATUS } from "../../utils/constants";
 
@@ -48,7 +48,7 @@ const DeletePostDialog = forwardRef((props, ref) => {
         }
       },
     }),
-    [openDialogState, closeDialogState, deletePostMutation.isPending],
+    [openDialogState, closeDialogState, deletePostMutation.isPending]
   );
 
   const handleConfirmDelete = async () => {
@@ -103,7 +103,7 @@ const DeletePostDialog = forwardRef((props, ref) => {
           <AlertDialogAction
             onClick={handleConfirmDelete}
             disabled={deletePostMutation.isPending}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            className="bg-red-600 text-white hover:bg-red-700"
           >
             {deletePostMutation.isPending ? "Deleting..." : "Delete"}
           </AlertDialogAction>

@@ -1,6 +1,6 @@
 /**
- * ResetPasswordForm component
- * Form for resetting password with token from email
+ * ChangePasswordForm - Form component for changing user password
+ * Follows React 19 best practices with proper form handling
  */
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -8,16 +8,17 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { FormField } from "../../custom";
-import { resetPasswordSchema } from "../../../validations/authSchemas";
+import { changePasswordSchema } from "../../../validations/userSchemas";
 import { useAuth } from "../../../hooks/authHooks/authHooks";
 import { createSubmitHandlerWithToast } from "../../../utils/formSubmitWithToast";
+import { TOAST_MESSAGES } from "../../../utils/constants";
 
-const ResetPasswordForm = ({ token }) => {
-  const { resetUserPassword, isLoading } = useAuth();
+const ChangePasswordForm = () => {
+  const { user, changePassword, isLoading } = useAuth();
   const navigate = useNavigate();
 
   const form = useForm({
-    resolver: yupResolver(resetPasswordSchema),
+    resolver: yupResolver(changePasswordSchema),
     defaultValues: {
       newPassword: "",
       confirmPassword: "",
@@ -27,38 +28,44 @@ const ResetPasswordForm = ({ token }) => {
 
   const onSubmit = async (data) => {
     try {
-      await resetUserPassword(token, data.newPassword, data.confirmPassword);
-
-      // Redirect to signin after successful reset
+      await changePassword(data.newPassword);
+      // Success message is handled by createSubmitHandlerWithToast
+      // Optionally navigate back to dashboard after a delay
       setTimeout(() => {
-        navigate("/signin");
+        navigate("/dashboard");
       }, 1500);
     } catch (error) {
       // Error message is handled by axios interceptor
     }
   };
 
-  const handleSubmit = createSubmitHandlerWithToast(form, onSubmit);
+  const handleSubmit = createSubmitHandlerWithToast(form, onSubmit, {
+    successMessage: TOAST_MESSAGES.PASSWORD_CHANGED_SUCCESS,
+  });
 
   return (
     <Form {...form}>
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-6">
         <FormField
           control={form.control}
           name="newPassword"
           type="password"
-          label="New Password"
+          label="Type new password"
           placeholder="Enter your new password"
           autoComplete="new-password"
+          showToggle
+          helperText="Use 8 or more characters with a mix of letters, numbers & symbols."
         />
 
         <FormField
           control={form.control}
           name="confirmPassword"
           type="password"
-          label="Confirm New Password"
-          placeholder="Confirm your new password"
+          label="Type new password again"
+          placeholder="Re-enter your new password"
           autoComplete="new-password"
+          showToggle
+          helperText="Use 8 or more characters with a mix of letters, numbers & symbols."
         />
 
         <Button
@@ -68,21 +75,12 @@ const ResetPasswordForm = ({ token }) => {
           size="lg"
           className="w-full"
         >
-          {isLoading ? "Resetting..." : "Reset Password"}
+          {isLoading ? "Saving..." : "Save Changes"}
         </Button>
-
-        <div className="text-center">
-          <button
-            type="button"
-            className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-            onClick={() => navigate("/signin")}
-          >
-            Back to Sign In
-          </button>
-        </div>
       </form>
     </Form>
   );
 };
 
-export default ResetPasswordForm;
+export default ChangePasswordForm;
+

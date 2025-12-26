@@ -1,53 +1,55 @@
-import { memo, useMemo, useState } from "react";
-import { format } from "date-fns";
+import { memo, useMemo, useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { ImageIcon, Eye, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
+import {
+  calculateReadTime,
+  formatPostDate,
+  getPostImageUrl,
+  getAuthorInfo,
+} from "../../utils/postUtils";
+import AuthorAvatar from "./AuthorAvatar";
 
 const PostCard = ({ post, variant = "public", onView, onEdit, onDelete }) => {
+  const navigate = useNavigate();
   // Track if image failed to load to prevent infinite retries
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
 
   const isDashboard = variant === "dashboard";
 
-  // Simple derived author info
-  const authorName = post.author?.name ?? "Unknown author";
-  const authorImageUrl = post.author?.image || null;
+  // Handle post click - navigate to post detail page (only if not clicking on action buttons)
+  const handlePostClick = useCallback(
+    (e) => {
+      // Don't navigate if clicking on action buttons or their children
+      const clickedButton = e.target.closest("button");
+      if (clickedButton) {
+        return;
+      }
+      if (id) {
+        navigate(`/posts/${id}`);
+      }
+    },
+    [navigate, id]
+  );
 
-  const formattedDate = useMemo(() => {
-    if (!post.createdAt) return "";
-    try {
-      return format(new Date(post.createdAt), "dd MMMM yyyy");
-    } catch {
-      return "";
-    }
-  }, [post.createdAt]);
+  // Destructure with safe defaults - use undefined (not {}) so utility functions handle them correctly
+  const { author, createdAt, body, image, title, status, id } = post || {};
+  // Get author info using utility function
+  const { name: authorName } = getAuthorInfo(author);
 
-  // Calculate read time: average reading speed is ~200 words per minute
-  const readTime = useMemo(() => {
-    if (!post.body) return "0 Min. To Read";
-    const wordCount = post.body.split(/\s+/).length;
-    const minutes = Math.ceil(wordCount / 200);
-    return `${minutes} Min. To Read`;
-  }, [post.body]);
+  const formattedDate = useMemo(() => formatPostDate(createdAt), [createdAt]);
+
+  const readTime = useMemo(() => calculateReadTime(body), [body]);
 
   const excerpt = useMemo(() => {
-    if (!post.body) return "";
+    if (!body) return "";
     // Show first 120 characters for excerpt
-    return post.body.length > 120 ? `${post.body.slice(0, 120)}...` : post.body;
-  }, [post.body]);
+    return body.length > 120 ? `${body.slice(0, 120)}...` : body;
+  }, [body]);
 
-  // Construct full image URL if image exists (cheap string operations, no memo needed)
-  let imageUrl = null;
-  if (post.image) {
-    if (post.image.startsWith("http://") || post.image.startsWith("https://")) {
-      imageUrl = post.image;
-    } else {
-      const baseURL = import.meta.env.VITE_API_BASE_URL;
-      imageUrl = `${baseURL}${post.image}`;
-    }
-  }
+  // Get post image URL using utility function
+  const imageUrl = getPostImageUrl(image);
 
   // Check if we should show placeholder (no image or image failed to load)
   const showPlaceholder = !imageUrl || imageError;
@@ -66,7 +68,19 @@ const PostCard = ({ post, variant = "public", onView, onEdit, onDelete }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg overflow-hidden hover:shadow-lg transition-shadow border border-gray-200">
+    <div
+      className="bg-white rounded-lg overflow-hidden hover:shadow-lg transition-shadow border border-gray-200 cursor-pointer"
+      onClick={handlePostClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          handlePostClick(e);
+        }
+      }}
+      aria-label={`View post: ${title}`}
+    >
       <div className="flex flex-col sm:flex-row gap-4 p-4">
         {/* Image on left */}
         <div className="flex-shrink-0">
@@ -77,7 +91,7 @@ const PostCard = ({ post, variant = "public", onView, onEdit, onDelete }) => {
                 <div className="text-center">
                   <ImageIcon className="w-12 h-12 text-gray-400 mx-auto mb-2" />
                   <p className="text-xs text-gray-500 px-2 line-clamp-2">
-                    {post.title || "No Image"}
+                    {title || "No Image"}
                   </p>
                 </div>
               </div>
@@ -85,7 +99,7 @@ const PostCard = ({ post, variant = "public", onView, onEdit, onDelete }) => {
               // Show actual image
               <img
                 src={imageUrl}
-                alt={post.title}
+                alt={title}
                 className={`w-full h-full object-cover ${
                   imageLoaded ? "opacity-100" : "opacity-0"
                 } transition-opacity duration-300`}
@@ -103,17 +117,23 @@ const PostCard = ({ post, variant = "public", onView, onEdit, onDelete }) => {
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs text-gray-500 uppercase tracking-wide">
                 {isDashboard
-                  ? (post.status || "draft").toString().toUpperCase()
+                  ? (status || "draft").toString().toUpperCase()
                   : "Published"}
               </span>
               {isDashboard && (onView || onEdit || onDelete) && (
-                <div className="flex items-center gap-1">
+                <div
+                  className="flex items-center gap-1"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   {onView && (
                     <Button
                       type="button"
                       variant="outline"
                       size="icon"
-                      onClick={() => onView(post)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onView(post);
+                      }}
                       className="h-7 w-7"
                     >
                       <Eye className="h-4 w-4" />
@@ -124,7 +144,10 @@ const PostCard = ({ post, variant = "public", onView, onEdit, onDelete }) => {
                       type="button"
                       variant="outline"
                       size="icon"
-                      onClick={() => onEdit(post)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEdit(post);
+                      }}
                       className="h-7 w-7"
                     >
                       <Edit className="h-4 w-4" />
@@ -135,7 +158,10 @@ const PostCard = ({ post, variant = "public", onView, onEdit, onDelete }) => {
                       type="button"
                       variant="outline"
                       size="icon"
-                      onClick={() => onDelete(post)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete(post);
+                      }}
                       className="h-7 w-7"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -146,27 +172,18 @@ const PostCard = ({ post, variant = "public", onView, onEdit, onDelete }) => {
             </div>
 
             {/* Title */}
-            <h2 className="text-2xl font-bold text-gray-900 mb-3 line-clamp-2">
-              {post.title}
+            <h2 className="text-2xl font-bold text-gray-900 mb-3 line-clamp-2 hover:text-blue-600 transition-colors">
+              {title}
             </h2>
 
             {/* Metadata: Author avatar + name, Date, Read Time */}
             <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500 mb-3">
               <div className="flex items-center gap-2 min-w-0">
-                {authorImageUrl ? (
-                  <img
-                    src={authorImageUrl}
-                    alt={authorName}
-                    className="h-6 w-6 rounded-full object-cover flex-shrink-0"
-                    loading="lazy"
-                  />
-                ) : (
-                  <div className="h-6 w-6 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-                    <span className="text-xs font-medium text-gray-600">
-                      {authorName.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                )}
+                <AuthorAvatar
+                  author={author}
+                  size="sm"
+                  fallbackBgColor="bg-gray-200"
+                />
                 <span className="text-gray-700 font-medium truncate">
                   {authorName}
                 </span>
@@ -188,5 +205,3 @@ const PostCard = ({ post, variant = "public", onView, onEdit, onDelete }) => {
 
 // Memoize PostCard to prevent re-renders when parent re-renders but post data hasn't changed
 export default memo(PostCard);
-
-

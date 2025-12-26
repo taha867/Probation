@@ -13,8 +13,10 @@ const router = Router();
 
 router.post("/", authenticateToken, create);
 router.get("/", list);
-router.get("/:postId/comments", authenticateToken, listForPost);
-router.get("/:id", authenticateToken, get);
+// Public routes - anyone can view posts and comments
+router.get("/:postId/comments", listForPost);
+router.get("/:id", get);
+// Protected routes - only authenticated users can modify
 router.put("/:id", authenticateToken, update);
 router.delete("/:id", authenticateToken, remove);
 

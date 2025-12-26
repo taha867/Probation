@@ -32,6 +32,7 @@ export const VALIDATION_MESSAGES = {
   NAME_REQUIRED: "Full name is required",
   PHONE_REQUIRED: "Phone number is required",
   CONFIRM_PASSWORD_REQUIRED: "Please confirm your password",
+  COMMENT_REQUIRED: "Comment is required",
 
   // Format validation messages
   INVALID_EMAIL: "Please enter a valid email address",
@@ -54,6 +55,10 @@ export const VALIDATION_MESSAGES = {
 
   // Email validation messages
   EMAIL_TOO_LONG: "Email must not exceed 254 characters",
+
+  // Comment validation messages
+  COMMENT_TOO_SHORT: "Comment cannot be empty",
+  COMMENT_TOO_LONG: "Comment must not exceed 2000 characters",
 };
 
 // Toast Messages
@@ -76,6 +81,7 @@ export const TOAST_MESSAGES = {
   RESET_LINK_SENT: "Password reset link sent! Check your email.",
   PASSWORD_RESET_SUCCESS:
     "Password reset successfully! Please sign in with your new password.",
+  PASSWORD_CHANGED_SUCCESS: "Password changed successfully!",
   TOKEN_REFRESHED: "Token refreshed successfully",
   POST_CREATED_SUCCESS: "Post created successfully!",
   POST_UPDATED_SUCCESS: "Post updated successfully!",

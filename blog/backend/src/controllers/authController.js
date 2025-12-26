@@ -14,6 +14,17 @@ import {
 } from "../validations/authValidation.js";
 import { authService } from "../services/authService.js";
 
+const { INTERNAL_SERVER_ERROR, OK } = HTTP_STATUS;
+const { OPERATION_FAILED } = ERROR_MESSAGES;
+const {
+  ACCOUNT_CREATED,
+  SIGNED_IN,
+  LOGGED_OUT,
+  TOKEN_REFRESHED,
+  RESET_TOKEN_SENT,
+  PASSWORD_RESET,
+} = SUCCESS_MESSAGES;
+
 /**
  * Registers a new user account.
  * @param {Object} req.body - The request body containing user registration data.
@@ -33,8 +44,8 @@ export async function signUp(req, res) {
   try {
     await authService.registerUser({ name, email, phone, password, image });
 
-    return res.status(HTTP_STATUS.OK).send({
-      data: { message: SUCCESS_MESSAGES.ACCOUNT_CREATED },
+    return res.status(OK).send({
+      data: { message: ACCOUNT_CREATED },
     });
   } catch (err) {
     if (handleAppError(err, res, ERROR_MESSAGES)) return;
@@ -42,8 +53,8 @@ export async function signUp(req, res) {
     // Fallback for unexpected errors
     // eslint-disable-next-line no-console
     console.error(err);
-    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send({
-      message: ERROR_MESSAGES.OPERATION_FAILED,
+    return res.status(INTERNAL_SERVER_ERROR).send({
+      message: OPERATION_FAILED,
     });
   }
 }
@@ -71,10 +82,17 @@ export async function signIn(req, res) {
       password,
     });
     const { user, accessToken, refreshToken } = result;
-    const { id, name, email: userEmail, phone: userPhone, status, image } = user;
-    return res.status(HTTP_STATUS.OK).send({
+    const {
+      id,
+      name,
+      email: userEmail,
+      phone: userPhone,
+      status,
+      image,
+    } = user;
+    return res.status(OK).send({
       data: {
-        message: SUCCESS_MESSAGES.SIGNED_IN,
+        message: SIGNED_IN,
         accessToken,
         refreshToken,
         user: {
@@ -92,8 +110,8 @@ export async function signIn(req, res) {
 
     // eslint-disable-next-line no-console
     console.error(err);
-    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send({
-      message: ERROR_MESSAGES.OPERATION_FAILED,
+    return res.status(INTERNAL_SERVER_ERROR).send({
+      message: OPERATION_FAILED,
     });
   }
 }
@@ -107,19 +125,19 @@ export async function signIn(req, res) {
  */
 export async function signOut(req, res) {
   try {
-    const { id: authUser ={} } = req.user;
+    const { id: authUser = {} } = req.user;
     await authService.logoutUser(authUser);
 
-    return res.status(HTTP_STATUS.OK).send({
-      data: { message: SUCCESS_MESSAGES.LOGGED_OUT },
+    return res.status(OK).send({
+      data: { message: LOGGED_OUT },
     });
   } catch (err) {
     if (handleAppError(err, res, ERROR_MESSAGES)) return;
 
     // eslint-disable-next-line no-console
     console.error(err);
-    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send({
-      message: ERROR_MESSAGES.OPERATION_FAILED,
+    return res.status(INTERNAL_SERVER_ERROR).send({
+      message: OPERATION_FAILED,
     });
   }
 }
@@ -142,9 +160,9 @@ export async function refreshToken(req, res) {
   try {
     const result = await authService.verifyAndRefreshToken(refreshToken);
 
-    return res.status(HTTP_STATUS.OK).send({
+    return res.status(OK).send({
       data: {
-        message: SUCCESS_MESSAGES.TOKEN_REFRESHED,
+        message: TOKEN_REFRESHED,
         accessToken: result.accessToken,
       },
     });
@@ -153,8 +171,8 @@ export async function refreshToken(req, res) {
 
     // eslint-disable-next-line no-console
     console.error(err);
-    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send({
-      message: ERROR_MESSAGES.OPERATION_FAILED,
+    return res.status(INTERNAL_SERVER_ERROR).send({
+      message: OPERATION_FAILED,
     });
   }
 }
@@ -175,9 +193,9 @@ export async function forgotPassword(req, res) {
   try {
     await authService.createPasswordResetToken(email);
 
-    return res.status(HTTP_STATUS.OK).send({
+    return res.status(OK).send({
       data: {
-        message: SUCCESS_MESSAGES.RESET_TOKEN_SENT,
+        message: RESET_TOKEN_SENT,
       },
     });
   } catch (err) {
@@ -185,8 +203,8 @@ export async function forgotPassword(req, res) {
 
     // eslint-disable-next-line no-console
     console.error(err);
-    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send({
-      message: ERROR_MESSAGES.OPERATION_FAILED,
+    return res.status(INTERNAL_SERVER_ERROR).send({
+      message: OPERATION_FAILED,
     });
   }
 }
@@ -211,16 +229,16 @@ export async function resetPassword(req, res) {
   try {
     await authService.resetUserPassword(token, newPassword);
 
-    return res.status(HTTP_STATUS.OK).send({
-      data: { message: SUCCESS_MESSAGES.PASSWORD_RESET },
+    return res.status(OK).send({
+      data: { message: PASSWORD_RESET },
     });
   } catch (err) {
     if (handleAppError(err, res, ERROR_MESSAGES)) return;
 
     // eslint-disable-next-line no-console
     console.error(err);
-    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send({
-      message: ERROR_MESSAGES.OPERATION_FAILED,
+    return res.status(INTERNAL_SERVER_ERROR).send({
+      message: OPERATION_FAILED,
     });
   }
 }

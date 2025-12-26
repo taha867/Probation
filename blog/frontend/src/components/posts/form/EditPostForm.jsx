@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { FormField, FormSelect, FormFileInput } from "../../custom";
 import { postSchema } from "../../../validations/postSchemas";
-import { useUpdatePost } from "../../../hooks/usePostMutations";
+import { useUpdatePost } from "../../../hooks/postHooks/postMutations";
 import { useImperativeDialog } from "../../../hooks/useImperativeDialog";
 import { POST_STATUS, TOAST_MESSAGES } from "../../../utils/constants";
 import { createSubmitHandlerWithToast } from "../../../utils/formSubmitWithToast";
@@ -43,7 +43,7 @@ const EditPostForm = forwardRef((_props, ref) => {
         }
       },
     }),
-    [openDialogState, closeDialogState, updatePostMutation.isPending],
+    [openDialogState, closeDialogState, updatePostMutation.isPending]
   );
 
   const form = useForm({
@@ -87,7 +87,11 @@ const EditPostForm = forwardRef((_props, ref) => {
         // Image was removed
         payload.image = null;
         payload.imagePublicId = null;
-      } else if (data.image && typeof data.image === "object" && data.image.image) {
+      } else if (
+        data.image &&
+        typeof data.image === "object" &&
+        data.image.image
+      ) {
         // New image uploaded to Cloudinary
         payload.image = data.image.image;
         payload.imagePublicId = data.image.imagePublicId;
@@ -181,6 +185,7 @@ const EditPostForm = forwardRef((_props, ref) => {
 
               <Button
                 type="submit"
+                variant="success"
                 disabled={updatePostMutation.isPending}
                 className="flex-1"
               >

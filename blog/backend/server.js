@@ -11,7 +11,7 @@ const App = async () => {
   // Enable CORS for your frontend
   app.use(
     cors({
-      origin: ["http://localhost:5173", "http://localhost:5174"], // frontend origins
+      origin: process.env.FRONTEND_URL,
     }),
   );
 

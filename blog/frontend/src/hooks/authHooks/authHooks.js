@@ -1,21 +1,21 @@
 import { useTransition } from "react";
-import { useAuthContext } from "../contexts/authContext";
-import { authActions } from "../reducers/authReducer";
+import { useAuthContext } from "../../contexts/authContext";
+import { authActions } from "../../reducers/authReducer";
 import {
   storeTokens,
   removeTokens,
   decodeAndValidateToken,
-} from "../utils/tokenUtils";
+} from "../../utils/tokenUtils";
 import {
   loginUser,
   registerUser,
   logoutUser,
   forgotPassword,
   resetPassword,
-} from "../services/authService";
-import { updateUserProfile } from "../services/userService";
-import { TOAST_MESSAGES } from "../utils/constants";
-import { invalidateAuthPromise, updateAuthPromise } from "../utils/authPromise";
+} from "../../services/authService";
+import { updateUserProfile } from "../../services/userService";
+import { TOAST_MESSAGES } from "../../utils/constants";
+import { invalidateAuthPromise, updateAuthPromise } from "../../utils/authPromise";
 
 /**
  * Custom hook for authentication operations
@@ -162,6 +162,30 @@ export const useAuth = () => {
     });
   };
 
+  const changePassword = async (newPassword) => {
+    return new Promise((resolve, reject) => {
+      startTransition(async () => {
+        try {
+          if (!user?.id) {
+            throw new Error("User not authenticated");
+          }
+
+          // Prepare payload with new password
+          const payload = {
+            password: newPassword,
+          };
+
+          // Call API to update password
+          const response = await updateUserProfile(user.id, payload);
+          resolve(response);
+        } catch (error) {
+          dispatch(authError());
+          reject(error);
+        }
+      });
+    });
+  };
+
   const { user } = state;
 
   return {
@@ -177,5 +201,6 @@ export const useAuth = () => {
     requestPasswordReset,
     resetUserPassword,
     updateProfileImage,
+    changePassword,
   };
 };

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { FormField } from "../../custom";
 import { signupSchema } from "../../../validations/authSchemas";
-import { useAuth } from "../../../hooks/authHooks";
+import { useAuth } from "../../../hooks/authHooks/authHooks";
 import { createSubmitHandlerWithToast } from "../../../utils/formSubmitWithToast";
 
 const SignUpForm = () => {
@@ -89,7 +89,8 @@ const SignUpForm = () => {
 
           <Button
             type="submit"
-            className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white font-medium"
+            variant="success"
+            className="w-full h-11 font-medium"
             disabled={isLoading}
           >
             {isLoading ? "Creating account..." : "Create account"}

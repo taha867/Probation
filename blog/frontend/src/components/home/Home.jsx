@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, useTransition } from "react";
-import { useHomePosts } from "../../hooks/useHomePosts";
+import { useHomePosts } from "../../hooks/postHooks/postQueries";
 import { calculateTotalPages } from "../../services/postService";
 import PostCard from "../common/PostCard.jsx";
 import PaginationControls from "../common/PaginationControls.jsx";

@@ -1,5 +1,5 @@
 import { Navigate, Outlet } from "react-router-dom";
-import { useAuth } from "../../hooks/authHooks.js";
+import { useAuth } from "../../hooks/authHooks/authHooks.js";
 import AppInitializer from "./AppInitializer.jsx";
 
 // Component to handle auth route protection

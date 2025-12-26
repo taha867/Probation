@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useTransition } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useUserPosts } from "../../hooks/useUserPosts";
+import { useUserPosts } from "../../hooks/postHooks/postQueries";
 import { calculateTotalPages } from "../../services/postService";
 import PostCard from "../common/PostCard.jsx";
 import PaginationControls from "../common/PaginationControls.jsx";

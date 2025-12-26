@@ -76,3 +76,20 @@ export const searchPostsSchema = yup.object({
     .max(100, "Limit must not exceed 100")
     .default(10),
 });
+
+/**
+ * Post ID Route Parameter Validation Schema
+ * Validates that the route parameter is a valid positive integer string
+ */
+export const postIdParamSchema = yup
+  .string()
+  .required("Post ID is required")
+  .test(
+    "is-valid-positive-integer",
+    "Invalid post ID",
+    (value) => {
+      if (!value) return false;
+      const num = parseInt(value, 10);
+      return !isNaN(num) && num > 0 && Number.isInteger(num);
+    }
+  );

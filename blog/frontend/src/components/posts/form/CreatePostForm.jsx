@@ -11,13 +11,13 @@ import { Form } from "@/components/ui/form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FormField, FormSelect, FormFileInput } from "../../custom";
 import { postSchema } from "../../../validations/postSchemas";
-import { useCreatePost } from "../../../hooks/usePostMutations";
+import { useCreatePost } from "../../../hooks/postHooks/postMutations";
 import { POST_STATUS, TOAST_MESSAGES } from "../../../utils/constants";
 import { createSubmitHandlerWithToast } from "../../../utils/formSubmitWithToast";
 
 const CreatePostForm = ({ onPostCreated }) => {
   const [isFormPending, startFormTransition] = useTransition();
-  
+
   // React Query mutation - handles API call and cache invalidation automatically
   const createPostMutation = useCreatePost();
 
@@ -112,6 +112,7 @@ const CreatePostForm = ({ onPostCreated }) => {
 
             <Button
               type="submit"
+              variant="success"
               disabled={createPostMutation.isPending || isFormPending}
               className="w-full"
             >
