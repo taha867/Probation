@@ -509,7 +509,7 @@ async updatePostForUser({ postId, userId, data }) {
 │ id (PK)     │    │ id (PK)     │           │ (replies/nested comments)
 │ userId (FK) │    │ userId (FK) │◄──────────┘
 │ title       │    │ postId (FK) │
-│ body        │    │ parentId    │▼
+│ body        │    │ parentId    │
 │ status      │    │   (FK)      │
 │ image       │    │ body        │
 └──────┬──────┘    └──────┬──────┘
