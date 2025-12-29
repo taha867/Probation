@@ -34,9 +34,8 @@ const SignUpForm = () => {
   const handleSubmit = createSubmitHandlerWithToast(form, onSubmit);
 
   return (
-    <div className="space-y-4">
-      <Form {...form}>
-        <form onSubmit={handleSubmit} className="space-y-4">
+    <Form {...form}>
+      <form onSubmit={handleSubmit} className="space-y-3">
           <FormField
             control={form.control}
             name="name"
@@ -97,7 +96,6 @@ const SignUpForm = () => {
           </Button>
         </form>
       </Form>
-    </div>
   );
 };
 

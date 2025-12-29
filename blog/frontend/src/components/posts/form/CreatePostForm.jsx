@@ -1,8 +1,3 @@
-/**
- * CreatePostForm - Optimized form component for creating new posts with useTransition
- * Handles file uploads using FormData for multipart/form-data requests
- * Using centralized state management and custom hooks
- */
 import { useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -12,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FormField, FormSelect, FormFileInput } from "../../custom";
 import { postSchema } from "../../../validations/postSchemas";
 import { useCreatePost } from "../../../hooks/postHooks/postMutations";
-import { POST_STATUS, TOAST_MESSAGES } from "../../../utils/constants";
+import { POST_STATUS } from "../../../utils/constants";
 import { createSubmitHandlerWithToast } from "../../../utils/formSubmitWithToast";
 
 const CreatePostForm = ({ onPostCreated }) => {
@@ -61,9 +56,8 @@ const CreatePostForm = ({ onPostCreated }) => {
     }
   };
 
-  const handleSubmit = createSubmitHandlerWithToast(form, onSubmit, {
-    successMessage: TOAST_MESSAGES.POST_CREATED_SUCCESS,
-  });
+  // Success message is shown automatically by axios interceptor from backend message
+  const handleSubmit = createSubmitHandlerWithToast(form, onSubmit);
 
   return (
     <Card>

@@ -19,7 +19,6 @@ import { invalidateAuthPromise, updateAuthPromise } from "../../utils/authPromis
 
 /**
  * Custom hook for authentication operations
- * @returns {object} - Authentication methods and state
  */
 export const useAuth = () => {
   const { state, dispatch } = useAuthContext();

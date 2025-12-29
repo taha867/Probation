@@ -1,7 +1,3 @@
-/**
- * Application Constants
- * Centralized location for all constants used throughout the application
- */
 import { StatusCodes } from "http-status-codes";
 
 export const HTTP_STATUS = StatusCodes;
@@ -134,6 +130,10 @@ export const POST_STATUS = {
   DRAFT: "draft",
   PUBLISHED: "published",
 };
+
+// Pagination Constants
+export const COMMENTS_PER_PAGE = 10;
+export const POSTS_PER_PAGE = 3;
 
 // Post Tab Constants - REMOVED: No longer using tabs, separate pages instead
 

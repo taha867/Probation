@@ -1,7 +1,6 @@
 /**
  * useCloudinaryUpload - Custom hook for Cloudinary direct uploads
  * Handles file upload to Cloudinary with loading and error states
- * Follows React 19 best practices
  */
 import { useState, useCallback } from "react";
 import { uploadImage } from "../services/cloudinaryService";

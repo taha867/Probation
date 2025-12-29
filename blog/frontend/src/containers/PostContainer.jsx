@@ -1,8 +1,4 @@
-/**
- * PostContainer - Container component for post detail page
- * Handles all business logic, data fetching, and state management
- * Follows React 19 best practices with proper separation of concerns
- */
+
 import { useParams } from "react-router-dom";
 import PostDetailContent from "../components/posts/PostDetailContent";
 import CommentSection from "../components/comments/CommentSection";
@@ -11,12 +7,12 @@ import { postIdParamSchema } from "../validations/postSchemas";
 const PostContainer = () => {
   const { id } = useParams();
 
-  // Validate post ID using validation schema
+  // Validate and transform post ID using validation schema
+  // The schema transforms the string to a number if valid
   let postId;
   try {
-    postIdParamSchema.validateSync(id);
-    // After validation succeeds, parse to number
-    postId = parseInt(id, 10);
+    postId = postIdParamSchema.validateSync(id);
+    // postId is now already a number (transformed by the schema)
   } catch (error) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">

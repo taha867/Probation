@@ -1,12 +1,11 @@
 import { useState, useEffect, useCallback, useTransition } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardContent, CardHeader} from "@/components/ui/card";
 import { useUserPosts } from "../../hooks/postHooks/postQueries";
 import { calculateTotalPages } from "../../services/postService";
+import { POSTS_PER_PAGE } from "../../utils/constants";
 import PostCard from "../common/PostCard.jsx";
 import PaginationControls from "../common/PaginationControls.jsx";
 import PostFilter from "../common/PostFilter.jsx";
-
-const POSTS_PER_PAGE = 3;
 
 const PostList = ({ onEditPost, onDeletePost }) => {
   const [inputValue, setInputValue] = useState("");

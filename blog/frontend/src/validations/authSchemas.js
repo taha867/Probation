@@ -1,7 +1,4 @@
-/**
- * Yup validation schemas for authentication forms
- * Using Yup's built-in validations with custom error messages
- */
+
 import * as yup from "yup";
 import { VALIDATION_MESSAGES } from "../utils/constants";
 

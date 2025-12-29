@@ -1,7 +1,5 @@
 import Joi from "joi";
 
-// Shared building blocks for many schemas
-
 export const idParamSchema = (entityName = "ID") =>
   Joi.object({
     id: Joi.number().integer().positive().required().messages({

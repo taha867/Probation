@@ -2,8 +2,8 @@ import toast from "react-hot-toast";
 
 /**
  * Wraps react-hook-form handleSubmit to show toast messages for:
- * - client-side validation errors (red error toast)
- * - optional success message (green success toast)
+ * - client-side validation errors 
+ * - optional success message
  *
  * This does NOT replace axios interceptors; those still handle
  * server-side success/error toasts.

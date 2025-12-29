@@ -20,7 +20,11 @@ const {
   UNABLE_TO_DELETE_COMMENT,
   UNABLE_TO_UPDATE_COMMENT,
 } = ERROR_MESSAGES;
-const { COMMENT_DELETED } = SUCCESS_MESSAGES;
+const {
+  COMMENT_CREATED,
+  COMMENT_UPDATED,
+  COMMENT_DELETED,
+} = SUCCESS_MESSAGES;
 
 /**
  * Creates a new comment or reply to an existing comment.
@@ -48,7 +52,10 @@ export async function create(req, res) {
       userId,
     });
 
-    return res.status(CREATED).send({ data: result.comment });
+    return res.status(CREATED).send({
+      data: result.comment,
+      message: COMMENT_CREATED,
+    });
   } catch (err) {
     if (handleAppError(err, res, ERROR_MESSAGES)) return;
 
@@ -156,7 +163,10 @@ export async function update(req, res) {
       body,
     });
 
-    return res.status(OK).send({ data: result.comment });
+    return res.status(OK).send({
+      data: result.comment,
+      message: COMMENT_UPDATED,
+    });
   } catch (err) {
     if (handleAppError(err, res, ERROR_MESSAGES)) return;
 

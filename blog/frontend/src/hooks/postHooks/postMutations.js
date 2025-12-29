@@ -1,11 +1,9 @@
 /**
  * Post Mutations - React Query hooks for post-related mutations
- * Follows React 19 best practices with proper cache invalidation
- * Single responsibility: All post-related mutation operations (write)
  */
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axiosInstance from "../../utils/axiosInstance";
-import { homePostsKeys, userPostsKeys } from "./postQueries";
+import { homePostsKeys, userPostsKeys, postDetailKeys } from "./postQueries";
 import { POST_STATUS } from "../../utils/constants";
 
 /**
@@ -43,8 +41,16 @@ export const useUpdatePost = () => {
       const { data: { data: updatedPost } = {} } = response;
       return { updatedPost, previousStatus };
     },
-    onSuccess: ({ updatedPost, previousStatus }) => {
+    onSuccess: ({ updatedPost, previousStatus }, variables) => {
+      const { postId } = variables;
+      
+      // Invalidate post detail cache so the detail page shows updated data immediately
+      queryClient.invalidateQueries({ queryKey: postDetailKeys.detail(postId) });
+      
+      // Invalidate user posts list (dashboard)
       queryClient.invalidateQueries({ queryKey: userPostsKeys.all });
+      
+      // Invalidate home posts if status changed to/from published
       const wasPublished = previousStatus === POST_STATUS.PUBLISHED;
       const isNowPublished = updatedPost?.status === POST_STATUS.PUBLISHED;
       if (wasPublished || isNowPublished) {

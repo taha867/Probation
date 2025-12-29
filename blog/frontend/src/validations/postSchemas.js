@@ -1,6 +1,4 @@
-/**
- * Yup validation schemas for post forms
- */
+
 import * as yup from "yup";
 import { POST_STATUS } from "../utils/constants";
 
@@ -78,18 +76,20 @@ export const searchPostsSchema = yup.object({
 });
 
 /**
- * Post ID Route Parameter Validation Schema
- * Validates that the route parameter is a valid positive integer string
+ * Validates and transforms the route parameter to a valid positive integer
+ * The .transform() ensures proper integer parsing from string
  */
 export const postIdParamSchema = yup
-  .string()
+  .number()
   .required("Post ID is required")
-  .test(
-    "is-valid-positive-integer",
-    "Invalid post ID",
-    (value) => {
-      if (!value) return false;
-      const num = parseInt(value, 10);
-      return !isNaN(num) && num > 0 && Number.isInteger(num);
+  .transform((value, originalValue) => {
+    // Transform string to number if valid
+    if (typeof originalValue === "string") {
+      const num = parseInt(originalValue, 10);
+      return !isNaN(num) ? num : NaN;
     }
-  );
+    return originalValue;
+  })
+  .integer("Post ID must be an integer")
+  .positive("Post ID must be a positive number")
+  .typeError("Post ID must be a valid number");

@@ -35,10 +35,6 @@ export const postDetailKeys = {
 
 /**
  * Hook for fetching home page posts (published only)
- * @param {number} page - Current page number (default: 1)
- * @param {number} limit - Number of posts per page
- * @param {string} search - Search query string
- * @returns {Object} React Query result with posts data, loading, error states
  */
 export const useHomePosts = (page = 1, limit, search) => {
   return useQuery({
@@ -55,15 +51,12 @@ export const useHomePosts = (page = 1, limit, search) => {
         pagination: result.pagination || {},
       };
     },
+    staleTime: 1000 * 60 * 1, // 1 minute - home posts refresh more frequently
   });
 };
 
 /**
  * Hook for fetching user's posts (dashboard)
- * @param {number} page - Current page number (default: 1)
- * @param {number} limit - Number of posts per page
- * @param {string} search - Search query string
- * @returns {Object} React Query result with posts data, loading, error states
  */
 export const useUserPosts = (page = 1, limit, search) => {
   const {
@@ -74,9 +67,7 @@ export const useUserPosts = (page = 1, limit, search) => {
   return useQuery({
     queryKey: userPostsKeys.list(userId, page, limit, search),
     queryFn: async () => {
-      if (!userId) {
-        return { posts: [], pagination: { limit, total: 0 } };
-      }
+      // No need for null check here - enabled option prevents query when userId is falsy
       const result = await fetchUserPosts(userId, {
         page,
         limit,
@@ -84,7 +75,7 @@ export const useUserPosts = (page = 1, limit, search) => {
       });
       return {
         posts: result.posts || [],
-        pagination: result.pagination || { limit, total: 0 },
+        pagination: result.pagination || {},
       };
     },
     enabled: !!userId,
@@ -94,21 +85,15 @@ export const useUserPosts = (page = 1, limit, search) => {
 
 /**
  * Hook for fetching a single post by ID
- * @param {number} postId - The ID of the post to fetch
- * @returns {Object} React Query result with post data, loading, error states
  */
 export const usePostDetail = (postId) => {
   return useQuery({
     queryKey: postDetailKeys.detail(postId),
     queryFn: async () => {
-      if (!postId) {
-        return null;
-      }
-      const post = await getPostDetails(postId);
-      return post;
+      return await getPostDetails(postId);
     },
     enabled: !!postId,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 5, // 5 minutes - post details change less frequently
   });
 };
 

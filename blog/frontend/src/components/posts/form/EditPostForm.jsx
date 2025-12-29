@@ -14,7 +14,7 @@ import { FormField, FormSelect, FormFileInput } from "../../custom";
 import { postSchema } from "../../../validations/postSchemas";
 import { useUpdatePost } from "../../../hooks/postHooks/postMutations";
 import { useImperativeDialog } from "../../../hooks/useImperativeDialog";
-import { POST_STATUS, TOAST_MESSAGES } from "../../../utils/constants";
+import { POST_STATUS } from "../../../utils/constants";
 import { createSubmitHandlerWithToast } from "../../../utils/formSubmitWithToast";
 
 const EditPostForm = forwardRef((_props, ref) => {
@@ -112,9 +112,8 @@ const EditPostForm = forwardRef((_props, ref) => {
     }
   };
 
-  const handleSubmit = createSubmitHandlerWithToast(form, onSubmit, {
-    successMessage: TOAST_MESSAGES.POST_UPDATED_SUCCESS,
-  });
+  // Success message is shown automatically by axios interceptor from backend message
+  const handleSubmit = createSubmitHandlerWithToast(form, onSubmit);
 
   const handleClose = () => {
     if (!updatePostMutation.isPending) {

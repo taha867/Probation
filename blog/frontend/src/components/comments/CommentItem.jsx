@@ -1,20 +1,33 @@
 /**
  * CommentItem - Component for displaying a single comment with nested replies
- * Follows React 19 best practices with proper memoization
+ * Supports edit and delete functionality for comment authors
  */
-import { memo, useState, useCallback } from "react";
+import { memo, useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { MessageSquare, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import CommentForm from "./CommentForm";
+import CommentActionsMenu from "./CommentActionsMenu";
+import DeleteCommentDialog from "./DeleteCommentDialog";
 import { useAuth } from "../../hooks/authHooks/authHooks";
 import { formatPostDate, getAuthorInfo } from "../../utils/postUtils";
 import AuthorAvatar from "../common/AuthorAvatar";
+import { useUpdateComment } from "../../hooks/commentHooks/commentMutations";
+import { createCommentComparison } from "../../utils/memoComparisons";
 
 const CommentItem = memo(({ comment, postId, onReplySuccess }) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [showReplies, setShowReplies] = useState(false);
   const [showReplyForm, setShowReplyForm] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const deleteDialogRef = useRef(null);
+  // Use ref to store comment for handleDelete to avoid dependency on comment object
+  const commentRef = useRef(comment);
+
+  // Keep ref in sync with comment prop
+  useEffect(() => {
+    commentRef.current = comment;
+  }, [comment]);
 
   // Destructure with safe defaults - use undefined (not {}) so utility functions handle them correctly
   const {
@@ -25,15 +38,20 @@ const CommentItem = memo(({ comment, postId, onReplySuccess }) => {
     replies: commentReplies = [],
   } = comment || {};
 
+  // Simple derived values - no need for memoization (overhead > benefit)
   const { name: authorName } = getAuthorInfo(author);
   const hasReplies = commentReplies.length > 0;
-
+  const isCommentAuthor = user?.id === author?.id;
   const formattedDate = formatPostDate(createdAt);
 
-  // Produces: “5 minutes ago”, “2 days ago”
-  const timeAgo = createdAt
-    ? formatDistanceToNow(new Date(createdAt), { addSuffix: true })
-    : "";
+  // Memoize timeAgo since it creates a new Date object - this is worth memoizing
+  const timeAgo = useMemo(() => {
+    if (!createdAt) return "";
+    return formatDistanceToNow(new Date(createdAt), { addSuffix: true });
+  }, [createdAt]);
+
+  // React Query mutation for updating comment
+  const updateCommentMutation = useUpdateComment();
 
   // useCallback avoids re-creating function on each render
   const toggleReplies = useCallback(() => {
@@ -52,6 +70,47 @@ const CommentItem = memo(({ comment, postId, onReplySuccess }) => {
     }
   }, [onReplySuccess]);
 
+  const handleEdit = useCallback(() => {
+    setIsEditing(true);
+  }, []);
+
+  const handleCancelEdit = useCallback(() => {
+    setIsEditing(false);
+  }, []);
+
+  const handleUpdate = useCallback(
+    async (updatedBody) => {
+      if (!id) return;
+
+      try {
+        await updateCommentMutation.mutateAsync({
+          commentId: id,
+          body: updatedBody,
+        });
+        setIsEditing(false);
+        // Call onReplySuccess to refresh comments if provided
+        if (onReplySuccess) {
+          onReplySuccess();
+        }
+      } catch (error) {
+        // Error handling is done by React Query and axios interceptor
+        // Re-throw to prevent form from closing on error
+        throw error;
+      }
+    },
+    [id, updateCommentMutation, onReplySuccess]
+  );
+
+  // Use ref to access comment without making handleDelete depend on comment object
+  // This prevents CommentActionsMenu from re-rendering when comment object reference changes
+  const handleDelete = useCallback(() => {
+    if (deleteDialogRef.current && commentRef.current) {
+      deleteDialogRef.current.openDialog(commentRef.current);
+    }
+  }, []); // Empty deps - commentRef is stable, deleteDialogRef is stable
+
+  const isPending = updateCommentMutation.isPending;
+
   return (
     <div className="border-b border-gray-100 pb-4 last:border-b-0">
       {/* Main Comment */}
@@ -63,16 +122,39 @@ const CommentItem = memo(({ comment, postId, onReplySuccess }) => {
 
         {/* Comment Content */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="font-semibold text-gray-900">{authorName}</span>
-            <span className="text-xs text-gray-500">{timeAgo}</span>
+          <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-gray-900">{authorName}</span>
+              <span className="text-xs text-gray-500">{timeAgo}</span>
+            </div>
+            {/* Comment Actions Menu - Only show for comment author */}
+            {isAuthenticated && isCommentAuthor && !isEditing && (
+              <CommentActionsMenu
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                disabled={isPending}
+              />
+            )}
           </div>
-          <p className="text-gray-700 text-sm whitespace-pre-wrap break-words">
-            {body}
-          </p>
 
-          {/* Reply Button */}
-          {isAuthenticated && (
+          {/* Edit Mode or View Mode */}
+          {isEditing ? (
+            <div className="mt-2">
+              <CommentForm
+                initialValue={body}
+                onUpdate={handleUpdate}
+                onCancel={handleCancelEdit}
+                placeholder="Edit your comment..."
+              />
+            </div>
+          ) : (
+            <p className="text-gray-700 text-sm whitespace-pre-wrap break-words">
+              {body}
+            </p>
+          )}
+
+          {/* Reply Button - Only show when not editing */}
+          {isAuthenticated && !isEditing && (
             <div className="mt-2">
               <Button
                 type="button"
@@ -138,8 +220,11 @@ const CommentItem = memo(({ comment, postId, onReplySuccess }) => {
           )}
         </div>
       </div>
+
+      {/* Delete Comment Dialog */}
+      <DeleteCommentDialog ref={deleteDialogRef} />
     </div>
   );
-});
+}, createCommentComparison());
 
 export default CommentItem;

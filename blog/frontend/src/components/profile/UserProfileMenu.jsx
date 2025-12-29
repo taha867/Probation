@@ -1,7 +1,3 @@
-/**
- * UserProfileMenu - Profile icon with dropdown menu
- * Optimized with React 19 best practices and minimal re-renders
- */
 import {
   memo,
   useState,

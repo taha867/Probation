@@ -1,7 +1,3 @@
-/**
- * SignUpContainer - Container for sign up functionality
- * Contains business logic and layout for sign up page
- */
 import { Link } from "react-router-dom";
 import {
   Card,
@@ -19,29 +15,31 @@ import SignUpForm from "./form/SignUpForm.jsx";
 
 const SignUp = () => {
   return (
-    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2">
-      {/* Left brand/story panel with blog image */}
-      <div className="relative hidden overflow-hidden lg:flex">
+    <div className="min-h-[calc(100vh-4rem-5rem)] lg:h-[calc(100vh-4rem-5rem)] overflow-hidden flex">
+      {/* Left brand/story panel with blog image - Compact version (40% width) */}
+      <div className="hidden lg:flex lg:w-2/5 relative overflow-hidden">
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{ backgroundImage: 'url("/blogImg.jpeg")' }}
         />
+        {/* Subtle gradient overlay for visual appeal */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/10 via-transparent to-transparent" />
       </div>
-      {/* Right auth panel */}
-      <div className="flex items-center justify-center px-4 py-10">
-        <div className="w-full max-w-md space-y-6">
-          <Card className="shadow-md border border-slate-200/60">
-            <CardHeader className="space-y-2 pb-4">
-              <CardTitle className="text-2xl font-semibold text-slate-900">
+      {/* Right auth panel - Takes remaining space (60% width) */}
+      <div className="flex-1 flex items-center justify-center px-4 py-4 overflow-y-auto">
+        <div className="w-full max-w-md">
+          <Card className="shadow-lg border border-slate-200/60">
+            <CardHeader className="space-y-1 pb-2">
+              <CardTitle className="text-lg font-semibold text-slate-900">
                 Create an account
               </CardTitle>
 
-              <CardDescription className="text-slate-600">
+              <CardDescription className="text-xs text-slate-600">
                 Enter your email below to create your account
               </CardDescription>
             </CardHeader>
 
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-3">
               <SignUpForm />
               <Separator />
 

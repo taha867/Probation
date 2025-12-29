@@ -1,5 +1,3 @@
-
-import { Link } from "react-router-dom";
 import {
   Card,
   CardContent,
@@ -7,9 +5,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import ForgotPasswordForm from "./form/ForgotPasswordForm.jsx";
+import ChangePasswordForm from "./form/ChangePasswordForm.jsx";
 
-const ForgotPassword = () => {
+const ChangePassword = () => {
   return (
     <div className="min-h-[calc(100vh-4rem-5rem)] lg:h-[calc(100vh-4rem-5rem)] overflow-hidden flex">
       {/* Left brand/story panel with blog image - Compact version (40% width) */}
@@ -28,24 +26,14 @@ const ForgotPassword = () => {
           <Card className="shadow-lg border border-slate-200/60">
             <CardHeader className="space-y-1 pb-2">
               <CardTitle className="text-lg font-semibold text-slate-900">
-                Reset password
+                Account Setting
               </CardTitle>
               <CardDescription className="text-xs text-slate-600">
-                We'll email you a reset link
+                Change Password
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <ForgotPasswordForm />
-
-              <p className="text-sm text-center text-slate-600">
-                Remembered it?{" "}
-                <Link
-                  to="/signin"
-                  className="text-blue-600 hover:text-blue-700 font-medium"
-                >
-                  Sign in
-                </Link>
-              </p>
+              <ChangePasswordForm />
             </CardContent>
           </Card>
         </div>
@@ -54,4 +42,4 @@ const ForgotPassword = () => {
   );
 };
 
-export default ForgotPassword;
+export default ChangePassword;

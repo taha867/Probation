@@ -1,7 +1,3 @@
-/**
- * ResetPasswordForm component
- * Form for resetting password with token from email
- */
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useNavigate } from "react-router-dom";
@@ -42,7 +38,7 @@ const ResetPasswordForm = ({ token }) => {
 
   return (
     <Form {...form}>
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-3">
         <FormField
           control={form.control}
           name="newPassword"
@@ -50,6 +46,7 @@ const ResetPasswordForm = ({ token }) => {
           label="New Password"
           placeholder="Enter your new password"
           autoComplete="new-password"
+          className="h-11"
         />
 
         <FormField
@@ -59,19 +56,19 @@ const ResetPasswordForm = ({ token }) => {
           label="Confirm New Password"
           placeholder="Confirm your new password"
           autoComplete="new-password"
+          className="h-11"
         />
 
         <Button
           type="submit"
           variant="success"
           disabled={isLoading}
-          size="lg"
-          className="w-full"
+          className="w-full h-11 font-medium"
         >
           {isLoading ? "Resetting..." : "Reset Password"}
         </Button>
 
-        <div className="text-center">
+        <div className="text-center pt-2">
           <button
             type="button"
             className="text-sm text-blue-600 hover:text-blue-700 font-medium"

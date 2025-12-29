@@ -1,9 +1,3 @@
-/**
- * AppInitializer - Global loading component for app-level Suspense fallback
- * Shows while the app is loading any async data (auth, posts, etc.)
- * Single global Suspense boundary for consistent loading experience
- */
-
 const AppInitializer = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">

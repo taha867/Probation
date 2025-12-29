@@ -1,6 +1,4 @@
-/**
- * Yup validation schemas for comment forms
- */
+
 import * as yup from "yup";
 import { VALIDATION_MESSAGES } from "../utils/constants";
 

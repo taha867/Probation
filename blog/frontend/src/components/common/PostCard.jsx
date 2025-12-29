@@ -8,6 +8,7 @@ import {
   getPostImageUrl,
   getAuthorInfo,
 } from "../../utils/postUtils";
+import { createPostComparison } from "../../utils/memoComparisons";
 import AuthorAvatar from "./AuthorAvatar";
 
 const PostCard = ({ post, variant = "public", onView, onEdit, onDelete }) => {
@@ -17,6 +18,10 @@ const PostCard = ({ post, variant = "public", onView, onEdit, onDelete }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
 
   const isDashboard = variant === "dashboard";
+
+  // Destructure with safe defaults - use undefined (not {}) so utility functions handle them correctly
+  // Must be before useCallback that uses id
+  const { author, createdAt, body, image, title, status, id } = post || {};
 
   // Handle post click - navigate to post detail page (only if not clicking on action buttons)
   const handlePostClick = useCallback(
@@ -32,9 +37,6 @@ const PostCard = ({ post, variant = "public", onView, onEdit, onDelete }) => {
     },
     [navigate, id]
   );
-
-  // Destructure with safe defaults - use undefined (not {}) so utility functions handle them correctly
-  const { author, createdAt, body, image, title, status, id } = post || {};
   // Get author info using utility function
   const { name: authorName } = getAuthorInfo(author);
 
@@ -203,5 +205,6 @@ const PostCard = ({ post, variant = "public", onView, onEdit, onDelete }) => {
   );
 };
 
-// Memoize PostCard to prevent re-renders when parent re-renders but post data hasn't changed
-export default memo(PostCard);
+// Memoize PostCard with custom comparison to prevent re-renders when parent re-renders
+// but post data hasn't changed (compares content, not just object references)
+export default memo(PostCard, createPostComparison());

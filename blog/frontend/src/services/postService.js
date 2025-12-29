@@ -47,7 +47,6 @@ export const getPostDetails = async (postId) => {
   }
 };
 
-// Keep getPosts and getPostComments as they might be used elsewhere
 export const getPosts = async (params = {}) => {
   try {
     const response = await axiosInstance.get("/posts", { params });
@@ -60,47 +59,6 @@ export const getPosts = async (params = {}) => {
   }
 };
 
-export const getPostComments = async (postId, params = {}) => {
-  try {
-    const response = await axiosInstance.get(`/posts/${postId}/comments`, {
-      params,
-    });
-    const { data = {} } = response;
-    return data;
-  } catch (error) {
-    const { response: { data: { message } = {} } = {} } = error || {};
-    const errorMessage = message || "Failed to fetch comments";
-    throw new Error(errorMessage);
-  }
-};
-
-/**
- * Create a new comment or reply
- * @param {Object} commentData - Comment data
- * @param {string} commentData.body - Comment content
- * @param {number} [commentData.postId] - Post ID (for top-level comments)
- * @param {number} [commentData.parentId] - Parent comment ID (for replies)
- * @returns {Promise<Object>} Created comment
- */
-export const createComment = async (commentData) => {
-  try {
-    const response = await axiosInstance.post("/comments", commentData);
-    const { data: { data } = {} } = response;
-    return data;
-  } catch (error) {
-    throw error; // Error message handled by axios interceptor
-  }
-};
-
-/**
- * Pure service functions - no React dependencies
- * These functions only handle API calls and return data
- * State management is handled by React Query hooks
- */
-
-/**
- * Pure business logic functions (no React dependencies)
- */
 
 // Search/filter posts - uses the reusable searchPosts function
 export const filterPosts = (posts, searchQuery) => {

@@ -1,7 +1,3 @@
-/**
- * PostDetailContent - Component for displaying post content
- * Follows React 19 best practices with proper memoization
- */
 import { memo, useMemo, useState } from "react";
 import { ImageIcon } from "lucide-react";
 import { usePostDetail } from "../../hooks/postHooks/postQueries";

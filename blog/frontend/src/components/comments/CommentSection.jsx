@@ -1,33 +1,88 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { usePostComments } from "../../hooks/commentHooks/commentQueries";
 import { useAuth } from "../../hooks/authHooks/authHooks";
+import { COMMENTS_PER_PAGE } from "../../utils/constants";
 import CommentItem from "./CommentItem";
 import CommentForm from "./CommentForm";
 import { Button } from "@/components/ui/button";
 import AppInitializer from "../common/AppInitializer";
 
-const COMMENTS_PER_PAGE = 10;
-
 const CommentSection = ({ postId }) => {
   const { isAuthenticated } = useAuth();
   const [currentPage, setCurrentPage] = useState(1);
-  const [refreshKey, setRefreshKey] = useState(0);
-
+  // stores all loaded comments so far : pag1 + page2 + .....
+  const [accumulatedComments, setAccumulatedComments] = useState([]);
+  // total no of comments from backend used to decide when to stop "Load More"
+  const [totalComments, setTotalComments] = useState(0);
+  
   const { data, isLoading, isFetching, refetch } = usePostComments(
     postId,
     currentPage,
     COMMENTS_PER_PAGE
   );
-  const { comments = [], meta: { total: totalComments = 0 } = {} } = data || {};
+  const { comments: pageComments = [], meta: { total = 0 } = {} } = data || {};
 
-  const hasMoreComments = totalComments > COMMENTS_PER_PAGE;
+  // Reset when postId changes - must happen first to clear previous post's comments
+  useEffect(() => {
+    setCurrentPage(1);
+    setAccumulatedComments([]);
+    setTotalComments(0);
+  }, [postId]);
 
+  // Update accumulated comments when new page data arrives
+  // This effect runs after the reset effect to populate comments for the new postId
+  useEffect(() => {
+    // Skip if postId is not set or data is not available
+    if (!postId || !data) return;
+
+    // Extract values from data inside the effect to avoid stale closure issues
+    
+    const comments = data.comments || [];
+    const totalCount = data.meta?.total || 0;
+
+    // Only update if we have comments or it's the first page (to handle empty states)
+    if (comments.length > 0 || currentPage === 1) {
+      if (currentPage === 1) {
+        // First page: replace all comments (this ensures fresh data when navigating back)
+        setAccumulatedComments(comments);
+      } else {
+        // Subsequent pages: append new comments (prevent duplicates)
+        setAccumulatedComments((prev) => {
+          const existingIds = new Set(prev.map((c) => c.id));
+          const newComments = comments.filter((c) => !existingIds.has(c.id));
+          return newComments.length > 0 ? [...prev, ...newComments] : prev;
+        });
+      }
+      setTotalComments(totalCount);
+    }
+  }, [data, currentPage, postId]); // Depend on data object reference - React Query provides stable references
+
+  // Memoize derived value to prevent recalculation
+  const hasMoreComments = useMemo(
+    () => accumulatedComments.length < totalComments,
+    [accumulatedComments.length, totalComments]
+  );
+
+  // Memoize comments text to prevent recalculation on every render
+  const commentsText = useMemo(
+    () => `${totalComments} ${totalComments === 1 ? "comment" : "comments"}`,
+    [totalComments]
+  );
+
+  // Stable callback - use functional setState to access current page without dependency
   const handleCommentSuccess = useCallback(() => {
-    // Refetch comments after successful comment creation
-    setRefreshKey((prev) => prev + 1);
-    refetch();
-  }, [refetch]);
+    // Reset to page 1 to get fresh comment list
+    setAccumulatedComments([]);
+    // Use functional setState to check current page without needing it as dependency
+    setCurrentPage((prevPage) => {
+      if (prevPage === 1) {
+        // If already on page 1, refetch to get latest comments
+        refetch();
+      }
+      return 1; // Always reset to page 1
+    });
+  }, [refetch]); // Only depends on stable refetch function
 
   const handleLoadMore = useCallback(() => {
     setCurrentPage((prev) => prev + 1);
@@ -46,7 +101,7 @@ const CommentSection = ({ postId }) => {
       {/* Comments Header */}
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-gray-900">
-          {totalComments} {totalComments === 1 ? "comment" : "comments"}
+          {commentsText}
         </h3>
         {!isAuthenticated && (
           <Link
@@ -70,13 +125,13 @@ const CommentSection = ({ postId }) => {
       )}
 
       {/* Comments List */}
-      {comments.length === 0 ? (
+      {accumulatedComments.length === 0 && !isLoading ? (
         <div className="text-center py-8 text-gray-500">
           <p>No comments yet. Be the first to comment!</p>
         </div>
       ) : (
         <div className="space-y-4">
-          {comments.map((comment) => (
+          {accumulatedComments.map((comment) => (
             <CommentItem
               key={comment.id}
               comment={comment}

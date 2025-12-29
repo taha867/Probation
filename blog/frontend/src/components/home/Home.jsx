@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useTransition } from "react";
+import { useState, useCallback, useTransition } from "react";
 import { useHomePosts } from "../../hooks/postHooks/postQueries";
 import { calculateTotalPages } from "../../services/postService";
 import PostCard from "../common/PostCard.jsx";

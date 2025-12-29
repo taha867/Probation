@@ -1,7 +1,6 @@
 /**
  * FormFileInput - File input component for Cloudinary image uploads
  * Handles file selection, automatic Cloudinary upload, preview, and validation
- * Follows React 19 best practices
  */
 import { useState, useRef, useCallback } from "react";
 import {

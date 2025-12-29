@@ -40,7 +40,11 @@ const {
   UNABLE_TO_DELETE_POST,
   UNABLE_TO_UPDATE_POST,
 } = ERROR_MESSAGES;
-const { POST_DELETED } = SUCCESS_MESSAGES;
+const {
+  POST_CREATED,
+  POST_UPDATED,
+  POST_DELETED,
+} = SUCCESS_MESSAGES;
 
 export async function create(req, res) {
   const validatedBody = validateRequest(createPostSchema, req.body, res);
@@ -57,7 +61,10 @@ export async function create(req, res) {
       imagePublicId: imagePublicId || null,
       userId,
     });
-    return res.status(CREATED).send({ data: post });
+    return res.status(CREATED).send({
+      data: post,
+      message: POST_CREATED,
+    });
   } catch (error) {
     console.error(error);
     return res
@@ -240,7 +247,10 @@ export async function update(req, res) {
       userId,
       data: updateData,
     });
-    return res.status(OK).send({ data: result.post });
+    return res.status(OK).send({
+      data: result.post,
+      message: POST_UPDATED,
+    });
   } catch (err) {
     if (handleAppError(err, res, ERROR_MESSAGES)) return;
 

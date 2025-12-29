@@ -1,7 +1,3 @@
-/**
- * ChangePasswordForm - Form component for changing user password
- * Follows React 19 best practices with proper form handling
- */
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useNavigate } from "react-router-dom";
@@ -11,7 +7,6 @@ import { FormField } from "../../custom";
 import { changePasswordSchema } from "../../../validations/userSchemas";
 import { useAuth } from "../../../hooks/authHooks/authHooks";
 import { createSubmitHandlerWithToast } from "../../../utils/formSubmitWithToast";
-import { TOAST_MESSAGES } from "../../../utils/constants";
 
 const ChangePasswordForm = () => {
   const { user, changePassword, isLoading } = useAuth();
@@ -29,7 +24,7 @@ const ChangePasswordForm = () => {
   const onSubmit = async (data) => {
     try {
       await changePassword(data.newPassword);
-      // Success message is handled by createSubmitHandlerWithToast
+      // Success message is shown automatically by axios interceptor from backend message
       // Optionally navigate back to dashboard after a delay
       setTimeout(() => {
         navigate("/dashboard");
@@ -39,13 +34,11 @@ const ChangePasswordForm = () => {
     }
   };
 
-  const handleSubmit = createSubmitHandlerWithToast(form, onSubmit, {
-    successMessage: TOAST_MESSAGES.PASSWORD_CHANGED_SUCCESS,
-  });
+  const handleSubmit = createSubmitHandlerWithToast(form, onSubmit);
 
   return (
     <Form {...form}>
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-3">
         <FormField
           control={form.control}
           name="newPassword"
@@ -55,6 +48,7 @@ const ChangePasswordForm = () => {
           autoComplete="new-password"
           showToggle
           helperText="Use 8 or more characters with a mix of letters, numbers & symbols."
+          className="h-11"
         />
 
         <FormField
@@ -66,14 +60,14 @@ const ChangePasswordForm = () => {
           autoComplete="new-password"
           showToggle
           helperText="Use 8 or more characters with a mix of letters, numbers & symbols."
+          className="h-11"
         />
 
         <Button
           type="submit"
           variant="success"
           disabled={isLoading}
-          size="lg"
-          className="w-full"
+          className="w-full h-11 font-medium"
         >
           {isLoading ? "Saving..." : "Save Changes"}
         </Button>
