@@ -81,13 +81,15 @@ const Navbar = memo(() => {
             {/* Logo/Brand */}
             <Link
               to="/"
-              className="flex items-center gap-2 text-lg font-semibold text-slate-900"
+              className="flex items-center gap-2 text-lg font-semibold text-slate-900 hover:opacity-80 transition-opacity"
               onClick={closeMobileMenu}
             >
-              <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-white font-bold">
-                B
-              </span>
-              Blogify
+              <img
+                src="/AppLogo.jpeg"
+                alt="Blogify Logo"
+                className="h-16 w-auto object-contain"
+              />
+              <span className="hidden sm:inline">Blogify</span>
             </Link>
           </div>
 
@@ -188,22 +190,6 @@ const Navbar = memo(() => {
                 ))}
               </div>
             </nav>
-
-            {/* Mobile Auth Actions - Only show Sign In/Sign Up for non-authenticated users */}
-            {!isAuthenticated && (
-              <div className="border-t p-6 space-y-3">
-                <Link to="/signin" onClick={closeMobileMenu} className="block">
-                  <Button variant="outline" className="w-full" size="sm">
-                    Sign In
-                  </Button>
-                </Link>
-                <Link to="/signup" onClick={closeMobileMenu} className="block">
-                  <Button className="w-full" size="sm">
-                    Sign Up
-                  </Button>
-                </Link>
-              </div>
-            )}
           </div>
         </div>
       </div>

@@ -27,16 +27,6 @@ const Footer = () => {
   return (
     <footer className="border-t bg-white">
       <div className="mx-auto flex max-w-6xl items-center px-4 py-8">
-        {/* Logo/Brand - Extreme Left */}
-        <div className="flex-shrink-0">
-          <div className="flex items-center gap-2 text-lg font-semibold text-slate-900">
-            <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-white font-bold">
-              B
-            </span>
-            Blogify
-          </div>
-        </div>
-
         {/* Center Text */}
         <div className="flex-1 flex justify-center">
           <p className="text-sm text-slate-500 text-center">
