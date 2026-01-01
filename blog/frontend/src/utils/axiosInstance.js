@@ -90,9 +90,15 @@ createAuthRefreshInterceptor(apiClient, refreshAuthLogic, {
 });
 
 //runs before every request is sent
-// Request interceptor - automatically add auth token to requests
+// Request interceptor - automatically add auth token to requests and handle FormData
 apiClient.interceptors.request.use(
   (config) => {
+    // If FormData is being sent, let axios set Content-Type automatically with boundary
+    if (config.data instanceof FormData) {
+      delete config.headers["Content-Type"];
+    }
+    
+    // Add auth token to all requests
     const token = getToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;

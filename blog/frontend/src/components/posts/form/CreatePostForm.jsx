@@ -22,28 +22,26 @@ const CreatePostForm = ({ onPostCreated }) => {
       title: "",
       body: "",
       status: POST_STATUS.DRAFT,
-      image: null, // Cloudinary upload result: {image: url, imagePublicId: id} or null
+      image: null, // File object or null
     },
     mode: "onChange", //validates fields as the user types
   });
 
   const onSubmit = async (data) => {
     try {
-      // Prepare JSON payload (no FormData needed - image already uploaded to Cloudinary)
-      const payload = {
-        title: data.title,
-        body: data.body,
-        status: data.status,
-      };
-
-      // Add image URL and publicId if image was uploaded
-      if (data.image && typeof data.image === "object" && data.image.image) {
-        payload.image = data.image.image;
-        payload.imagePublicId = data.image.imagePublicId;
+      // Create FormData for multipart/form-data
+      const formData = new FormData();
+      formData.append("title", data.title);
+      formData.append("body", data.body);
+      formData.append("status", data.status);
+      
+      // Append file if selected
+      if (data.image instanceof File) {
+        formData.append("image", data.image);
       }
 
       // React Query mutation handles API call and cache invalidation automatically
-      await createPostMutation.mutateAsync(payload);
+      await createPostMutation.mutateAsync(formData);
 
       // Non-urgent: Form reset and tab switch can be deferred for smooth UX
       startFormTransition(() => {
@@ -101,7 +99,6 @@ const CreatePostForm = ({ onPostCreated }) => {
               name="image"
               label="Post Image (Optional)"
               maxSizeMB={5}
-              folder="blog/posts"
             />
 
             <Button

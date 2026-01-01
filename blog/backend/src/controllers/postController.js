@@ -17,6 +17,7 @@ import {
 } from "../validations/postValidation.js";
 import { postService } from "../services/postService.js";
 import { handleAppError } from "../utils/errors.js";
+import { uploadImageToCloudinary } from "../services/cloudinaryService.js";
 
 /**
  * Creates a new post.
@@ -49,16 +50,31 @@ const {
 export async function create(req, res) {
   const validatedBody = validateRequest(createPostSchema, req.body, res);
   if (!validatedBody) return;
-  const { title, body, status, image, imagePublicId } = validatedBody;
+  const { title, body, status } = validatedBody;
   const { id: userId } = req.user;
 
+  let imageUrl = null;
+  let imagePublicId = null;
+
   try {
+    // If file was uploaded, upload to Cloudinary
+    if (req.file) {
+      const uploadResult = await uploadImageToCloudinary(
+        req.file.buffer,
+        "blog/posts",
+        req.file.originalname
+      );
+      const{secure_url, public_id}=uploadResult;
+      imageUrl = secure_url;
+      imagePublicId = public_id;
+    }
+
     const post = await postService.createPost({
       title,
       body,
       status,
-      image: image || null,
-      imagePublicId: imagePublicId || null,
+      image: imageUrl,
+      imagePublicId,
       userId,
     });
     return res.status(CREATED).send({
@@ -69,7 +85,7 @@ export async function create(req, res) {
     console.error(error);
     return res
       .status(INTERNAL_SERVER_ERROR)
-      .send({ message: UNABLE_TO_CREATE_POST });
+      .send({ data: { message: UNABLE_TO_CREATE_POST } });
   }
 }
 
@@ -230,22 +246,24 @@ export async function update(req, res) {
     const { id: userId } = req.user;
     const validatedBody = validateRequest(updatePostSchema, req.body, res);
     if (!validatedBody) return;
-    const { title, body, status, image, imagePublicId } = validatedBody;
 
-    // Build update data - only include fields that are provided
-    const updateData = {};
-    if (title !== undefined) updateData.title = title;
-    if (body !== undefined) updateData.body = body;
-    if (status !== undefined) updateData.status = status;
-    if (image !== undefined) {
-      updateData.image = image || null;
-      updateData.imagePublicId = imagePublicId || null;
-    }
+    // Filter out undefined values - only include fields that were actually provided
+    // This ensures we don't overwrite existing values with undefined in the database
+    const updateData = Object.fromEntries(
+      Object.entries(validatedBody).filter(([_, value]) => value !== undefined)
+    );
+
+    // Pass validated data to service - service will handle all image-related business logic
+    // (upload, removal, Cloudinary operations)
+    const fileBuffer = req.file ? req.file.buffer : null;
+    const fileName = req.file ? req.file.originalname : null;
 
     const result = await postService.updatePostForUser({
       postId,
       userId,
       data: updateData,
+      fileBuffer,
+      fileName,
     });
     return res.status(OK).send({
       data: result.post,

@@ -1,6 +1,6 @@
 /**
  * Cloudinary Service - Handles Cloudinary business logic
- * Manages image upload signatures, deletions, and URL parsing
+ * Manages image uploads, deletions, and URL parsing
  */
 import { v2 as cloudinary } from "cloudinary";
 
@@ -10,35 +10,6 @@ cloudinary.config({
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
-
-/**
- * Generate signed upload parameters for direct frontend upload
- * @param {string} folder - Optional folder path in Cloudinary (e.g., 'blog/posts', 'blog/users')
- * @returns {Object} Signed upload parameters (signature, timestamp, cloud_name, api_key, folder)
- */
-export const generateUploadSignature = (folder = "blog") => {
-  const timestamp = Math.round(new Date().getTime() / 1000);
-
-  // Sanitize folder name (security: prevent path traversal)
-  const sanitizedFolder = folder.replace(/[^a-zA-Z0-9/_-]/g, "");
-
-  // Generate signature using Cloudinary's signing algorithm
-  const signature = cloudinary.utils.api_sign_request(
-    {
-      timestamp,
-      folder: sanitizedFolder,
-    },
-    process.env.CLOUDINARY_API_SECRET
-  );
-
-  return {
-    signature,
-    timestamp,
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    folder: sanitizedFolder,
-  };
-};
 
 /**
  * Delete an image from Cloudinary using public_id
@@ -78,6 +49,64 @@ export const extractPublicIdFromUrl = (url) => {
   } catch (error) {
     console.error("Error extracting public_id from URL:", error);
     return null;
+  }
+};
+
+/**
+ * Sanitize folder name to prevent path traversal attacks
+ * @param {string} folder - Folder name to sanitize
+ * @returns {string} Sanitized folder name
+ */
+const sanitizeFolder = (folder = "blog") => {
+  return folder.replace(/[^a-zA-Z0-9/_-]/g, "");
+};
+
+/**
+ * Upload image file buffer to Cloudinary
+ * @param {Buffer} fileBuffer - File buffer from multer
+ * @param {string} folder - Optional folder path (default: 'blog')
+ * @param {string} originalName - Original filename (optional)
+ * @returns {Promise<Object>} Upload result with secure_url and public_id
+ */
+export const uploadImageToCloudinary = async (
+  fileBuffer,
+  folder = "blog",
+  originalName = "image"
+) => {
+  try {
+    const sanitizedFolder = sanitizeFolder(folder);
+    
+    // Generate unique filename to avoid conflicts
+    const timestamp = Date.now();
+    const sanitizedName = originalName.replace(/[^a-zA-Z0-9._-]/g, "");
+    const publicId = `${sanitizedFolder}/${timestamp}_${sanitizedName}`;
+
+    return new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          folder: sanitizedFolder,
+          resource_type: "image",
+          public_id: publicId.split(".")[0], // Remove extension if present
+        },
+        (error, result) => {
+          if (error) {
+            console.error("Cloudinary upload error:", error);
+            reject(error);
+          } else {
+            resolve({
+              secure_url: result.secure_url,
+              public_id: result.public_id,
+            });
+          }
+        }
+      );
+
+      // Write buffer to upload stream
+      uploadStream.end(fileBuffer);
+    });
+  } catch (error) {
+    console.error("Error uploading image to Cloudinary:", error);
+    throw error;
   }
 };
 

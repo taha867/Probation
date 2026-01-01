@@ -1,6 +1,7 @@
 /**
- * FormFileInput - File input component for Cloudinary image uploads
- * Handles file selection, automatic Cloudinary upload, preview, and validation
+ * FormFileInput - File input component for image uploads
+ * Handles file selection, preview, and validation
+ * File is sent to backend via FormData (multipart/form-data)
  */
 import { useState, useRef, useCallback } from "react";
 import {
@@ -11,8 +12,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import { ImageIcon, X, Loader2 } from "lucide-react";
-import { useCloudinaryUpload } from "../../hooks/useCloudinaryUpload";
+import { ImageIcon, X } from "lucide-react";
+import toast from "react-hot-toast";
 
 export const FormFileInput = ({
   control,
@@ -23,16 +24,14 @@ export const FormFileInput = ({
   disabled = false,
   className = "",
   existingImageUrl = null, // URL string for existing image preview
-  folder = "blog", // Cloudinary folder
 }) => {
   const [preview, setPreview] = useState(null);
   const [hideExisting, setHideExisting] = useState(false);
   const fileInputRef = useRef(null);
-  const { uploadFile, isUploading } = useCloudinaryUpload(folder, maxSizeMB);
 
-  // Handle file selection and upload to Cloudinary
+  // Handle file selection - only create preview, don't upload
   const handleFileChange = useCallback(
-    async (field, event) => {
+    (field, event) => {
       const file = event.target.files?.[0];
       if (!file) {
         field.onChange(null);
@@ -40,31 +39,36 @@ export const FormFileInput = ({
         return;
       }
 
-      // Create preview immediately (validation happens in useCloudinaryUpload hook)
+      // Validate file type
+      if (!file.type.startsWith("image/")) {
+        toast.error("Only image files are allowed");
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+        return;
+      }
+
+      // Validate file size
+      const maxSize = maxSizeMB * 1024 * 1024;
+      if (file.size > maxSize) {
+        toast.error(`File size must be less than ${maxSizeMB}MB`);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+        return;
+      }
+
+      // Create preview
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreview(reader.result);
       };
       reader.readAsDataURL(file);
 
-      // Upload to Cloudinary (validation for type and size happens inside uploadFile)
-      const uploadResult = await uploadFile(file);
-      if (uploadResult) {
-        // Store Cloudinary URL and public_id in form field
-        field.onChange({
-          image: uploadResult.image,
-          imagePublicId: uploadResult.imagePublicId,
-        });
-      } else {
-        // Upload failed (validation failed or upload error), clear preview
-        field.onChange(null);
-        setPreview(null);
-        if (fileInputRef.current) {
-          fileInputRef.current.value = "";
-        }
-      }
+      // Store file object in form field (will be sent to backend)
+      field.onChange(file);
     },
-    [uploadFile]
+    [maxSizeMB]
   );
 
   // Handle remove file (including clearing existing image preview)
@@ -113,72 +117,56 @@ export const FormFileInput = ({
               />
 
               {/* Preview or upload button */}
-              {preview || (field.value && (field.value.image || typeof field.value === "string")) || (existingImageUrl && !hideExisting) ? (
+              {preview || (field.value instanceof File) || (typeof field.value === "string" && field.value) || (existingImageUrl && !hideExisting) ? (
                 <div className="relative">
                   <div className="relative w-full h-48 rounded-lg overflow-hidden border border-gray-300 bg-gray-50">
-                    {isUploading ? (
-                      <div className="w-full h-full flex items-center justify-center bg-gray-100">
-                        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-                      </div>
-                    ) : (
-                      <img
-                        src={
-                          preview ||
-                          (field.value?.image || (typeof field.value === "string" ? field.value : null)) ||
-                          (!hideExisting ? existingImageUrl : null)
-                        }
-                        alt="Preview"
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          // Hide image if it fails to load
-                          e.target.style.display = "none";
-                        }}
-                      />
-                    )}
-                    {!isUploading && (
-                      <button
-                        type="button"
-                        onClick={() => handleRemove(field)}
-                        disabled={disabled}
-                        className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
-                        aria-label="Remove image"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    )}
+                    <img
+                      src={
+                        preview ||
+                        (field.value instanceof File ? preview : null) ||
+                        (typeof field.value === "string" ? field.value : null) ||
+                        (!hideExisting ? existingImageUrl : null)
+                      }
+                      alt="Preview"
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        // Hide image if it fails to load
+                        e.target.style.display = "none";
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleRemove(field)}
+                      disabled={disabled}
+                      className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                      aria-label="Remove image"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
                   </div>
-                  {!isUploading && (
-                    <p className="text-xs text-gray-500 mt-1">
-                      {field.value?.image || (typeof field.value === "string" && field.value)
-                        ? "Image uploaded"
-                        : "Current image"}
-                    </p>
-                  )}
+                  <p className="text-xs text-gray-500 mt-1">
+                    {field.value instanceof File
+                      ? "Image selected (will be uploaded on submit)"
+                      : typeof field.value === "string" && field.value
+                      ? "Current image"
+                      : "Current image"}
+                  </p>
                 </div>
               ) : (
                 <Button
                   type="button"
                   variant="outline"
                   onClick={handleButtonClick}
-                  disabled={disabled || isUploading}
+                  disabled={disabled}
                   className="w-full h-48 flex flex-col items-center justify-center gap-2 border-dashed"
                 >
-                  {isUploading ? (
-                    <>
-                      <Loader2 className="h-8 w-8 text-gray-400 animate-spin" />
-                      <span className="text-sm text-gray-600">Uploading...</span>
-                    </>
-                  ) : (
-                    <>
-                      <ImageIcon className="h-8 w-8 text-gray-400" />
-                      <span className="text-sm text-gray-600">
-                        Click to upload image
-                      </span>
-                      <span className="text-xs text-gray-400">
-                        Max size: {maxSizeMB}MB (JPEG, PNG, WebP, GIF)
-                      </span>
-                    </>
-                  )}
+                  <ImageIcon className="h-8 w-8 text-gray-400" />
+                  <span className="text-sm text-gray-600">
+                    Click to upload image
+                  </span>
+                  <span className="text-xs text-gray-400">
+                    Max size: {maxSizeMB}MB (JPEG, PNG, WebP, GIF)
+                  </span>
                 </Button>
               )}
             </div>

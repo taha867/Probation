@@ -175,17 +175,38 @@ export async function update(req, res) {
   const { id: requestedUserId } = validatedParams;
   const { id: authUser } = req.user;
   try {
-    // Validate request body - Joi schema handles:
-    // - Empty object check (.min(1))
-    // - Field format validation (email, phone, name regex, etc.)
-    // - Empty string filtering and validation
-    const updateData = validateRequest(updateUserSchema, req.body, res);
-    if (!updateData) return;
+    // When only a file is uploaded via FormData, req.body might be empty
+    // We need to ensure validation passes by adding a placeholder field
+    // The validation schema will detect req.file and handle it appropriately
+    const bodyForValidation = { ...req.body };
+    if (req.file && !bodyForValidation.image) {
+      // File was uploaded but body doesn't have image field - add placeholder for validation
+      bodyForValidation.image = req.file.originalname;
+    }
+
+    const validatedBody = validateRequest(
+      updateUserSchema,
+      bodyForValidation,
+      res,
+      { context: { req } }
+    );
+    if (!validatedBody) return;
+
+    // Remove the placeholder image field if it was added (service will handle the actual file)
+    if (req.file && validatedBody.image === req.file.originalname) {
+      delete validatedBody.image;
+    }
+
+  
+    const fileBuffer = req.file ? req.file.buffer : null;
+    const fileName = req.file ? req.file.originalname : null;
 
     const result = await userService.updateUserForSelf({
       requestedUserId,
       authUserId: authUser,
-      data: updateData,
+      data: validatedBody,
+      fileBuffer,
+      fileName,
     });
 
     const { user } = result;

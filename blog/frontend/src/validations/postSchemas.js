@@ -28,28 +28,26 @@ export const postSchema = yup.object({
     )
     .default(POST_STATUS.DRAFT),
 
-  // Image can be an object with {image: url, imagePublicId: id} (Cloudinary upload result)
-  // or string (existing URL) or null
+  // Image can be a File object (new upload) or string (existing URL) or null
   image: yup
     .mixed()
     .nullable()
     .optional()
-    .test(
-      "image-format",
-      "Image must be a valid Cloudinary upload result or URL",
-      (value) => {
-        if (!value) return true; // Optional field
-        if (typeof value === "object" && value.image && value.imagePublicId) {
-          // Cloudinary upload result - validate URL format
-          return typeof value.image === "string" && value.image.length > 0;
-        }
-        if (typeof value === "string") {
-          // Existing image URL - just validate it's not empty
-          return value.length > 0;
-        }
-        return false;
+    .test("file-type", "Only image files are allowed", (value) => {
+      if (!value) return true; // Optional field
+      if (typeof value === "string") return true; // Existing URL
+      if (value instanceof File) {
+        return value.type.startsWith("image/");
       }
-    ),
+      return false;
+    })
+    .test("file-size", "File size must be less than 5MB", (value) => {
+      if (!value || typeof value === "string") return true;
+      if (value instanceof File) {
+        return value.size <= 5 * 1024 * 1024; // 5MB
+      }
+      return false;
+    }),
 });
 
 /**

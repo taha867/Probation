@@ -21,7 +21,6 @@ const CommentForm = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const createCommentMutation = useCreateComment();
 
-  // Simple boolean check - no need for memoization (overhead > benefit)
   const isEditMode = !!initialValue && !!onUpdate;
 
   const form = useForm({

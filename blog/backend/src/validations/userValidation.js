@@ -50,37 +50,53 @@ export const updateUserSchema = Joi.object({
   email: emailSchema,
   phone: phoneSchema,
   password: passwordSchema,
-  image: Joi.string()
-    .uri()
-    .optional()
-    .allow("", null)
-    .messages({
-      "string.uri": "Image must be a valid URL",
-    }),
-  imagePublicId: Joi.string().optional().allow("", null),
+  // Image field from FormData (string filename or empty string for removal)
+  // Actual file is in req.file (handled by multer)
+  image: Joi.string().optional().allow("", null),
 })
   .min(1)
   .messages({
     "object.min": "At least one field must be provided to update",
   })
   .custom((value, helpers) => {
-    // Filter out empty strings (but keep null values for clearing fields)
+    // Access request object through context passed to validate()
+    const req = helpers.prefs.context?.req;
+    const hasFileUpload = req?.file !== undefined;
+    
+    // Filter out undefined values and empty strings (but keep null and empty string for image removal)
+    // This ensures we only include fields that were actually provided
     const filtered = Object.entries(value).reduce((acc, [key, val]) => {
-      if (val !== "" && val !== undefined) {
+      if (key === "image") {
+        // Keep image field if explicitly provided (empty string = removal, string = filename/placeholder)
+        // If it's a placeholder from file upload, we'll remove it after validation
+        if (val !== undefined) {
+          acc[key] = val;
+        }
+      } else if (val !== "" && val !== undefined) {
+        // For other fields, only include if not empty string and not undefined
         acc[key] = val;
       }
       return acc;
     }, {});
 
-    // Ensure at least one valid field after filtering empty strings
-    if (Object.keys(filtered).length === 0) {
-      return helpers.error("any.custom", {
-        message: "At least one field must be provided to update",
-      });
+    // Validation passes if:
+    // 1. A file was uploaded (hasFileUpload), OR
+    // 2. Image field exists (even as empty string for removal), OR
+    // 3. There are other valid fields to update
+    if (hasFileUpload || value.image !== undefined || Object.keys(filtered).length > 0) {
+      // If file was uploaded but image field is a placeholder (matches filename), remove it
+      // The actual file will be handled by the service layer
+      if (hasFileUpload && filtered.image === req.file.originalname) {
+        delete filtered.image;
+      }
+      // Return filtered object (may be empty if only file uploaded, but that's OK - service handles it)
+      return filtered;
     }
 
-    // Return filtered object (without empty strings)
-    return filtered;
+    // No valid fields found
+    return helpers.error("any.custom", {
+      message: "At least one field must be provided to update",
+    });
   })
   .messages({
     "any.custom": "At least one field must be provided to update",

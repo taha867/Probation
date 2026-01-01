@@ -129,7 +129,7 @@ export const useAuth = () => {
     });
   };
 
-  const updateProfileImage = async (imageData) => {
+  const updateProfileImage = async (formData) => {
     return new Promise((resolve, reject) => {
       startTransition(async () => {
         try {
@@ -137,14 +137,8 @@ export const useAuth = () => {
             throw new Error("User not authenticated");
           }
 
-          // Prepare JSON payload (image already uploaded to Cloudinary)
-          const payload = {
-            image: imageData.image,
-            imagePublicId: imageData.imagePublicId,
-          };
-
-          // Call API to update profile image
-          const response = await updateUserProfile(user.id, payload);
+          // Call API to update profile image (FormData with file)
+          const response = await updateUserProfile(user.id, formData);
           const updatedUser = response.data.user;
 
           // Update auth state with new user data

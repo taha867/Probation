@@ -104,14 +104,26 @@ const UserProfileMenu = memo(() => {
   const onSubmit = useCallback(
     async (data) => {
       try {
-        // Normalize the image value - handle empty objects or null
-        const imageValue = data.image;
+        // Only submit if a new file was selected
+        if (data.image instanceof File) {
+          // Create FormData for multipart/form-data
+          const formData = new FormData();
+          formData.append("image", data.image);
 
-        // Only submit if a new image was uploaded to Cloudinary
-        if (imageValue && typeof imageValue === "object" && imageValue.image) {
-          await updateProfileImage(imageValue);
+          await updateProfileImage(formData);
 
           // Non-urgent: Form reset and dialog close can be deferred
+          startTransition(() => {
+            form.reset({ image: null });
+            closeDialogState();
+          });
+        } else if (data.image === null) {
+          // Image was removed - send empty string to remove image
+          const formData = new FormData();
+          formData.append("image", "");
+
+          await updateProfileImage(formData);
+
           startTransition(() => {
             form.reset({ image: null });
             closeDialogState();
@@ -124,7 +136,7 @@ const UserProfileMenu = memo(() => {
         // Error handling is done by axios interceptor
       }
     },
-    [updateProfileImage, form, startTransition]
+    [updateProfileImage, form, startTransition, closeDialogState]
   );
 
   const handleSubmit = createSubmitHandlerWithToast(form, onSubmit);
@@ -220,7 +232,6 @@ const UserProfileMenu = memo(() => {
                 maxSizeMB={5}
                 disabled={isPending}
                 existingImageUrl={user?.image || null}
-                folder="blog/users"
               />
               <div className="flex justify-end gap-2">
                 <Button

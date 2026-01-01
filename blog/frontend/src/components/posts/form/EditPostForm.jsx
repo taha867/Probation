@@ -52,7 +52,7 @@ const EditPostForm = forwardRef((_props, ref) => {
       title: "",
       body: "",
       status: POST_STATUS.DRAFT,
-      image: null, // Cloudinary upload result: {image: url, imagePublicId: id} or existing URL string
+      image: null, // File object or existing URL string or null
     },
     mode: "onChange",
   });
@@ -73,36 +73,30 @@ const EditPostForm = forwardRef((_props, ref) => {
     if (!currentPost?.id) return;
 
     try {
-      // Prepare JSON payload (no FormData needed - image already uploaded to Cloudinary)
-      const payload = {
-        title: data.title,
-        body: data.body,
-        status: data.status,
-      };
+      // Create FormData for multipart/form-data
+      const formData = new FormData();
+      formData.append("title", data.title);
+      formData.append("body", data.body);
+      formData.append("status", data.status);
 
-      // Handle image: if new upload (object with image property), include it
-      // If unchanged (string URL), don't include (backend keeps existing)
-      // If null/removed, set to null
-      if (data.image === null) {
+      // Handle image:
+      // - If File object: append to FormData (new upload)
+      // - If null: append empty string (remove image)
+      // - If string (existing URL): don't include (backend keeps existing)
+      if (data.image instanceof File) {
+        // New file selected
+        formData.append("image", data.image);
+      } else if (data.image === null) {
         // Image was removed
-        payload.image = null;
-        payload.imagePublicId = null;
-      } else if (
-        data.image &&
-        typeof data.image === "object" &&
-        data.image.image
-      ) {
-        // New image uploaded to Cloudinary
-        payload.image = data.image.image;
-        payload.imagePublicId = data.image.imagePublicId;
+        formData.append("image", "");
       }
-      // If data.image is a string (existing URL), don't include in payload (backend keeps existing)
+      // If data.image is a string (existing URL), don't append (backend keeps existing)
 
       // React Query mutation handles API call and cache invalidation automatically
       // Pass previousStatus so mutation can check if home posts need invalidation
       await updatePostMutation.mutateAsync({
         postId: currentPost.id,
-        data: payload,
+        formData,
         previousStatus: currentPost.status,
       });
 
@@ -168,7 +162,6 @@ const EditPostForm = forwardRef((_props, ref) => {
               label="Post Image (Optional)"
               maxSizeMB={5}
               existingImageUrl={currentPost?.image || null}
-              folder="blog/posts"
             />
 
             <div className="flex gap-2 pt-4">

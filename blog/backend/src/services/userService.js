@@ -6,7 +6,7 @@ import {
   buildPaginationMeta,
   getPaginationParams,
 } from "../utils/pagination.js";
-import { deleteImageFromCloudinary } from "./cloudinaryService.js";
+import { deleteImageFromCloudinary, uploadImageToCloudinary } from "./cloudinaryService.js";
 
 const { NOT_FOUND, FORBIDDEN, UNPROCESSABLE_ENTITY } = HTTP_STATUS;
 
@@ -100,7 +100,7 @@ export class UserService {
     };
   }
 
-  async updateUserForSelf({ requestedUserId, authUserId, data }) {
+  async updateUserForSelf({ requestedUserId, authUserId, data, fileBuffer, fileName }) {
     if (requestedUserId !== authUserId) {
       throw new AppError("CANNOT_UPDATE_OTHER_USER", FORBIDDEN);
     }
@@ -110,7 +110,7 @@ export class UserService {
       throw new AppError("USER_NOT_FOUND", NOT_FOUND);
     }
 
-    const { name, email, phone, password, image, imagePublicId } = data;
+    const { name, email, phone, password } = data;
     const updateData = {};
 
     if (name !== undefined) updateData.name = name;
@@ -139,14 +139,30 @@ export class UserService {
       updateData.phone = phone;
     }
     if (password !== undefined) updateData.password = password;
-    if (image !== undefined) {
-      // If new image is being uploaded, delete old image from Cloudinary
-      if (user.image && image !== user.image && user.imagePublicId) {
+    
+    // Handle image-related business logic (all Cloudinary operations)
+    if (fileBuffer) {
+      // New image uploaded: delete old image from Cloudinary, upload new one
+      if (user.imagePublicId) {
         await deleteImageFromCloudinary(user.imagePublicId);
       }
-      updateData.image = image;
-      updateData.imagePublicId = imagePublicId || null;
+      
+      const uploadResult = await uploadImageToCloudinary(
+        fileBuffer,
+        "blog/users",
+        fileName || "profile-image"
+      );
+      updateData.image = uploadResult.secure_url;
+      updateData.imagePublicId = uploadResult.public_id;
+    } else if (data.image === null || data.image === "") {
+      // Image explicitly removed: delete from Cloudinary and set to null in database
+      if (user.imagePublicId) {
+        await deleteImageFromCloudinary(user.imagePublicId);
+      }
+      updateData.image = null;
+      updateData.imagePublicId = null;
     }
+    // If image field not provided, keep existing image (don't touch it)
 
     await user.update(updateData);
 

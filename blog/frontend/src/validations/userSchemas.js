@@ -4,25 +4,25 @@ import { VALIDATION_MESSAGES } from "../utils/constants";
 
 /**
  * Profile Image Validation Schema
- * Validates Cloudinary upload result or existing image URL
+ * Validates File object or existing image URL
  */
 export const profileImageSchema = yup.object({
   image: yup
     .mixed()
     .nullable()
-    .transform((value, originalValue) => {
-      // Normalize empty objects to null
-      if (value && typeof value === "object" && !(value.image) && Object.keys(value).length === 0) {
-        return null;
+    .optional()
+    .test("file-type", "Only image files are allowed", (value) => {
+      if (!value) return true; // Optional field
+      if (typeof value === "string") return true; // Existing URL
+      if (value instanceof File) {
+        return value.type.startsWith("image/");
       }
-      return value;
+      return false;
     })
-    .test("image-format", "Image must be a valid Cloudinary upload result or URL", (value) => {
-      if (!value || value === null) return true; // Optional field
-      if (typeof value === "string") return true; // Existing image URL
-      if (typeof value === "object" && value.image && value.imagePublicId) {
-        // Cloudinary upload result
-        return typeof value.image === "string" && value.image.length > 0;
+    .test("file-size", "File size must be less than 5MB", (value) => {
+      if (!value || typeof value === "string") return true;
+      if (value instanceof File) {
+        return value.size <= 5 * 1024 * 1024; // 5MB
       }
       return false;
     }),

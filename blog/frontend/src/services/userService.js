@@ -11,8 +11,11 @@ export const fetchCurrentUserProfile = async () => {
 
 /**
  * Update user profile
+ * @param {number} userId - User ID
+ * @param {FormData|Object} payload - FormData for file uploads or JSON object for other fields
  */
 export const updateUserProfile = async (userId, payload) => {
+  // If FormData, axios will automatically set Content-Type with boundary
   const response = await apiClient.put(`/users/${userId}`, payload);
   return response.data;
 };

@@ -14,8 +14,10 @@ export const useCreatePost = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (payload) => {
-      const response = await axiosInstance.post("/posts", payload);
+    mutationFn: async (formData) => {
+      // Send FormData (multipart/form-data)
+      // Axios automatically sets Content-Type with boundary when FormData is passed
+      const response = await axiosInstance.post("/posts", formData);
       const { data: { data } = {} } = response;
       return data;
     },
@@ -36,8 +38,10 @@ export const useUpdatePost = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ postId, data, previousStatus }) => {
-      const response = await axiosInstance.put(`/posts/${postId}`, data);
+    mutationFn: async ({ postId, formData, previousStatus }) => {
+      // Send FormData (multipart/form-data)
+      // Axios automatically sets Content-Type with boundary when FormData is passed
+      const response = await axiosInstance.put(`/posts/${postId}`, formData);
       const { data: { data: updatedPost } = {} } = response;
       return { updatedPost, previousStatus };
     },

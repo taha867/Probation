@@ -7,6 +7,7 @@ import {
   remove,
 } from "../controllers/userController.js";
 import { authenticateToken } from "../middleware/authMiddleware.js";
+import { handleImageUpload } from "../middleware/uploadMiddleware.js";
 
 const router = Router();
 
@@ -14,7 +15,8 @@ const router = Router();
 router.get("/", authenticateToken, list);
 router.get("/me", authenticateToken, getCurrentUser);
 router.get("/:id/posts", authenticateToken, getUserPostsWithComment);
-router.put("/:id", authenticateToken, update);
+// Update user profile with optional image upload
+router.put("/:id", authenticateToken, ...handleImageUpload, update);
 router.delete("/:id", authenticateToken, remove);
 
 export default router;

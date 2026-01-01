@@ -15,6 +15,7 @@ export const validateRequest = (schema, payload, res, options = {}) => {
     stripUnknown: false, // Do NOT silently drop unknown properties
     allowUnknown: false, // Treat any extra fields as validation errors
     convert: options.convert ?? false, // Default false; can be enabled per call
+    context: options.context, // Pass context (e.g., req object) for custom validations
   });
 
   if (error) {

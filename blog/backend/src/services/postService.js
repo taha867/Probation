@@ -3,7 +3,7 @@ import models from "../models/index.js";
 import { HTTP_STATUS } from "../utils/constants.js";
 import { AppError } from "../utils/errors.js";
 import { getPaginationParams, buildPaginationMeta } from "../utils/pagination.js";
-import { deleteImageFromCloudinary } from "./cloudinaryService.js";
+import { deleteImageFromCloudinary, uploadImageToCloudinary } from "./cloudinaryService.js";
 
 export class PostService {
   constructor(models) {
@@ -111,7 +111,7 @@ export class PostService {
     };
   }
 
-  async updatePostForUser({ postId, userId, data }) {
+  async updatePostForUser({ postId, userId, data, fileBuffer, fileName }) {
     const post = await this.findPostWithAuthor(postId);
     if (!post) {
       throw new AppError("POST_NOT_FOUND", HTTP_STATUS.NOT_FOUND);
@@ -120,10 +120,29 @@ export class PostService {
       throw new AppError("CANNOT_UPDATE_OTHER_POST", HTTP_STATUS.FORBIDDEN);
     }
 
-    // If new image is being uploaded, delete old image from Cloudinary
-    if (data.image && post.image && data.image !== post.image && post.imagePublicId) {
-      await deleteImageFromCloudinary(post.imagePublicId);
+    // Handle image-related business logic (all Cloudinary operations)
+    if (fileBuffer) {
+      // New image uploaded: delete old image from Cloudinary, upload new one
+      if (post.imagePublicId) {
+        await deleteImageFromCloudinary(post.imagePublicId);
+      }
+      
+      const uploadResult = await uploadImageToCloudinary(
+        fileBuffer,
+        "blog/posts",
+        fileName || "updated-image"
+      );
+      data.image = uploadResult.secure_url;
+      data.imagePublicId = uploadResult.public_id;
+    } else if (data.image === null || data.image === "") {
+      // Image explicitly removed: delete from Cloudinary and set to null in database
+      if (post.imagePublicId) {
+        await deleteImageFromCloudinary(post.imagePublicId);
+      }
+      data.image = null;
+      data.imagePublicId = null;
     }
+    // If image field not provided, keep existing image (don't touch it)
 
     await post.update(data);
     return { ok: true, post };
