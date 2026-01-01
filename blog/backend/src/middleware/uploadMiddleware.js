@@ -5,6 +5,9 @@
 import multer from "multer";
 import { HTTP_STATUS, ERROR_MESSAGES } from "../utils/constants.js";
 
+const { BAD_REQUEST } = HTTP_STATUS;
+const { ERROR_MESSAGES } = VALIDATION_ERROR;
+
 // Configure multer for memory storage (no disk storage needed)
 // Files will be stored in memory and uploaded directly to Cloudinary
 const storage = multer.memoryStorage();
@@ -31,16 +34,16 @@ export const upload = multer({
 export const handleUploadError = (err, req, res, next) => {
   if (err instanceof multer.MulterError) {
     if (err.code === "LIMIT_FILE_SIZE") {
-      return res.status(HTTP_STATUS.BAD_REQUEST).send({
+      return res.status(BAD_REQUEST).send({
         data: { message: "File size exceeds 5MB limit" },
       });
     }
-    return res.status(HTTP_STATUS.BAD_REQUEST).send({
-      data: { message: ERROR_MESSAGES.VALIDATION_ERROR },
+    return res.status(BAD_REQUEST).send({
+      data: { message: VALIDATION_ERROR },
     });
   }
   if (err.message === "Only image files are allowed") {
-    return res.status(HTTP_STATUS.BAD_REQUEST).send({
+    return res.status(BAD_REQUEST).send({
       data: { message: err.message },
     });
   }
@@ -51,12 +54,8 @@ export const handleUploadError = (err, req, res, next) => {
  * Combined middleware for single image upload
  * Combines upload.single("image") + error handling
  * Use this instead of manually adding both middlewares
- * 
+ *
  * Usage:
  * router.post("/", authenticateToken, ...handleImageUpload, create);
  */
-export const handleImageUpload = [
-  upload.single("image"),
-  handleUploadError,
-];
-
+export const handleImageUpload = [upload.single("image"), handleUploadError];

@@ -20,10 +20,9 @@ export const usePostComments = (postId, page = 1, limit = 10) => {
   return useQuery({
     queryKey: postCommentsKeys.list(postId, page, limit),
     queryFn: async () => {
-      
+      // getPostComments returns { post, comments, meta } (fetchClient already extracts data)
       const result = await getPostComments(postId, { page, limit });
-      const { data } = result;
-      const { comments = [], meta = {} } = data || {};
+      const { comments = [], meta = {} } = result || {};
 
       return {
         comments: comments || [],
@@ -32,7 +31,8 @@ export const usePostComments = (postId, page = 1, limit = 10) => {
     },
     enabled: !!postId,
     staleTime: 1000 * 30, // 30 seconds
-    refetchOnMount: true, // Always refetch when component mounts to ensure fresh data
+    // Removed refetchOnMount: true - React Query handles refetching intelligently
+    // It will refetch when data is stale, but not when fresh (within staleTime)
   });
 };
 

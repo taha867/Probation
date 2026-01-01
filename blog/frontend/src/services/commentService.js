@@ -1,4 +1,5 @@
-import axiosInstance from "../utils/axiosInstance";
+import { fetchClient } from "../middleware/fetchClient";
+import { buildQueryString } from "../utils/queryParams";
 
 /**
  * Get comments for a specific post
@@ -6,17 +7,11 @@ import axiosInstance from "../utils/axiosInstance";
  * @param {Object} params - Query parameters (page, limit, etc.)
  */
 export const getPostComments = async (postId, params = {}) => {
-  try {
-    const response = await axiosInstance.get(`/posts/${postId}/comments`, {
-      params,
-    });
-    const { data = {} } = response;
-    return data;
-  } catch (error) {
-    const { response: { data: { message } = {} } = {} } = error || {};
-    const errorMessage = message || "Failed to fetch comments";
-    throw new Error(errorMessage);
-  }
+  const queryParams = buildQueryString(params);
+  const response = await fetchClient(`/posts/${postId}/comments?${queryParams}`, {
+    method: "GET",
+  });
+  return response.data;
 };
 
 /**
@@ -28,13 +23,11 @@ export const getPostComments = async (postId, params = {}) => {
  * @returns {Promise<Object>} Created comment
  */
 export const createComment = async (commentData) => {
-  try {
-    const response = await axiosInstance.post("/comments", commentData);
-    const { data: { data } = {} } = response;
-    return data;
-  } catch (error) {
-    throw error; // Error message handled by axios interceptor
-  }
+  const response = await fetchClient("/comments", {
+    method: "POST",
+    body: JSON.stringify(commentData),
+  });
+  return response.data;
 };
 
 /**
@@ -44,15 +37,11 @@ export const createComment = async (commentData) => {
  * @returns {Promise<Object>} Updated comment
  */
 export const updateComment = async (commentId, body) => {
-  try {
-    const response = await axiosInstance.put(`/comments/${commentId}`, {
-      body,
-    });
-    const { data: { data } = {} } = response;
-    return data;
-  } catch (error) {
-    throw error; // Error message handled by axios interceptor
-  }
+  const response = await fetchClient(`/comments/${commentId}`, {
+    method: "PUT",
+    body: JSON.stringify({ body }),
+  });
+  return response.data;
 };
 
 /**
@@ -61,11 +50,8 @@ export const updateComment = async (commentId, body) => {
  * @returns {Promise<Object>} Deletion result
  */
 export const deleteComment = async (commentId) => {
-  try {
-    const response = await axiosInstance.delete(`/comments/${commentId}`);
-    const { data: { data } = {} } = response;
-    return data;
-  } catch (error) {
-    throw error; // Error message handled by axios interceptor
-  }
+  const response = await fetchClient(`/comments/${commentId}`, {
+    method: "DELETE",
+  });
+  return response.data;
 };

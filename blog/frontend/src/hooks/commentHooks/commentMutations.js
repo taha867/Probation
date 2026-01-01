@@ -6,11 +6,10 @@ import {
   deleteComment,
 } from "../../services/commentService";
 import { postCommentsKeys } from "./commentQueries";
-import { postDetailKeys } from "../postHooks/postQueries";
 
 /**
  * Hook for creating a new comment or reply
- * Automatically invalidates post comments and post detail
+ * Automatically invalidates post comments for the affected post
  */
 export const useCreateComment = () => {
   const queryClient = useQueryClient();
@@ -23,12 +22,19 @@ export const useCreateComment = () => {
     onSuccess: (newComment, variables) => {
       const postId = variables.postId || newComment?.postId;
       if (postId) {
+        // Invalidate only this specific post's comments (all pages)
+        // Using predicate to match all queries for this postId
         queryClient.invalidateQueries({
-          queryKey: postCommentsKeys.lists(),
+          predicate: (query) => {
+            const key = query.queryKey;
+            return (
+              key[0] === "postComments" &&
+              key[1] === "list" &&
+              key[2] === postId
+            );
+          },
         });
-        queryClient.invalidateQueries({
-          queryKey: postDetailKeys.detail(postId),
-        });
+        // Post detail doesn't display comment count, so no need to invalidate it
       }
     },
   });
@@ -36,7 +42,7 @@ export const useCreateComment = () => {
 
 /**
  * Hook for updating an existing comment
- * Automatically invalidates post comments and post detail
+ * Automatically invalidates post comments for the affected post
  */
 export const useUpdateComment = () => {
   const queryClient = useQueryClient();
@@ -49,12 +55,18 @@ export const useUpdateComment = () => {
     onSuccess: (updatedComment) => {
       const postId = updatedComment?.postId;
       if (postId) {
+        // Invalidate only this specific post's comments (all pages)
         queryClient.invalidateQueries({
-          queryKey: postCommentsKeys.lists(),
+          predicate: (query) => {
+            const key = query.queryKey;
+            return (
+              key[0] === "postComments" &&
+              key[1] === "list" &&
+              key[2] === postId
+            );
+          },
         });
-        queryClient.invalidateQueries({
-          queryKey: postDetailKeys.detail(postId),
-        });
+        // Post detail doesn't display comment count, so no need to invalidate it
       }
     },
   });
@@ -62,7 +74,7 @@ export const useUpdateComment = () => {
 
 /**
  * Hook for deleting a comment
- * Automatically invalidates post comments and post detail
+ * Automatically invalidates all post comments (since postId is unknown)
  * Note: Backend handles cascading delete for child comments
  */
 export const useDeleteComment = () => {
@@ -78,10 +90,7 @@ export const useDeleteComment = () => {
       queryClient.invalidateQueries({
         queryKey: postCommentsKeys.lists(),
       });
-      // Also invalidate all post details to refresh comment counts
-      queryClient.invalidateQueries({
-        queryKey: postDetailKeys.all,
-      });
+      // Post detail doesn't display comment count, so no need to invalidate it
     },
   });
 };

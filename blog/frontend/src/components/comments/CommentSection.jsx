@@ -16,7 +16,7 @@ const CommentSection = ({ postId }) => {
   // total no of comments from backend used to decide when to stop "Load More"
   const [totalComments, setTotalComments] = useState(0);
   
-  const { data, isLoading, isFetching, refetch } = usePostComments(
+  const { data, isLoading, isFetching } = usePostComments(
     postId,
     currentPage,
     COMMENTS_PER_PAGE
@@ -70,19 +70,14 @@ const CommentSection = ({ postId }) => {
     [totalComments]
   );
 
-  // Stable callback - use functional setState to access current page without dependency
+  // Stable callback - reset to page 1 after comment creation
+  // React Query automatically refetches after mutation invalidates queries
   const handleCommentSuccess = useCallback(() => {
     // Reset to page 1 to get fresh comment list
     setAccumulatedComments([]);
-    // Use functional setState to check current page without needing it as dependency
-    setCurrentPage((prevPage) => {
-      if (prevPage === 1) {
-        // If already on page 1, refetch to get latest comments
-        refetch();
-      }
-      return 1; // Always reset to page 1
-    });
-  }, [refetch]); // Only depends on stable refetch function
+    setCurrentPage(1);
+    // No manual refetch needed - React Query handles it automatically after invalidation
+  }, []);
 
   const handleLoadMore = useCallback(() => {
     setCurrentPage((prev) => prev + 1);

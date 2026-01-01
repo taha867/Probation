@@ -2,7 +2,7 @@
  * Post Mutations - React Query hooks for post-related mutations
  */
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import axiosInstance from "../../utils/axiosInstance";
+import { createPost, updatePost, deletePost } from "../../services/postService";
 import { homePostsKeys, userPostsKeys, postDetailKeys } from "./postQueries";
 import { POST_STATUS } from "../../utils/constants";
 
@@ -15,11 +15,8 @@ export const useCreatePost = () => {
 
   return useMutation({
     mutationFn: async (formData) => {
-      // Send FormData (multipart/form-data)
-      // Axios automatically sets Content-Type with boundary when FormData is passed
-      const response = await axiosInstance.post("/posts", formData);
-      const { data: { data } = {} } = response;
-      return data;
+      // FormData middleware handles Content-Type automatically
+      return await createPost(formData);
     },
     onSuccess: (newPost) => {
       queryClient.invalidateQueries({ queryKey: userPostsKeys.all });
@@ -39,10 +36,8 @@ export const useUpdatePost = () => {
 
   return useMutation({
     mutationFn: async ({ postId, formData, previousStatus }) => {
-      // Send FormData (multipart/form-data)
-      // Axios automatically sets Content-Type with boundary when FormData is passed
-      const response = await axiosInstance.put(`/posts/${postId}`, formData);
-      const { data: { data: updatedPost } = {} } = response;
+      // FormData middleware handles Content-Type automatically
+      const updatedPost = await updatePost(postId, formData);
       return { updatedPost, previousStatus };
     },
     onSuccess: ({ updatedPost, previousStatus }, variables) => {
@@ -73,7 +68,7 @@ export const useDeletePost = () => {
 
   return useMutation({
     mutationFn: async ({ postId, wasPublished }) => {
-      await axiosInstance.delete(`/posts/${postId}`);
+      await deletePost(postId);
       return { postId, wasPublished };
     },
     onSuccess: ({ wasPublished }) => {

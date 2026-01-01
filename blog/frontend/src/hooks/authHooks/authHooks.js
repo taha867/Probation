@@ -1,199 +1,55 @@
-import { useTransition } from "react";
 import { useAuthContext } from "../../contexts/authContext";
-import { authActions } from "../../reducers/authReducer";
 import {
-  storeTokens,
-  removeTokens,
-  decodeAndValidateToken,
-} from "../../utils/tokenUtils";
-import {
-  loginUser,
-  registerUser,
-  logoutUser,
-  forgotPassword,
-  resetPassword,
-} from "../../services/authService";
-import { updateUserProfile } from "../../services/userService";
-import { TOAST_MESSAGES } from "../../utils/constants";
-import { invalidateAuthPromise, updateAuthPromise } from "../../utils/authPromise";
+  useLogin,
+  useSignup,
+  useLogout,
+  useForgotPassword,
+  useResetPassword,
+  useUpdateProfileImage,
+  useChangePassword,
+} from "./authMutations";
 
 /**
  * Custom hook for authentication operations
+ * Wraps React Query mutations for easy use in components
  */
 export const useAuth = () => {
-  const { state, dispatch } = useAuthContext();
-  const [isPending, startTransition] = useTransition();
+  const { state } = useAuthContext();
 
-  const {
-    loginSuccess,
-    signupSuccess,
-    authError,
-    logout,
-    forgotPasswordSuccess,
-    resetPasswordSuccess,
-    setUserFromToken,
-  } = authActions;
-
-  const signin = async (credentials) => {
-    return new Promise((resolve, reject) => {
-      startTransition(async () => {
-        try {
-          const response = await loginUser(credentials);
-          const {
-            data: { accessToken, refreshToken, user },
-          } = response;
-
-          // Store both tokens and validate the access token
-          storeTokens(accessToken, refreshToken);
-          const decodedUser = decodeAndValidateToken(accessToken);
-
-          if (decodedUser) {
-            // Use the complete user object from the backend response
-            dispatch(loginSuccess(user));
-            // Update the auth promise cache with new user
-            updateAuthPromise(user);
-            resolve(response);
-          } else {
-            throw new Error("Invalid token received");
-          }
-        } catch (error) {
-          dispatch(authError());
-          reject(error);
-        }
-      });
-    });
-  };
-
-  const signup = async (userData) => {
-    return new Promise((resolve, reject) => {
-      startTransition(async () => {
-        try {
-          const response = await registerUser(userData);
-          dispatch(signupSuccess());
-          resolve(response);
-        } catch (error) {
-          dispatch(authError());
-          reject(error);
-        }
-      });
-    });
-  };
-
-  const signout = async () => {
-    try {
-      // Call backend logout API to invalidate session
-      await logoutUser();
-    } catch (error) {
-      // Even if backend logout fails, we still want to clear local state
-      console.warn(TOAST_MESSAGES.BACKEND_LOGOUT_FAILED, error.message);
-    } finally {
-      // Always clear both tokens and state
-      removeTokens();
-      dispatch(logout());
-      // Invalidate auth promise cache for next login
-      invalidateAuthPromise();
-    }
-  };
-
-  const requestPasswordReset = async (email) => {
-    return new Promise((resolve, reject) => {
-      startTransition(async () => {
-        try {
-          const response = await forgotPassword({ email });
-          dispatch(forgotPasswordSuccess());
-          resolve(response);
-        } catch (error) {
-          dispatch(authError());
-          reject(error);
-        }
-      });
-    });
-  };
-
-  const resetUserPassword = async (token, newPassword, confirmPassword) => {
-    return new Promise((resolve, reject) => {
-      startTransition(async () => {
-        try {
-          const response = await resetPassword({
-            token,
-            newPassword,
-            confirmPassword,
-          });
-          dispatch(resetPasswordSuccess());
-          resolve(response);
-        } catch (error) {
-          dispatch(authError());
-          reject(error);
-        }
-      });
-    });
-  };
-
-  const updateProfileImage = async (formData) => {
-    return new Promise((resolve, reject) => {
-      startTransition(async () => {
-        try {
-          if (!user?.id) {
-            throw new Error("User not authenticated");
-          }
-
-          // Call API to update profile image (FormData with file)
-          const response = await updateUserProfile(user.id, formData);
-          const updatedUser = response.data.user;
-
-          // Update auth state with new user data
-          dispatch(setUserFromToken(updatedUser));
-          // Update the auth promise cache with new user
-          updateAuthPromise(updatedUser);
-
-          resolve(response);
-        } catch (error) {
-          dispatch(authError());
-          reject(error);
-        }
-      });
-    });
-  };
-
-  const changePassword = async (newPassword) => {
-    return new Promise((resolve, reject) => {
-      startTransition(async () => {
-        try {
-          if (!user?.id) {
-            throw new Error("User not authenticated");
-          }
-
-          // Prepare payload with new password
-          const payload = {
-            password: newPassword,
-          };
-
-          // Call API to update password
-          const response = await updateUserProfile(user.id, payload);
-          resolve(response);
-        } catch (error) {
-          dispatch(authError());
-          reject(error);
-        }
-      });
-    });
-  };
+  // React Query mutations
+  const loginMutation = useLogin();
+  const signupMutation = useSignup();
+  const logoutMutation = useLogout();
+  const forgotPasswordMutation = useForgotPassword();
+  const resetPasswordMutation = useResetPassword();
+  const updateProfileImageMutation = useUpdateProfileImage();
+  const changePasswordMutation = useChangePassword();
 
   const { user } = state;
+
+  // Check if any mutation is pending
+  const isLoading =
+    loginMutation.isPending ||
+    signupMutation.isPending ||
+    logoutMutation.isPending ||
+    forgotPasswordMutation.isPending ||
+    resetPasswordMutation.isPending ||
+    updateProfileImageMutation.isPending ||
+    changePasswordMutation.isPending;
 
   return {
     // State
     user,
     isAuthenticated: !!user,
-    isLoading: isPending, // From useTransition
+    isLoading,
 
-    // Actions
-    signin,
-    signup,
-    signout,
-    requestPasswordReset,
-    resetUserPassword,
-    updateProfileImage,
-    changePassword,
+    // Actions (using mutateAsync for Promise-based API compatibility)
+    signin: loginMutation.mutateAsync,
+    signup: signupMutation.mutateAsync,
+    signout: logoutMutation.mutateAsync,
+    requestPasswordReset: forgotPasswordMutation.mutateAsync,
+    resetUserPassword: resetPasswordMutation.mutateAsync,
+    updateProfileImage: updateProfileImageMutation.mutateAsync,
+    changePassword: changePasswordMutation.mutateAsync,
   };
 };

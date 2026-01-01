@@ -1,4 +1,5 @@
-import axiosInstance from "../utils/axiosInstance";
+import { fetchClient } from "../middleware/fetchClient";
+import { buildQueryString } from "../utils/queryParams";
 
 // Original API function for fetching user posts (used by postsPromise.js)
 export const fetchUserPosts = async (userId, options = {}) => {
@@ -6,24 +7,16 @@ export const fetchUserPosts = async (userId, options = {}) => {
     throw new Error("User ID is required to fetch posts");
   }
 
-  try {
-    const response = await axiosInstance.get(`/users/${userId}/posts`, {
-      params: options,
-    });
-    const { data: { data } = {} } = response;
-    const { posts: userPosts = {}, meta = {} } = data;
+  const params = buildQueryString(options);
+  const response = await fetchClient(`/users/${userId}/posts?${params}`, {
+    method: "GET",
+  });
+  const { posts: userPosts = {}, meta = {} } = response.data || {};
 
-    return {
-      posts: userPosts,
-      pagination: meta,
-    };
-  } catch (error) {
-    const { response: { data: { message } = {} } = {} } = error || {};
-
-    const errorMessage = message || "Failed to fetch posts. Please try again.";
-
-    throw new Error(errorMessage);
-  }
+  return {
+    posts: userPosts,
+    pagination: meta,
+  };
 };
 
 export const searchPosts = (posts, searchQuery) => {
@@ -38,27 +31,19 @@ export const searchPosts = (posts, searchQuery) => {
 };
 
 export const getPostDetails = async (postId) => {
-  try {
-    const response = await axiosInstance.get(`/posts/${postId}`);
-    const { data: { data } = {} } = response;
-    return data;
-  } catch (error) {
-    throw error; // Error message handled by axios interceptor
-  }
+  const response = await fetchClient(`/posts/${postId}`, {
+    method: "GET",
+  });
+  return response.data;
 };
 
 export const getPosts = async (params = {}) => {
-  try {
-    const response = await axiosInstance.get("/posts", { params });
-    const { data = {} } = response;
-    return data;
-  } catch (error) {
-    const { response: { data: { message } = {} } = {} } = error || {};
-    const errorMessage = message || "Failed to fetch posts. Please try again.";
-    throw new Error(errorMessage);
-  }
+  const queryParams = buildQueryString(params);
+  const response = await fetchClient(`/posts?${queryParams}`, {
+    method: "GET",
+  });
+  return response.data;
 };
-
 
 // Search/filter posts - uses the reusable searchPosts function
 export const filterPosts = (posts, searchQuery) => {
@@ -71,26 +56,51 @@ export const calculateTotalPages = (total, limit) => {
 };
 
 /**
+ * Create a new post
+ */
+export const createPost = async (formData) => {
+  const response = await fetchClient("/posts", {
+    method: "POST",
+    body: formData,
+  });
+  return response.data;
+};
+
+/**
+ * Update an existing post
+ */
+export const updatePost = async (postId, formData) => {
+  const response = await fetchClient(`/posts/${postId}`, {
+    method: "PUT",
+    body: formData,
+  });
+  return response.data;
+};
+
+/**
+ * Delete a post
+ */
+export const deletePost = async (postId) => {
+  await fetchClient(`/posts/${postId}`, {
+    method: "DELETE",
+  });
+};
+
+/**
  * Fetch all public posts (for home page)
  * Business logic: Fetches all posts from the API
  * Filters published posts on client side if needed
  */
 export const fetchAllPosts = async (options = {}) => {
-  try {
-    const response = await axiosInstance.get("/posts", {
-      params: options,
-    });
-    const { data: { data } = {} } = response;
-    // Backend returns "items" and "meta"
-    const { items = [], meta = {} } = data;
+  const params = buildQueryString(options);
+  const response = await fetchClient(`/posts?${params}`, {
+    method: "GET",
+  });
+  // Backend returns "items" and "meta"
+  const { items = [], meta = {} } = response.data || {};
 
-    return {
-      posts: items,
-      pagination: meta,
-    };
-  } catch (error) {
-    const { response: { data: { message } = {} } = {} } = error || {};
-    const errorMessage = message || "Failed to fetch posts. Please try again.";
-    throw new Error(errorMessage);
-  }
+  return {
+    posts: items,
+    pagination: meta,
+  };
 };

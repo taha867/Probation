@@ -14,8 +14,17 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: 1000 * 60 * 2, // 2 minutes - data is fresh for 2 minutes (freshness of data)
       gcTime: 1000 * 60 * 5, // 5 minutes (formerly cacheTime) - unused data kept for 5 minutes (how long the data is kept in memory)
-      retry: 1, // Retry failed requests once
-      refetchOnWindowFocus: false, // by default on switche tabs or comes back to the window → queries refetch automatically(it prevents that)
+      retry: (failureCount, error) => {
+        // Don't retry on 401 (token refresh handles it)
+        if (error?.status === 401) return false;
+
+        // Don't retry on client errors (4xx)
+        if (error?.status >= 400 && error?.status < 500) return false;
+
+        // Retry once on network errors and server errors (5xx)
+        return failureCount < 1;
+      },
+      refetchOnWindowFocus: false, // by default on switch tabs or comes back to the window → queries refetch automatically(it prevents that)
     },
   },
 });
