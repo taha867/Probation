@@ -68,16 +68,14 @@ const extractErrorMessage = async (error) => {
     try {
       const data = await response.clone().json();
       const {
-        data: {
-          data: { message: nestedMessage } = {},
-          message: topLevelMessage,
-        } = {},
+        message: rootMessage,
+        data: { message: dataMessage } = {},
         error: errorField,
       } = data || {};
 
       return (
-        nestedMessage ||
-        topLevelMessage ||
+        dataMessage ||
+        rootMessage ||
         errorField ||
         `Request failed with status ${error.status}`
       );
@@ -243,15 +241,10 @@ export const fetchClient = async (url, options = {}, metadata = {}) => {
 
     // Show success toast (if message exists and not disabled)
     if (metadata.showToast !== false) {
-      const {
-        message: rootMessage,
-        data: {
-          message: topLevelMessage,
-          data: { message: nestedMessage } = {},
-        } = {},
-      } = responseData || {};
+      const { message: rootMessage, data: { message: dataMessage } = {} } =
+        responseData || {};
 
-      const successMessage = nestedMessage || topLevelMessage || rootMessage;
+      const successMessage = dataMessage || rootMessage;
 
       if (successMessage) {
         toast.success(successMessage);
@@ -309,4 +302,3 @@ export const fetchClient = async (url, options = {}, metadata = {}) => {
     throw error;
   }
 };
-

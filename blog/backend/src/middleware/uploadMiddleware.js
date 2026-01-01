@@ -6,7 +6,7 @@ import multer from "multer";
 import { HTTP_STATUS, ERROR_MESSAGES } from "../utils/constants.js";
 
 const { BAD_REQUEST } = HTTP_STATUS;
-const { ERROR_MESSAGES } = VALIDATION_ERROR;
+const { VALIDATION_ERROR } = ERROR_MESSAGES;
 
 // Configure multer for memory storage (no disk storage needed)
 // Files will be stored in memory and uploaded directly to Cloudinary
