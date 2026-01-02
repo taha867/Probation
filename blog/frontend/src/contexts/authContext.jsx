@@ -1,4 +1,4 @@
-import { createContext, useReducer, useContext, useMemo, use } from "react";
+import { createContext, useReducer, useContext, useMemo, use, useEffect } from "react";
 import { authReducer, initialAuthState } from "../reducers/authReducer";
 import { createInitialAuthPromise } from "../utils/authPromise";
 
@@ -14,6 +14,7 @@ export const AuthProvider = ({ children }) => {
   const { user } = use(createInitialAuthPromise());
 
   // Create initial state with resolved user
+  // isInitializing starts as true (from initialAuthState), will be set to false after mount
   const initialStateWithUser = {
     ...initialAuthState,
     user,
@@ -21,6 +22,13 @@ export const AuthProvider = ({ children }) => {
 
   // useReducer returns current state and a dispatch function
   const [state, dispatch] = useReducer(authReducer, initialStateWithUser);
+
+  // Mark initialization as complete after promise resolves and component mounts
+  useEffect(() => {
+    if (state.isInitializing) {
+      dispatch({ type: "SET_INITIALIZING", payload: { isInitializing: false } });
+    }
+  }, [state.isInitializing]);
 
   // Memoize the context value to prevent unnecessary re-renders
   // Only re-creates when state or dispatch changes

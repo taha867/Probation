@@ -1,63 +1,48 @@
-
 import * as yup from "yup";
 import { POST_STATUS } from "../utils/constants";
+import { VALIDATION_MESSAGES } from "../utils/constants";
+import { imageFileSchema, baseTextSchema } from "./commonSchemas";
+
+const { DRAFT, PUBLISHED } = POST_STATUS;
+const {
+  TITLE_REQUIRED,
+  TITLE_TOO_SHORT,
+  TITLE_TOO_LONG,
+  CONTENT_REQUIRED,
+  CONTENT_TOO_SHORT,
+  CONTENT_TOO_LONG,
+  STATUS_INVALID,
+  SEARCH_TOO_LONG,
+} = VALIDATION_MESSAGES;
 
 /**
  * Create/Update Post Form Validation Schema
  */
 export const postSchema = yup.object({
-  title: yup
-    .string()
-    .required("Title is required")
-    .min(3, "Title must be at least 3 characters")
-    .max(200, "Title must not exceed 200 characters")
-    .trim(),
+  title: baseTextSchema
+    .required(TITLE_REQUIRED)
+    .min(3, TITLE_TOO_SHORT)
+    .max(200, TITLE_TOO_LONG),
 
-  body: yup
-    .string()
-    .required("Content is required")
-    .min(10, "Content must be at least 10 characters")
-    .max(10000, "Content must not exceed 10,000 characters")
-    .trim(),
+  body: baseTextSchema
+    .required(CONTENT_REQUIRED)
+    .min(10, CONTENT_TOO_SHORT)
+    .max(10000, CONTENT_TOO_LONG),
 
   status: yup
     .string()
-    .oneOf(
-      [POST_STATUS.DRAFT, POST_STATUS.PUBLISHED],
-      "Status must be either draft or published",
-    )
-    .default(POST_STATUS.DRAFT),
+    .oneOf([DRAFT, PUBLISHED], STATUS_INVALID)
+    .default(DRAFT),
 
   // Image can be a File object (new upload) or string (existing URL) or null
-  image: yup
-    .mixed()
-    .nullable()
-    .optional()
-    .test("file-type", "Only image files are allowed", (value) => {
-      if (!value) return true; // Optional field
-      if (typeof value === "string") return true; // Existing URL
-      if (value instanceof File) {
-        return value.type.startsWith("image/");
-      }
-      return false;
-    })
-    .test("file-size", "File size must be less than 5MB", (value) => {
-      if (!value || typeof value === "string") return true;
-      if (value instanceof File) {
-        return value.size <= 5 * 1024 * 1024; // 5MB
-      }
-      return false;
-    }),
+  image: imageFileSchema,
 });
 
 /**
  * Search Posts Form Validation Schema
  */
 export const searchPostsSchema = yup.object({
-  search: yup
-    .string()
-    .max(100, "Search query must not exceed 100 characters")
-    .trim(),
+  search: baseTextSchema.max(100, SEARCH_TOO_LONG),
 
   page: yup
     .number()

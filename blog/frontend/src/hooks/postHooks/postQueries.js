@@ -1,9 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
-import { useAuthContext } from "../../contexts/authContext";
-import { fetchAllPosts, fetchUserPosts, getPostDetails } from "../../services/postService";
+import { useAuth } from "../authHooks/authHooks";
+import {
+  fetchAllPosts,
+  fetchUserPosts,
+  getPostDetails,
+} from "../../services/postService";
 import { POST_STATUS } from "../../utils/constants";
 
-
+const { PUBLISHED } = POST_STATUS;
 export const homePostsKeys = {
   all: ["homePosts"],
   lists: () => [...homePostsKeys.all, "list"],
@@ -32,7 +36,6 @@ export const postDetailKeys = {
   detail: (postId) => [...postDetailKeys.all, postId],
 };
 
-
 /**
  * Hook for fetching home page posts (published only)
  */
@@ -43,12 +46,13 @@ export const useHomePosts = (page = 1, limit, search) => {
       const result = await fetchAllPosts({
         page,
         limit,
-        status: POST_STATUS.PUBLISHED,
+        status: PUBLISHED,
         search: search || undefined,
       });
+      const { posts = [], pagination = {} } = result;
       return {
-        posts: result.posts || [],
-        pagination: result.pagination || {},
+        posts,
+        pagination,
       };
     },
     staleTime: 1000 * 60 * 1, // 1 minute - home posts refresh more frequently
@@ -59,10 +63,7 @@ export const useHomePosts = (page = 1, limit, search) => {
  * Hook for fetching user's posts (dashboard)
  */
 export const useUserPosts = (page = 1, limit, search) => {
-  const {
-    state: { user },
-  } = useAuthContext();
-  const userId = user?.id;
+  const { user: { id: userId } = {} } = useAuth();
 
   return useQuery({
     queryKey: userPostsKeys.list(userId, page, limit, search),
@@ -73,9 +74,10 @@ export const useUserPosts = (page = 1, limit, search) => {
         limit,
         search: search || undefined,
       });
+      const { posts = [], pagination = {} } = result;
       return {
-        posts: result.posts || [],
-        pagination: result.pagination || {},
+        posts,
+        pagination,
       };
     },
     enabled: !!userId,
@@ -96,4 +98,3 @@ export const usePostDetail = (postId) => {
     staleTime: 1000 * 60 * 5, // 5 minutes - post details change less frequently
   });
 };
-

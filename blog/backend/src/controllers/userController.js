@@ -188,9 +188,12 @@ export async function update(req, res) {
       updateUserSchema,
       bodyForValidation,
       res,
-      { context: { req } }
+      { context: { req } } // Passing req object as context
+      // The file is in req.file (from multer middleware)
+      // The validation payload only has { name, email, phone, ... }
+      // The validation needs to know if a file was uploaded
     );
-    if (!validatedBody) return;
+    if (!validatedBody) return; 
 
     // Remove the placeholder image field if it was added (service will handle the actual file)
     if (req.file && validatedBody.image === req.file.originalname) {

@@ -6,22 +6,23 @@ import { createPost, updatePost, deletePost } from "../../services/postService";
 import { homePostsKeys, userPostsKeys, postDetailKeys } from "./postQueries";
 import { POST_STATUS } from "../../utils/constants";
 
+const { PUBLISHED } = POST_STATUS;
 /**
  * Hook for creating a new post
  * Automatically invalidates user posts and home posts (if published)
  */
 export const useCreatePost = () => {
   const queryClient = useQueryClient();
-
+  const { invalidateQueries } = queryClient;
   return useMutation({
     mutationFn: async (formData) => {
       // FormData middleware handles Content-Type automatically
       return await createPost(formData);
     },
     onSuccess: (newPost) => {
-      queryClient.invalidateQueries({ queryKey: userPostsKeys.all });
-      if (newPost?.status === POST_STATUS.PUBLISHED) {
-        queryClient.invalidateQueries({ queryKey: homePostsKeys.all });
+      invalidateQueries({ queryKey: userPostsKeys.all });
+      if (newPost?.status === PUBLISHED) {
+        invalidateQueries({ queryKey: homePostsKeys.all });
       }
     },
   });
@@ -33,6 +34,7 @@ export const useCreatePost = () => {
  */
 export const useUpdatePost = () => {
   const queryClient = useQueryClient();
+  const { invalidateQueries } = queryClient;
 
   return useMutation({
     mutationFn: async ({ postId, formData, previousStatus }) => {
@@ -42,18 +44,18 @@ export const useUpdatePost = () => {
     },
     onSuccess: ({ updatedPost, previousStatus }, variables) => {
       const { postId } = variables;
-      
+
       // Invalidate post detail cache so the detail page shows updated data immediately
-      queryClient.invalidateQueries({ queryKey: postDetailKeys.detail(postId) });
-      
+      invalidateQueries({ queryKey: postDetailKeys.detail(postId) });
+
       // Invalidate user posts list (dashboard)
-      queryClient.invalidateQueries({ queryKey: userPostsKeys.all });
-      
+      invalidateQueries({ queryKey: userPostsKeys.all });
+
       // Invalidate home posts if status changed to/from published
-      const wasPublished = previousStatus === POST_STATUS.PUBLISHED;
-      const isNowPublished = updatedPost?.status === POST_STATUS.PUBLISHED;
+      const wasPublished = previousStatus === PUBLISHED;
+      const isNowPublished = updatedPost?.status === PUBLISHED;
       if (wasPublished || isNowPublished) {
-        queryClient.invalidateQueries({ queryKey: homePostsKeys.all });
+        invalidateQueries({ queryKey: homePostsKeys.all });
       }
     },
   });
@@ -65,6 +67,7 @@ export const useUpdatePost = () => {
  */
 export const useDeletePost = () => {
   const queryClient = useQueryClient();
+  const { invalidateQueries } = queryClient;
 
   return useMutation({
     mutationFn: async ({ postId, wasPublished }) => {
@@ -72,11 +75,10 @@ export const useDeletePost = () => {
       return { postId, wasPublished };
     },
     onSuccess: ({ wasPublished }) => {
-      queryClient.invalidateQueries({ queryKey: userPostsKeys.all });
+      invalidateQueries({ queryKey: userPostsKeys.all });
       if (wasPublished) {
-        queryClient.invalidateQueries({ queryKey: homePostsKeys.all });
+        invalidateQueries({ queryKey: homePostsKeys.all });
       }
     },
   });
 };
-

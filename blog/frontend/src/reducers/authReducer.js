@@ -3,6 +3,7 @@ import { AUTH_ACTIONS } from "../utils/constants";
 // Auth reducer for managing authentication state
 export const initialAuthState = {
   user: null,
+  isInitializing: true, // Track if initial auth check is in progress
 };
 
 const {
@@ -29,8 +30,17 @@ export const authReducer = (state, action) => {
     case FORGOT_PASSWORD_SUCCESS:
     case RESET_PASSWORD_SUCCESS:
     case AUTH_ERROR:
+      // These actions exist for consistency and future extensibility
+      // They don't modify state but allow components to dispatch them
+      // Success/error handling is done by React Query
       return {
         ...state,
+      };
+
+    case "SET_INITIALIZING":
+      return {
+        ...state,
+        isInitializing: action.payload.isInitializing,
       };
 
     case LOGOUT:
@@ -51,7 +61,9 @@ export const authReducer = (state, action) => {
       };
 
     default:
-      throw new Error(`Unknown action type: ${action.type}`);
+      // Log error but don't crash - return current state for graceful degradation
+      console.error(`Unknown action type: ${action.type}`, action);
+      return state;
   }
 };
 

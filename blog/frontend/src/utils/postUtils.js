@@ -1,9 +1,7 @@
 
 import { format } from "date-fns";
 
-/**
- * Calculate estimated reading time for a post body
- */
+
 export const calculateReadTime = (body) => {
   if (!body) return "0 Min. To Read";
   const wordCount = body.split(/\s+/).length;

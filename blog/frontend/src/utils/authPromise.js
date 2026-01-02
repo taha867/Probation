@@ -1,5 +1,4 @@
 /**
- * Auth Promise Utility for React 19 use() hook
  * Handles initial authentication state resolution using cached promises
  * Includes automatic token refresh during app initialization
  */
@@ -194,20 +193,4 @@ export const createInitialAuthPromise = () => {
   }
 
   return authPromise;
-};
-
-/**
- * Invalidates the auth promise cache
- * Call this when user logs out to reset the promise for next login
- */
-export const invalidateAuthPromise = () => {
-  authPromise = null;
-};
-
-/**
- * Updates the auth promise cache with new user data
- * Call this when user logs in to update the cached promise
- */
-export const updateAuthPromise = (user) => {
-  authPromise = Promise.resolve({ user });
 };

@@ -31,7 +31,6 @@ const App = () => {
               <Route path="/signup" element={<SignUpPage />} />
               <Route path="/forgot-password" element={<ForgotPasswordPage />} />
               <Route path="/reset-password" element={<ResetPasswordPage />} />
-              <Route path="/auth" element={<SignInPage />} />
             </Route>
 
             {/* ---------- Protected routes (auth required) ---------- */}

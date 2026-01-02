@@ -19,9 +19,12 @@ const {
 
 const { FORBIDDEN, NOT_FOUND, UNPROCESSABLE_ENTITY, INTERNAL_SERVER_ERROR } =
   HTTP_STATUS;
-// Token refresh state management
+
+//Prevents multiple refresh token requests. 5 API requests fail with 401 at the same time
+// Without this → 5 refresh calls, With this → only 1 refresh request, others wait
 let isRefreshing = false;
 let refreshPromise = null;
+
 
 /**
  * Refreshes the access token using refresh token
@@ -61,12 +64,13 @@ const refreshToken = async () => {
 
 /**
  * Extracts error message from error object
+ * Convert any backend error shape into one readable message
  */
 const extractErrorMessage = async (error) => {
   const { response, message } = error;
   if (response) {
     try {
-      const data = await response.clone().json();
+      const data = await response.clone().json(); // response.json() reads the response body once, if we try again error occurs so we make copy of it 
       const {
         message: rootMessage,
         data: { message: dataMessage } = {},

@@ -25,10 +25,13 @@ export const useAuth = () => {
   const updateProfileImageMutation = useUpdateProfileImage();
   const changePasswordMutation = useChangePassword();
 
-  const { user } = state;
+  const { user, isInitializing } = state;
 
-  // Check if any mutation is pending
+  // Combine initializing state with mutation loading states
+  // isInitializing: true during app startup auth check
+  // mutation.isPending: true during API calls
   const isLoading =
+    isInitializing ||
     loginMutation.isPending ||
     signupMutation.isPending ||
     logoutMutation.isPending ||

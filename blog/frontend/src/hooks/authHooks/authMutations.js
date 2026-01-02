@@ -17,7 +17,6 @@ import {
   removeTokens,
   decodeAndValidateToken,
 } from "../../utils/tokenUtils";
-import { invalidateAuthPromise, updateAuthPromise } from "../../utils/authPromise";
 
 /**
  * Hook for user login
@@ -39,9 +38,8 @@ export const useLogin = () => {
 
       if (decodedUser) {
         // Use the complete user object from the backend response
+        // Context state is the single source of truth for runtime auth state
         dispatch(loginSuccess(user));
-        // Update the auth promise cache with new user
-        updateAuthPromise(user);
       } else {
         throw new Error("Invalid token received");
       }
@@ -81,14 +79,13 @@ export const useLogout = () => {
     mutationFn: logoutUser,
     onSuccess: () => {
       removeTokens();
+      // Context state is the single source of truth for runtime auth state
       dispatch(logout());
-      invalidateAuthPromise();
     },
     onError: () => {
       // Even if backend logout fails, we still want to clear local state
       removeTokens();
       dispatch(logout());
-      invalidateAuthPromise();
     },
   });
 };
@@ -148,9 +145,8 @@ export const useUpdateProfileImage = () => {
     onSuccess: (data) => {
       const updatedUser = data.user;
       // Update auth state with new user data
+      // Context state is the single source of truth for runtime auth state
       dispatch(setUserFromToken(updatedUser));
-      // Update the auth promise cache with new user
-      updateAuthPromise(updatedUser);
     },
     onError: () => {
       dispatch(authError());

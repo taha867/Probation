@@ -13,7 +13,6 @@ export const AUTH_ACTIONS = {
   RESET_PASSWORD_SUCCESS: "RESET_PASSWORD_SUCCESS",
 };
 
-// AUTH_STATUS removed - replaced by useTransition's isPending
 
 export const STORAGE_KEYS = {
   AUTH_TOKEN: "auth_token",
@@ -55,6 +54,16 @@ export const VALIDATION_MESSAGES = {
   // Comment validation messages
   COMMENT_TOO_SHORT: "Comment cannot be empty",
   COMMENT_TOO_LONG: "Comment must not exceed 2000 characters",
+
+  // Post validation messages
+  TITLE_REQUIRED: "Title is required",
+  TITLE_TOO_SHORT: "Title must be at least 3 characters",
+  TITLE_TOO_LONG: "Title must not exceed 200 characters",
+  CONTENT_REQUIRED: "Content is required",
+  CONTENT_TOO_SHORT: "Content must be at least 10 characters",
+  CONTENT_TOO_LONG: "Content must not exceed 10,000 characters",
+  SEARCH_TOO_LONG: "Search query must not exceed 100 characters",
+  STATUS_INVALID: "Status must be either draft or published",
 };
 
 // Toast Messages

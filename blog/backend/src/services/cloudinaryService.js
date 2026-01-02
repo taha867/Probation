@@ -1,7 +1,3 @@
-/**
- * Cloudinary Service - Handles Cloudinary business logic
- * Manages image uploads, deletions, and URL parsing
- */
 import { v2 as cloudinary } from "cloudinary";
 
 // Configure Cloudinary SDK

@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { getPostComments } from "../../services/commentService";
 
-
 export const postCommentsKeys = {
   all: ["postComments"],
   lists: () => [...postCommentsKeys.all, "list"],
@@ -35,4 +34,3 @@ export const usePostComments = (postId, page = 1, limit = 10) => {
     // It will refetch when data is stale, but not when fresh (within staleTime)
   });
 };
-
