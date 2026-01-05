@@ -18,11 +18,7 @@ export default (sequelize, DataTypes) => {
       }
       return attributes;
     }
-    /**
-     * Helper method for defining associations.
-     * This method is not a part of Sequelize lifecycle.
-     * The `models/index` file will call this method automatically.
-     */
+   
     static associate(models) {
       User.hasMany(models.Post, {
         foreignKey: "userId",
@@ -73,7 +69,7 @@ export default (sequelize, DataTypes) => {
       status: DataTypes.STRING,
       lastLoginAt: {
         type: DataTypes.DATE,
-        field: "last_login_at", // Map camelCase to snake_case database column
+        field: "last_login_at", 
       },
       tokenVersion: {
         type: DataTypes.INTEGER,

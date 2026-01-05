@@ -1,0 +1,55 @@
+import Joi from "joi";
+import { idParamSchema } from "./commonSchemas.js";
+
+export const createCommentSchema = Joi.object({
+  body: Joi.string()
+    .trim()
+    .min(1)
+    .max(2000)
+    .pattern(/^[^<>]*$/)
+    .required()
+    .messages({
+    "string.min": "Comment body must not be empty",
+      "string.max": "Comment body must not exceed 2000 characters",
+      "string.pattern.base": "Comment body contains invalid characters",
+    "any.required": "Comment body is required",
+  }),
+  postId: Joi.number().integer().positive().optional().messages({
+    "number.base": "Post ID must be a number",
+    "number.integer": "Post ID must be an integer",
+    "number.positive": "Post ID must be a positive number",
+  }),
+  parentId: Joi.number().integer().positive().optional().messages({
+    "number.base": "Parent ID must be a number",
+    "number.integer": "Parent ID must be an integer",
+    "number.positive": "Parent ID must be a positive number",
+  }),
+}).or("postId", "parentId").messages({
+  "object.missing": "Either postId or parentId is required",
+});
+
+export const updateCommentSchema = Joi.object({
+  body: Joi.string()
+    .trim()
+    .min(1)
+    .max(2000)
+    .pattern(/^[^<>]*$/)
+    .required()
+    .messages({
+    "string.min": "Comment body must not be empty",
+      "string.max": "Comment body must not exceed 2000 characters",
+      "string.pattern.base": "Comment body contains invalid characters",
+    "any.required": "Comment body is required",
+  }),
+});
+
+export const listCommentsQuerySchema = Joi.object({
+  postId: Joi.number().integer().positive().optional().messages({
+    "number.base": "Post ID must be a number",
+    "number.integer": "Post ID must be an integer",
+    "number.positive": "Post ID must be a positive number",
+  }),
+});
+
+export const commentIdParamSchema = idParamSchema("Comment ID");
+
