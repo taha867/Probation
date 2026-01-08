@@ -1,10 +1,26 @@
-import Joi from "joi";
+import Joi, { ObjectSchema } from "joi";
 import {
   baseEmailSchema,
   basePasswordSchema,
   basePhoneSchema,
   baseNameSchema,
 } from "./commonSchemas.js";
+import {
+  SignUpInput,
+  SignInInput,
+  ForgotPasswordInput,
+  ResetPasswordInput,
+  RefreshTokenInput,
+} from "../interfaces";
+
+
+export type {
+  SignUpInput,
+  SignInInput,
+  ForgotPasswordInput,
+  ResetPasswordInput,
+  RefreshTokenInput,
+};
 
 // Common validation patterns using shared base schemas
 const emailSchema = baseEmailSchema.required();
@@ -26,7 +42,7 @@ const nameSchema = baseNameSchema.required().messages({
 });
 
 // Auth validation schemas
-export const signUpSchema = Joi.object({
+export const signUpSchema: ObjectSchema<SignUpInput> = Joi.object({
   name: nameSchema,
   email: emailSchema,
   phone: phoneSchema,
@@ -40,22 +56,26 @@ export const signUpSchema = Joi.object({
     }),
 });
 
-export const signInSchema = Joi.object({
+export const signInSchema: ObjectSchema<SignInInput> = Joi.object({
   email: baseEmailSchema.optional(),
   phone: loginPhoneSchema,
   password: passwordSchema,
 }).or("email", "phone");
 
-export const forgotPasswordSchema = Joi.object({
-  email: emailSchema,
-});
+export const forgotPasswordSchema: ObjectSchema<ForgotPasswordInput> =
+  Joi.object({
+    email: emailSchema,
+  });
 
-export const resetPasswordSchema = Joi.object({
-  token: Joi.string().required(),
-  newPassword: passwordSchema,
-  confirmPassword: Joi.string().valid(Joi.ref("newPassword")).required(),
-});
+export const resetPasswordSchema: ObjectSchema<ResetPasswordInput> =
+  Joi.object({
+    token: Joi.string().required(),
+    newPassword: passwordSchema,
+    confirmPassword: Joi.string().valid(Joi.ref("newPassword")).required(),
+  });
 
-export const refreshTokenSchema = Joi.object({
-  refreshToken: Joi.string().required(),
-});
+export const refreshTokenSchema: ObjectSchema<RefreshTokenInput> =
+  Joi.object({
+    refreshToken: Joi.string().required(),
+  });
+

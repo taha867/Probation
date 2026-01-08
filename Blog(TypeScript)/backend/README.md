@@ -49,7 +49,7 @@ A production-ready RESTful API backend built with Node.js, Express, and Sequeliz
 
 ### Development Tools
 
-- **nodemon 3.1.11** - Auto-restart on file changes
+- **tsx 4.21.0** - TypeScript execution and watch mode for development
 - **sequelize-cli 6.6.3** - Database migrations and seeders
 
 ---

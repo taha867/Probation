@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
 dotenv.config();
-import express, { Express } from "express";
+import express, { Express } from "express"; // Express is an interface defined by @types/express
 import route from "./src/routes/index.js";
 import { initDb } from "./src/config/dbConfig.js";
 import cors from "cors";
@@ -8,7 +8,7 @@ import cors from "cors";
 // Type annotations added
 const app: Express = express();
 
-const App = async (): Promise<void> => {
+const App = async (): Promise<void> => { // async function does not return a value
   await initDb();
 
   // Enable CORS for your frontend

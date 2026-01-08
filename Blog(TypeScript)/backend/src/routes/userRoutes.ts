@@ -9,7 +9,7 @@ import {
 import { authenticateToken } from "../middleware/authMiddleware.js";
 import { handleImageUpload } from "../middleware/uploadMiddleware.js";
 
-const router = Router();
+const router: Router = Router();
 
 // All user-related read operations now require authentication
 router.get("/", authenticateToken, list);
@@ -20,3 +20,4 @@ router.put("/:id", authenticateToken, ...handleImageUpload, update);
 router.delete("/:id", authenticateToken, remove);
 
 export default router;
+

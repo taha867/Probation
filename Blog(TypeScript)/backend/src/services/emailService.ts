@@ -1,31 +1,55 @@
-import nodemailer from "nodemailer";
+import nodemailer, { Transporter, SendMailOptions } from "nodemailer";
+
+/**
+ * Email service response interface
+ * Returned after sending an email
+ */
+interface EmailSendResult {
+  success: boolean;
+  messageId?: string;
+}
 
 /**
  * Email Service for sending emails
  * Handles SMTP configuration and email templates
+ * Uses singleton pattern - single instance manages all email operations
  */
 class EmailService {
+  /**
+   * Nodemailer transporter instance
+   * Stores SMTP connection details and handles email sending
+   * Can be null if initialization fails
+   */
+  private transporter: Transporter | null = null;
+
+  /**
+   * Constructor initializes the email transporter
+   * Called when the singleton instance is created
+   */
   constructor() {
-    this.transporter = null; //store SMTP connection details
     this.initializeTransporter();
   }
 
   /**
    * Initialize nodemailer transporter with SMTP configuration
+   * Reads environment variables and sets up the email sending engine
+   * 
+   * @returns void - Sets this.transporter or leaves it null on failure
    */
-  initializeTransporter() {
+  private initializeTransporter(): void {
     try {
       // Validate required environment variables
-      const requiredEnvVars = [
+      const requiredEnvVars: string[] = [
         "EMAIL_HOST",
         "EMAIL_PORT",
         "EMAIL_USER",
         "EMAIL_PASS",
         "EMAIL_FROM",
       ];
-      //checks: If any variable is missing
-      const missingVars = requiredEnvVars.filter(
-        (varName) => !process.env[varName]
+
+      // Check if any variable is missing
+      const missingVars: string[] = requiredEnvVars.filter(
+        (varName: string) => !process.env[varName]
       );
 
       if (missingVars.length > 0) {
@@ -36,17 +60,17 @@ class EmailService {
         return;
       }
 
-      // This creates a mail sending engine.
+      // This creates a mail sending engine
       this.transporter = nodemailer.createTransport({
-        host: process.env.EMAIL_HOST,
-        port: parseInt(process.env.EMAIL_PORT),
+        host: process.env.EMAIL_HOST as string,
+        port: parseInt(process.env.EMAIL_PORT as string, 10),
         secure: process.env.EMAIL_SECURE === "true", // true for 465, false for other ports
         auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS,
+          user: process.env.EMAIL_USER as string,
+          pass: process.env.EMAIL_PASS as string,
         },
-        debug: true, // Enable debug output
-        logger: true, // Log to console
+        debug: false, // Disable verbose debug output (set to true only for troubleshooting)
+        logger: false, // Disable console logging (set to true only for troubleshooting)
       });
 
       console.log("Email transporter initialized successfully");
@@ -56,18 +80,25 @@ class EmailService {
         user: process.env.EMAIL_USER,
         from: process.env.EMAIL_FROM,
       });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Failed to initialize email transporter:", error);
     }
   }
 
   /**
    * Send password reset email
-   * @param {string} email - Recipient email address
-   * @param {string} resetToken - Password reset token
-   * @param {string} userName - User's name for personalization
+   * 
+   * @param email - Recipient email address
+   * @param resetToken - Password reset token (JWT)
+   * @param userName - User's name for personalization (defaults to "User")
+   * @returns Promise resolving to email send result
+   * @throws Error if transporter is not initialized or email sending fails
    */
-  async sendPasswordResetEmail(email, resetToken, userName = "User") {
+  async sendPasswordResetEmail(
+    email: string,
+    resetToken: string,
+    userName: string = "User"
+  ): Promise<EmailSendResult> {
     if (!this.transporter) {
       console.error(
         "Email transporter not initialized - check environment variables"
@@ -75,17 +106,17 @@ class EmailService {
       throw new Error("Email transporter not initialized");
     }
 
-    const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+    const resetLink: string = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
 
     // Generate reset link using environment variable
     console.log("Generated reset link:", resetLink);
 
-    const htmlTemplate = this.getPasswordResetTemplate(userName, resetLink);
+    const htmlTemplate: string = this.getPasswordResetTemplate(userName, resetLink);
 
-    const mailOptions = {
+    const mailOptions: SendMailOptions = {
       from: {
         name: "Blog App",
-        address: process.env.EMAIL_FROM,
+        address: process.env.EMAIL_FROM as string,
       },
       to: email,
       subject: "Reset Your Password - Blog App",
@@ -94,28 +125,30 @@ class EmailService {
     };
 
     try {
-      const info = this.transporter.sendMail(mailOptions);
+      const info = await this.transporter.sendMail(mailOptions);
       console.log("Password reset email sent successfully:", info.messageId);
       return { success: true, messageId: info.messageId };
-    } catch (error) {
-      console.error("Detailed email error:", {
-        message: error.message,
-        code: error.code,
-        command: error.command,
-        response: error.response,
-        responseCode: error.responseCode,
-      });
-      throw new Error(`Failed to send password reset email: ${error.message}`);
+    } catch (error: unknown) {
+      // Type guard: Check if error has expected properties
+      if (error instanceof Error) {
+        console.error("Detailed email error:", {
+          message: error.message,
+          name: error.name,
+        });
+        throw new Error(`Failed to send password reset email: ${error.message}`);
+      }
+      throw new Error("Failed to send password reset email: Unknown error");
     }
   }
 
   /**
    * Generate HTML template for password reset email
-   * @param {string} userName - User's name
-   * @param {string} resetLink - Password reset link
-   * @returns {string} HTML template
+   * 
+   * @param userName - User's name for personalization
+   * @param resetLink - Password reset link URL
+   * @returns HTML template string
    */
-  getPasswordResetTemplate(userName, resetLink) {
+  private getPasswordResetTemplate(userName: string, resetLink: string): string {
     return `
     <!DOCTYPE html>
 <html lang="en">
@@ -234,7 +267,7 @@ class EmailService {
               </div>
 
               <p>
-                If the button doesn’t work, copy and paste this link into your
+                If the button doesn't work, copy and paste this link into your
                 browser:
               </p>
 
@@ -290,3 +323,4 @@ class EmailService {
 
 // Export singleton instance
 export const emailService = new EmailService();
+

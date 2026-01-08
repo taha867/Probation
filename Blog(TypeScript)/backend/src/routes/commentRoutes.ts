@@ -8,12 +8,13 @@ import {
 } from "../controllers/commentController.js";
 import { authenticateToken } from "../middleware/authMiddleware.js";
 
-const router = Router();
+const router: Router = Router();
 
 router.post("/", authenticateToken, create);
-router.get("/",authenticateToken, list);
-router.get("/:id",authenticateToken, get);
+router.get("/", authenticateToken, list);
+router.get("/:id", authenticateToken, get);
 router.put("/:id", authenticateToken, update);
 router.delete("/:id", authenticateToken, remove);
 
 export default router;
+

@@ -12,7 +12,7 @@ import {
   loginRateLimiter,
 } from "../middleware/authMiddleware.js";
 
-const router = Router();
+const router: Router = Router();
 
 router.post("/register", signUp);
 router.post("/login", loginRateLimiter, signIn);
@@ -22,3 +22,4 @@ router.post("/resetPassword", resetPassword);
 router.post("/refreshToken", refreshToken);
 
 export default router;
+

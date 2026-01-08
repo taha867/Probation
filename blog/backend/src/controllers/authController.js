@@ -132,7 +132,11 @@ export async function signOut(req, res) {
       data: { message: LOGGED_OUT },
     });
   } catch (err) {
-    if (handleAppError(err, res, ERROR_MESSAGES)) return;
+    const appError = handleAppError(err, res, ERROR_MESSAGES);
+
+    if (appError) {
+      return appError;
+    }
 
     // eslint-disable-next-line no-console
     console.error(err);
