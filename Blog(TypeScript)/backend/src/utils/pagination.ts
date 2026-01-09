@@ -1,35 +1,30 @@
 import type {
   PaginationParams,
   PaginationMeta,
+  BaseQuery,
 } from "../interfaces/commonInterface.js";
-import type { ListUsersQuery } from "../interfaces/userInterface.js";
 
-/**
- * Pagination utility functions
- * Helper functions for calculating pagination parameters and metadata
- */
 
 /**
  * Calculates pagination offset from page and limit
- * Assumes page/limit are already validated and defaulted by Joi
+ * Joi validation ensures page and limit are always present (defaults applied)
+ * This function trusts Joi's validation and does NOT apply defaults
  * 
- * @param params - Pagination query parameters
- * @param params.page - Page number (1-indexed)
- * @param params.limit - Number of items per page
+ * @param params - Validated pagination query parameters (Joi guaranteed defaults)
+ * @param params.page - Page number (1-indexed, always present after Joi validation)
+ * @param params.limit - Number of items per page (always present after Joi validation)
  * @returns Calculated pagination parameters including offset
  */
 export const getPaginationParams = ({
-  page = 1,
-  limit = 20,
-}: ListUsersQuery = {}): PaginationParams => {
-  // Ensure page and limit are numbers (Joi validation should have converted them)
-  const pageNum = typeof page === "number" ? page : 1;
-  const limitNum = typeof limit === "number" ? limit : 20;
-
+  page,
+  limit,
+}: BaseQuery & { page: number; limit: number }): PaginationParams => {
+  // Joi validation already applied defaults and converted to numbers
+  // Trust validation - no need for additional defaults or type checks
   return {
-    page: pageNum,
-    limit: limitNum,
-    offset: (pageNum - 1) * limitNum,
+    page,
+    limit,
+    offset: (page - 1) * limit,
   };
 };
 

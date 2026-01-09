@@ -20,7 +20,6 @@ import {
   DeleteUserServiceInput,
   PublicUserProfile,
   BaseUserProfile,
-  UserModelData,
   UserImagePublicId,
 } from "../interfaces/userInterface.js";
 import type { ServiceResult } from "../interfaces/commonInterface.js";
@@ -106,25 +105,10 @@ export class UserService {
     });
 
     // Map Sequelize models to PublicUserProfile interface
-    // Reuses UserModelData type to avoid redundant type definitions
-    const userRows: PublicUserProfile[] = rows.map((user) => {
-      const {
-        id,
-        name,
-        email,
-        phone,
-        status,
-        image,
-      } = user.get() as UserModelData;
-      return {
-        id,
-        name,
-        email,
-        phone: phone ?? null,
-        status,
-        image: image ?? null,
-      };
-    });
+    // Since we fetch only public fields via attributes, we can use PublicUserProfile directly
+    const userRows: PublicUserProfile[] = rows.map((user) => 
+      user.get() as PublicUserProfile
+    );
 
     return {
       rows: userRows,
@@ -148,20 +132,8 @@ export class UserService {
       return null;
     }
 
-    // Reuses UserModelData type to avoid redundant type definitions
-    const {
-      id: userId,
-      name,
-      email,
-      image,
-    } = user.get() as UserModelData;
-
-    return {
-      id: userId,
-      name,
-      email,
-      image: image ?? null,
-    };
+    // Since we fetch only BaseUserProfile fields via attributes, we can use BaseUserProfile directly
+    return user.get() as BaseUserProfile;
   }
 
   /**
@@ -322,13 +294,9 @@ export class UserService {
         "blog/users",
         fileName || "profile-image"
       );
-      // Type assertion: Cloudinary returns secure_url and public_id
-      const cloudinaryResult = uploadResult as {
-        secure_url: string;
-        public_id: string;
-      };
-      updateData.image = cloudinaryResult.secure_url;
-      updateData.imagePublicId = cloudinaryResult.public_id;
+      // uploadResult is already CloudinaryUploadResult with secure_url and public_id
+      updateData.image = uploadResult.secure_url;
+      updateData.imagePublicId = uploadResult.public_id;
     } else if (data.image === null || data.image === "") {
       // Image explicitly removed: delete from Cloudinary and set to null in database
       // Reuses UserImagePublicId type to avoid redundant type definitions
@@ -343,28 +311,16 @@ export class UserService {
 
     await user.update(updateData);
 
-    // Extract updated user data
-    // Reuses UserModelData type to avoid redundant type definitions
-    // Note: Renamed variables to avoid conflicts with data destructuring above
-    const {
-      id: userId,
-      name: userName,
-      email: userEmail,
-      phone: userPhone,
-      status: userStatus,
-      image: userImage,
-    } = user.get() as UserModelData;
+    // Reload user with only public fields for response
+    // This ensures we return clean PublicUserProfile data
+    await user.reload({
+      attributes: ["id", "name", "email", "phone", "status", "image"],
+    });
 
+    // Since we fetch only public fields via attributes, we can use PublicUserProfile directly
     return {
       ok: true,
-      data: {
-        id: userId,
-        name: userName,
-        email: userEmail,
-        phone: userPhone ?? null,
-        image: userImage ?? null,
-        status: userStatus,
-      },
+      data: user.get() as PublicUserProfile,
     };
   }
 

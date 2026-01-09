@@ -20,8 +20,9 @@ import {
   BaseUserProfile,
   PublicUserProfile,
 } from "../interfaces/userInterface.js";
+import type { IdParam } from "../interfaces/index.js";
 
-const { INTERNAL_SERVER_ERROR, OK, NOT_FOUND } = HTTP_STATUS;
+const { INTERNAL_SERVER_ERROR, OK, NOT_FOUND, UNAUTHORIZED, BAD_REQUEST } = HTTP_STATUS;
 const {
   UNABLE_TO_FETCH_USERS,
   UNABLE_TO_FETCH_USER_POSTS,
@@ -29,18 +30,11 @@ const {
   UNABLE_TO_UPDATE_USER,
   UNABLE_TO_DELETE_USER,
   UNABLE_TO_FETCH_CURRENT_USER,
+  ACCESS_TOKEN_REQUIRED
 } = ERROR_MESSAGES;
-const { USER_UPDATED } = SUCCESS_MESSAGES;
+const { USER_UPDATED, USER_DELETED } = SUCCESS_MESSAGES;
 
 // Note: req.file is now available globally via express.d.ts augmentation
-
-/**
- * User ID parameter interface
- * Extracted from validated route parameters
- */
-interface UserIdParam {
-  id: number;
-}
 
 /**
  * Gets paginated list of all users
@@ -61,17 +55,19 @@ export async function list(req: Request, res: Response): Promise<void> {
   );
   if (!validatedQuery) return;
 
-  // Type guard: Ensure page and limit are numbers (Joi converts strings to numbers)
-  const page = validatedQuery.page ?? 1;
-  const limit = validatedQuery.limit ?? 20;
+  // Joi validation ensures page and limit are always present (defaults applied)
+  const { page, limit } = validatedQuery;
 
   try {
-    const result = await userService.listUsers({ page, limit });
-
+    const result = await userService.listUsers({
+      page: page!,   
+      limit: limit!, 
+    });
+    const { rows : users , meta } = result;
     res.status(OK).send({
       data: {
-        users: result.rows,
-        meta: result.meta,
+        users,
+        meta,
       },
     });
   } catch (error: unknown) {
@@ -97,8 +93,8 @@ export async function getCurrentUser(
 ): Promise<void> {
   // Type guard: Ensure user exists
   if (!req.user) {
-    res.status(HTTP_STATUS.UNAUTHORIZED).send({
-      data: { message: ERROR_MESSAGES.ACCESS_TOKEN_REQUIRED },
+    res.status(UNAUTHORIZED).send({
+      data: { message: ACCESS_TOKEN_REQUIRED },
     });
     return;
   }
@@ -149,7 +145,7 @@ export async function getUserPostsWithComment(
   req: Request,
   res: Response
 ): Promise<void> {
-  const validatedParams = validateRequest<UserIdParam>(
+  const validatedParams = validateRequest<IdParam>(
     userIdParamSchema,
     req.params,
     res,
@@ -169,16 +165,14 @@ export async function getUserPostsWithComment(
   );
   if (!validatedQuery) return;
 
-  // Type guard: Ensure page and limit are numbers
-  const page = validatedQuery.page ?? 1;
-  const limit = validatedQuery.limit ?? 10;
-  const { search } = validatedQuery;
+  // Joi validation ensures page and limit are always present (defaults applied)
+  const { page, limit, search } = validatedQuery;
 
   try {
     const result = await userService.getUserPostsWithComments({
       userId: requestedUserId,
-      page,
-      limit,
+      page: page!,   // Non-null assertion: Joi guaranteed default
+      limit: limit!, // Non-null assertion: Joi guaranteed default
       search,
     });
 
@@ -211,7 +205,7 @@ export async function getUserPostsWithComment(
  * @throws {500} If there's an error during the update process
  */
 export async function update(req: Request, res: Response): Promise<void> {
-  const validatedParams = validateRequest<UserIdParam>(
+  const validatedParams = validateRequest<IdParam>(
     userIdParamSchema,
     req.params,
     res,
@@ -225,8 +219,8 @@ export async function update(req: Request, res: Response): Promise<void> {
 
   // Type guard: Ensure user exists
   if (!req.user) {
-    res.status(HTTP_STATUS.UNAUTHORIZED).send({
-      data: { message: ERROR_MESSAGES.ACCESS_TOKEN_REQUIRED },
+    res.status(UNAUTHORIZED).send({
+      data: { message: ACCESS_TOKEN_REQUIRED },
     });
     return;
   }
@@ -234,38 +228,41 @@ export async function update(req: Request, res: Response): Promise<void> {
   const { id: authUser } = req.user;
 
   try {
-    // When only a file is uploaded via FormData, req.body might be empty
-    // We need to ensure validation passes by adding a placeholder field
-    // The validation schema will detect req.file and handle it appropriately
-    const bodyForValidation: Record<string, unknown> = { ...req.body };
-    if (req.file && !bodyForValidation.image) {
-      // File was uploaded but body doesn't have image field - add placeholder for validation
-      bodyForValidation.image = req.file.originalname;
-    }
-
+    // Validate request body (all fields optional)
     const validatedBody = validateRequest<UpdateUserInput>(
       updateUserSchema,
-      bodyForValidation,
-      res,
-      { context: { req } } // Passing req object as context
-      // The file is in req.file (from multer middleware)
-      // The validation payload only has { name, email, phone, ... }
-      // The validation needs to know if a file was uploaded
+      req.body,
+      res
     );
     if (!validatedBody) return;
 
-    // Remove the placeholder image field if it was added (service will handle the actual file)
-    if (req.file && validatedBody.image === req.file.originalname) {
-      delete validatedBody.image;
+    // Filter out undefined values - only include fields that were actually provided
+    // Keep null and empty string for image removal
+    const updateData: UpdateUserInput = Object.fromEntries(
+      Object.entries(validatedBody).filter(([_, value]) => value !== undefined)
+    ) as UpdateUserInput;
+
+    // Check if at least one field is being updated (body fields OR file upload)
+    const hasBodyFields = Object.keys(updateData).length > 0;
+    const hasFileUpload = req.file !== undefined;
+
+    if (!hasBodyFields && !hasFileUpload) {
+      res.status(BAD_REQUEST).send({
+        data: {
+          message: "At least one field must be provided to update",
+        },
+      });
+      return;
     }
 
+    // Extract file data (if uploaded)
     const fileBuffer = req.file ? req.file.buffer : null;
     const fileName = req.file ? req.file.originalname : null;
 
     const result = await userService.updateUserForSelf({
       requestedUserId,
       authUserId: authUser,
-      data: validatedBody,
+      data: updateData,
       fileBuffer,
       fileName,
     });
@@ -318,7 +315,7 @@ export async function update(req: Request, res: Response): Promise<void> {
  * @throws {500} If there's an error during the deletion process
  */
 export async function remove(req: Request, res: Response): Promise<void> {
-  const validatedParams = validateRequest<UserIdParam>(
+  const validatedParams = validateRequest<IdParam>(
     userIdParamSchema,
     req.params,
     res,
@@ -332,8 +329,8 @@ export async function remove(req: Request, res: Response): Promise<void> {
 
   // Type guard: Ensure user exists
   if (!req.user) {
-    res.status(HTTP_STATUS.UNAUTHORIZED).send({
-      data: { message: ERROR_MESSAGES.ACCESS_TOKEN_REQUIRED },
+    res.status(UNAUTHORIZED).send({
+      data: { message: ACCESS_TOKEN_REQUIRED },
     });
     return;
   }
@@ -346,8 +343,8 @@ export async function remove(req: Request, res: Response): Promise<void> {
       authUserId: authUser,
     });
 
-    res.status(HTTP_STATUS.OK).send({
-      data: { message: SUCCESS_MESSAGES.USER_DELETED },
+    res.status(OK).send({
+      data: { message: USER_DELETED },
     });
   } catch (err: unknown) {
     if (handleAppError(err, res, ERROR_MESSAGES)) return;

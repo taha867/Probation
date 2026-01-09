@@ -16,8 +16,9 @@ import {
 } from "../validations/commentValidation.js";
 import { commentService } from "../services/commentService.js";
 import { handleAppError } from "../utils/errors.js";
+import type { IdParam } from "../interfaces/index.js";
 
-const { INTERNAL_SERVER_ERROR, OK, NOT_FOUND, CREATED } = HTTP_STATUS;
+const { INTERNAL_SERVER_ERROR, OK, NOT_FOUND, CREATED, UNAUTHORIZED } = HTTP_STATUS;
 const {
   UNABLE_TO_CREATE_COMMENT,
   UNABLE_TO_FETCH_COMMENT,
@@ -25,20 +26,13 @@ const {
   UNABLE_TO_UPDATE_COMMENT,
   UNABLE_TO_FETCH_COMMENTS,
   COMMENT_NOT_FOUND,
+  ACCESS_TOKEN_REQUIRED
 } = ERROR_MESSAGES;
 const {
   COMMENT_CREATED,
   COMMENT_UPDATED,
   COMMENT_DELETED,
 } = SUCCESS_MESSAGES;
-
-/**
- * Comment ID parameter interface
- * Extracted from validated route parameters
- */
-interface CommentIdParam {
-  id: number;
-}
 
 /**
  * Creates a new comment or reply to an existing comment
@@ -53,8 +47,8 @@ interface CommentIdParam {
 export async function create(req: Request, res: Response): Promise<void> {
   // Type guard: Ensure user exists
   if (!req.user) {
-    res.status(HTTP_STATUS.UNAUTHORIZED).send({
-      data: { message: ERROR_MESSAGES.ACCESS_TOKEN_REQUIRED },
+    res.status(UNAUTHORIZED).send({
+      data: { message: ACCESS_TOKEN_REQUIRED },
     });
     return;
   }
@@ -138,7 +132,7 @@ export async function list(req: Request, res: Response): Promise<void> {
  */
 export async function get(req: Request, res: Response): Promise<void> {
   try {
-    const validatedParams = validateRequest<CommentIdParam>(
+    const validatedParams = validateRequest<IdParam>(
       commentIdParamSchema,
       req.params,
       res,
@@ -181,13 +175,13 @@ export async function update(req: Request, res: Response): Promise<void> {
   try {
     // Type guard: Ensure user exists
     if (!req.user) {
-      res.status(HTTP_STATUS.UNAUTHORIZED).send({
-        data: { message: ERROR_MESSAGES.ACCESS_TOKEN_REQUIRED },
+      res.status(UNAUTHORIZED).send({
+        data: { message: ACCESS_TOKEN_REQUIRED },
       });
       return;
     }
 
-    const validatedParams = validateRequest<CommentIdParam>(
+    const validatedParams = validateRequest<IdParam>(
       commentIdParamSchema,
       req.params,
       res,
@@ -246,13 +240,13 @@ export async function remove(req: Request, res: Response): Promise<void> {
   try {
     // Type guard: Ensure user exists
     if (!req.user) {
-      res.status(HTTP_STATUS.UNAUTHORIZED).send({
-        data: { message: ERROR_MESSAGES.ACCESS_TOKEN_REQUIRED },
+      res.status(UNAUTHORIZED).send({
+        data: { message: ACCESS_TOKEN_REQUIRED },
       });
       return;
     }
 
-    const validatedParams = validateRequest<CommentIdParam>(
+    const validatedParams = validateRequest<IdParam>(
       commentIdParamSchema,
       req.params,
       res,

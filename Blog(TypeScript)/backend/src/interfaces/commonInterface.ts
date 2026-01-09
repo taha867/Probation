@@ -79,6 +79,41 @@ export interface BaseQuery {
 }
 
 /**
+ * ID parameter interface
+ * Common interface for validated route ID parameters
+ * Used across all controllers for type-safe parameter extraction
+ * 
+ * @example
+ * // In controller:
+ * const validatedParams = validateRequest<IdParam>(
+ *   idParamSchema("User ID"),
+ *   req.params,
+ *   res
+ * );
+ * const { id } = validatedParams; // TypeScript knows id is number
+ */
+export interface IdParam {
+  id: number;
+}
+
+/**
+ * Post ID parameter interface for comments endpoint
+ * Used when route parameter is named "postId" instead of "id"
+ * 
+ * @example
+ * // Route: /posts/:postId/comments
+ * const validatedParams = validateRequest<PostIdParam>(
+ *   postIdParamForCommentsSchema,
+ *   req.params,
+ *   res
+ * );
+ * const { postId } = validatedParams; // TypeScript knows postId is number
+ */
+export interface PostIdParam {
+  postId: number;
+}
+
+/**
  * Searchable query parameters DTO
  * Extends BaseQuery with search capability
  * Used for endpoints that support text search functionality

@@ -1,47 +1,10 @@
 import { v2 as cloudinary } from "cloudinary";
-
-/**
- * Cloudinary upload API response interface
- * Structure returned after successful image upload from Cloudinary
- */
-interface UploadApiResponse {
-  secure_url: string;
-  public_id: string;
-  url?: string;
-  width?: number;
-  height?: number;
-  format?: string;
-  resource_type?: string;
-  [key: string]: unknown; // Allow additional properties
-}
-
-/**
- * Cloudinary upload API error response interface
- * Structure returned when upload fails
- */
-interface UploadApiErrorResponse extends Error {
-  http_code?: number;
-  message: string;
-  name: string;
-}
-
-/**
- * Cloudinary upload result interface
- * Simplified structure returned after successful image upload
- * Used as return type for our service functions
- */
-export interface CloudinaryUploadResult {
-  secure_url: string;
-  public_id: string;
-}
-
-/**
- * Cloudinary deletion result interface
- * Structure returned after image deletion
- */
-export interface CloudinaryDeletionResult {
-  result: string; // "ok" | "not found"
-}
+import type {
+  CloudinaryUploadApiResponse,
+  CloudinaryUploadApiError,
+  CloudinaryUploadResult,
+  CloudinaryDeletionResult,
+} from "../interfaces/cloudinaryInterface.js";
 
 // Configure Cloudinary SDK
 cloudinary.config({
@@ -55,12 +18,6 @@ cloudinary.config({
  * 
  * @param publicId - The public_id of the image to delete
  * @returns Promise resolving to deletion result or null if deletion fails
- * 
- * @example
- * const result = await deleteImageFromCloudinary("blog/users/1234567890_profile.jpg");
- * if (result) {
- *   console.log("Image deleted:", result.result);
- * }
  */
 export const deleteImageFromCloudinary = async (
   publicId: string | null | undefined
@@ -83,12 +40,6 @@ export const deleteImageFromCloudinary = async (
  * 
  * @param url - Cloudinary image URL
  * @returns Public ID string or null if extraction fails
- * 
- * @example
- * const publicId = extractPublicIdFromUrl(
- *   "https://res.cloudinary.com/demo/image/upload/v1234567890/blog/users/profile.jpg"
- * );
- * // Returns: "blog/users/profile"
  */
 export const extractPublicIdFromUrl = (url: string | null | undefined): string | null => {
   if (!url) return null;
@@ -114,10 +65,6 @@ export const extractPublicIdFromUrl = (url: string | null | undefined): string |
  * 
  * @param folder - Folder name to sanitize
  * @returns Sanitized folder name
- * 
- * @example
- * sanitizeFolder("blog/users") // Returns: "blog/users"
- * sanitizeFolder("blog/../users") // Returns: "blogusers" (removes invalid chars)
  */
 const sanitizeFolder = (folder: string = "blog"): string => {
   return folder.replace(/[^a-zA-Z0-9/_-]/g, "");
@@ -132,15 +79,7 @@ const sanitizeFolder = (folder: string = "blog"): string => {
  * @param originalName - Original filename (optional, default: 'image')
  * @returns Promise resolving to upload result with secure_url and public_id
  * @throws Error if upload fails
- * 
- * @example
- * const result = await uploadImageToCloudinary(
- *   fileBuffer,
- *   "blog/users",
- *   "profile.jpg"
- * );
- * // Returns: { secure_url: "https://...", public_id: "blog/users/1234567890_profile" }
- */
+*/
 export const uploadImageToCloudinary = async (
   fileBuffer: Buffer,
   folder: string = "blog",
@@ -161,7 +100,7 @@ export const uploadImageToCloudinary = async (
           resource_type: "image",
           public_id: publicId.split(".")[0], // Remove extension if present
         },
-        (error: UploadApiErrorResponse | undefined, result: UploadApiResponse | undefined) => {
+        (error: CloudinaryUploadApiError | undefined, result: CloudinaryUploadApiResponse | undefined) => {
           if (error) {
             console.error("Cloudinary upload error:", error);
             reject(error);

@@ -12,14 +12,84 @@ import {
   ListCommentsServiceResult,
   CommentWithAuthor,
   CommentWithRelations,
-  CommentModelData,
   CommentUserId,
   CommentPostId,
 } from "../interfaces/commentInterface.js";
 import type { ServiceResult } from "../interfaces/commonInterface.js";
+import type { BaseUserProfile } from "../interfaces/userInterface.js";
 import { DatabaseModels } from "../models/index.js";
 
-const { NOT_FOUND, FORBIDDEN } = HTTP_STATUS;
+const { NOT_FOUND, FORBIDDEN, INTERNAL_SERVER_ERROR, BAD_REQUEST } = HTTP_STATUS;
+
+/**
+ * Author attributes for Sequelize includes
+ * Reusable constant to avoid duplication across all comment queries
+ */
+const AUTHOR_ATTRIBUTES = ["id", "name", "email", "image"];
+
+/**
+ * Post attributes for Sequelize includes
+ * Reusable constant for post information in comments
+ */
+const POST_ATTRIBUTES = ["id", "title"];
+
+/**
+ * Comment attributes for Sequelize queries
+ * Fields needed for CommentWithAuthor and CommentWithRelations interfaces
+ */
+const COMMENT_ATTRIBUTES = [
+  "id",
+  "body",
+  "postId",
+  "userId",
+  "parentId",
+  "createdAt",
+  "updatedAt",
+];
+
+/**
+ * Maps Sequelize author data to BaseUserProfile
+ * Helper function to avoid duplication and ensure consistency
+ *
+ * @param authorData - Author data from Sequelize include (can be null/undefined)
+ * @returns BaseUserProfile object
+ */
+const mapAuthorData = (authorData: any): BaseUserProfile => {
+  // Sequelize includes guarantee author exists when configured correctly
+  // This fallback should rarely be needed, but provides safety
+  if (!authorData) {
+    throw new Error(
+      "Author data missing - Sequelize include may be misconfigured"
+    );
+  }
+  const { id, name, email, image } = authorData;
+  return {
+    id,
+    name,
+    email,
+    image: image || null,
+  };
+};
+
+/**
+ * Maps Sequelize post data to post object
+ * Helper function to avoid duplication and ensure consistency
+ *
+ * @param postData - Post data from Sequelize include (can be null/undefined)
+ * @returns Post object with id and title
+ */
+const mapPostData = (postData: any): { id: number; title: string } => {
+  if (!postData) {
+    throw new Error(
+      "Post data missing - Sequelize include may be misconfigured"
+    );
+  }
+  const { id, title } = postData;
+  return {
+    id,
+    title,
+  };
+};
 
 /**
  * Sequelize model types
@@ -64,28 +134,8 @@ export class CommentService {
   private User: UserModel;
 
   /**
-   * Include configuration for author
-   * Reusable include configuration for fetching comment author
-   */
-  private includeAuthor: {
-    model: UserModel;
-    as: "author";
-    attributes: string[];
-  };
-
-  /**
-   * Include configuration for post
-   * Reusable include configuration for fetching comment post
-   */
-  private includePost: {
-    model: PostModel;
-    as: "post";
-    attributes: string[];
-  };
-
-  /**
    * Constructor initializes the service with database models
-   * 
+   *
    * @param models - Database models object containing all Sequelize models
    */
   constructor(models: DatabaseModels) {
@@ -93,18 +143,6 @@ export class CommentService {
     this.Comment = models.Comment as CommentModel;
     this.Post = models.Post as PostModel;
     this.User = models.User as UserModel;
-
-    this.includeAuthor = {
-      model: this.User,
-      as: "author",
-      attributes: ["id", "name", "email"],
-    };
-
-    this.includePost = {
-      model: this.Post,
-      as: "post",
-      attributes: ["id", "title"],
-    };
   }
 
   /**
@@ -137,7 +175,7 @@ export class CommentService {
     } else {
       // This is a top-level comment
       if (!postId) {
-        throw new AppError("POST_ID_REQUIRED", HTTP_STATUS.BAD_REQUEST);
+        throw new AppError("POST_ID_REQUIRED", BAD_REQUEST);
       }
       const post = await this.Post.findByPk(postId);
       if (!post) {
@@ -156,18 +194,29 @@ export class CommentService {
     const createdComment = await this.Comment.findByPk(
       comment.get("id") as number,
       {
-        include: [this.includeAuthor, this.includePost],
+        attributes: COMMENT_ATTRIBUTES,
+        include: [
+          {
+            model: this.User,
+            as: "author",
+            attributes: AUTHOR_ATTRIBUTES,
+          },
+          {
+            model: this.Post,
+            as: "post",
+            attributes: POST_ATTRIBUTES,
+          },
+        ],
       }
     );
 
     if (!createdComment) {
-      throw new AppError("COMMENT_CREATION_FAILED", HTTP_STATUS.INTERNAL_SERVER_ERROR);
+      throw new AppError("COMMENT_CREATION_FAILED", INTERNAL_SERVER_ERROR);
     }
 
     // Map to CommentWithRelations interface
-    // Reuses CommentModelData type to avoid redundant type definitions
-    // Note: Renamed variables to avoid conflicts with data destructuring above
-    const commentData = createdComment.toJSON ? createdComment.toJSON() : createdComment;
+    // Since we fetch only needed fields via attributes, we can map directly
+    const commentData = createdComment.toJSON ? createdComment.toJSON() : createdComment.get();
     const {
       id: commentId,
       body: commentBody,
@@ -176,8 +225,10 @@ export class CommentService {
       parentId: commentParentId,
       createdAt,
       updatedAt,
-    } = createdComment.get() as CommentModelData;
-    
+    } = commentData;
+    const authorData = (commentData as any).author;
+    const postData = (commentData as any).post;
+
     const commentResult: CommentWithRelations = {
       id: commentId,
       body: commentBody,
@@ -186,16 +237,8 @@ export class CommentService {
       parentId: commentParentId ?? null,
       createdAt,
       updatedAt,
-      author: {
-        id: (commentData as any).author?.id || 0,
-        name: (commentData as any).author?.name || "",
-        email: (commentData as any).author?.email || "",
-        image: (commentData as any).author?.image || null,
-      },
-      post: {
-        id: (commentData as any).post?.id || 0,
-        title: (commentData as any).post?.title || "",
-      },
+      author: mapAuthorData(authorData),
+      post: mapPostData(postData),
     };
 
     return {
@@ -223,37 +266,46 @@ export class CommentService {
 
     const comments = await this.Comment.findAll({
       where,
-      include: [this.includeAuthor, this.includePost],
+      attributes: COMMENT_ATTRIBUTES,
+      include: [
+        {
+          model: this.User,
+          as: "author",
+          attributes: AUTHOR_ATTRIBUTES,
+        },
+        {
+          model: this.Post,
+          as: "post",
+          attributes: POST_ATTRIBUTES,
+        },
+      ],
       order: [["createdAt", "DESC"]],
     });
 
     // Map Sequelize models to CommentWithAuthor interface
-    // Reuses CommentModelData type to avoid redundant type definitions
+    // Since we fetch only needed fields via attributes, we can map directly
     const commentRows: CommentWithAuthor[] = comments.map((comment) => {
-      const commentData = comment.toJSON ? comment.toJSON() : comment;
+      const commentData = comment.toJSON ? comment.toJSON() : comment.get();
       const {
         id,
-        body,
-        postId,
+        body: commentBody,
+        postId: commentPostId,
         userId,
         parentId,
         createdAt,
         updatedAt,
-      } = comment.get() as CommentModelData;
+      } = commentData;
+      const authorData = (commentData as any).author;
+
       return {
         id,
-        body,
-        postId,
+        body: commentBody,
+        postId: commentPostId,
         userId,
         parentId: parentId ?? null,
         createdAt,
         updatedAt,
-        author: {
-          id: (commentData as any).author?.id || 0,
-          name: (commentData as any).author?.name || "",
-          email: (commentData as any).author?.email || "",
-          image: (commentData as any).author?.image || null,
-        },
+        author: mapAuthorData(authorData),
       };
     });
 
@@ -269,7 +321,19 @@ export class CommentService {
   async findCommentWithRelations(id: number): Promise<CommentWithRelations | null> {
     // Load the main comment with its author and post
     const comment = await this.Comment.findByPk(id, {
-      include: [this.includeAuthor, this.includePost],
+      attributes: COMMENT_ATTRIBUTES,
+      include: [
+        {
+          model: this.User,
+          as: "author",
+          attributes: AUTHOR_ATTRIBUTES,
+        },
+        {
+          model: this.Post,
+          as: "post",
+          attributes: POST_ATTRIBUTES,
+        },
+      ],
     });
 
     if (!comment) {
@@ -279,72 +343,53 @@ export class CommentService {
     // Load replies for this comment (if any), including their authors
     const replies = await this.Comment.findAll({
       where: { parentId: id },
-      include: [this.includeAuthor],
+      attributes: COMMENT_ATTRIBUTES,
+      include: [
+        {
+          model: this.User,
+          as: "author",
+          attributes: AUTHOR_ATTRIBUTES,
+        },
+      ],
       order: [["createdAt", "ASC"]],
     });
 
     // Map replies to CommentWithAuthor interface
-    // Reuses CommentModelData type to avoid redundant type definitions
+    // Since we fetch only needed fields via attributes, we can map directly
     const replyRows: CommentWithAuthor[] = replies.map((reply) => {
-      const replyData = reply.toJSON ? reply.toJSON() : reply;
-      const {
-        id: replyId,
-        body: replyBody,
-        postId: replyPostId,
-        userId: replyUserId,
-        parentId: replyParentId,
-        createdAt,
-        updatedAt,
-      } = reply.get() as CommentModelData;
+      const replyData = reply.toJSON ? reply.toJSON() : reply.get();
+      const { id: replyId, body, postId, userId, parentId, createdAt, updatedAt } = replyData;
+      const authorData = (replyData as any).author;
+
       return {
         id: replyId,
-        body: replyBody,
-        postId: replyPostId,
-        userId: replyUserId,
-        parentId: replyParentId ?? null,
+        body,
+        postId,
+        userId,
+        parentId: parentId ?? null,
         createdAt,
         updatedAt,
-        author: {
-          id: (replyData as any).author?.id || 0,
-          name: (replyData as any).author?.name || "",
-          email: (replyData as any).author?.email || "",
-          image: (replyData as any).author?.image || null,
-        },
+        author: mapAuthorData(authorData),
       };
     });
 
     // Map main comment to CommentWithRelations interface
-    // Reuses CommentModelData type to avoid redundant type definitions
-    // Note: Renamed id to commentId to avoid conflict with function parameter
-    const commentData = comment.toJSON ? comment.toJSON() : comment;
-    const {
-      id: commentId,
-      body: commentBody,
-      postId: commentPostId,
-      userId: commentUserId,
-      parentId: commentParentId,
-      createdAt,
-      updatedAt,
-    } = comment.get() as CommentModelData;
-    
+    // Since we fetch only needed fields via attributes, we can map directly
+    const commentData = comment.toJSON ? comment.toJSON() : comment.get();
+    const { id: commentId, body, postId, userId, parentId, createdAt, updatedAt } = commentData;
+    const authorData = (commentData as any).author;
+    const postData = (commentData as any).post;
+
     const commentResult: CommentWithRelations = {
       id: commentId,
-      body: commentBody,
-      postId: commentPostId,
-      userId: commentUserId,
-      parentId: commentParentId ?? null,
+      body,
+      postId,
+      userId,
+      parentId: parentId ?? null,
       createdAt,
       updatedAt,
-      author: {
-        id: (commentData as any).author?.id || 0,
-        name: (commentData as any).author?.name || "",
-        email: (commentData as any).author?.email || "",
-        image: (commentData as any).author?.image || null,
-      },
-      post: {
-        id: (commentData as any).post?.id || 0,
-        title: (commentData as any).post?.title || "",
-      },
+      author: mapAuthorData(authorData),
+      post: mapPostData(postData),
       replies: replyRows,
     };
 
@@ -382,7 +427,7 @@ export class CommentService {
     const updated = await this.findCommentWithRelations(commentId);
     
     if (!updated) {
-      throw new AppError("COMMENT_UPDATE_FAILED", HTTP_STATUS.INTERNAL_SERVER_ERROR);
+      throw new AppError("COMMENT_UPDATE_FAILED", INTERNAL_SERVER_ERROR);
     }
 
     return {

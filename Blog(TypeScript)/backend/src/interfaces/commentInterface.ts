@@ -119,13 +119,6 @@ export interface DeleteCommentServiceInput
 }
 
 /**
- * Get comment service result
- * Result from findCommentWithRelations service method
- * Uses ServiceResult<T> DTO for consistency
- */
-export type GetCommentServiceResult = ServiceResult<CommentWithRelations | null>;
-
-/**
  * List comments service input
  * Input parameters for listTopLevelComments service method
  */

@@ -132,13 +132,6 @@ export interface DeletePostServiceInput
 }
 
 /**
- * Get post with author service result
- * Result from findPostWithAuthor service method
- * Uses ServiceResult<T> DTO for consistency
- */
-export type GetPostServiceResult = ServiceResult<PostWithAuthor | null>;
-
-/**
  * Get post comments service input
  * Input parameters for getPostWithComments service method
  * 

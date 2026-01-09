@@ -10,6 +10,8 @@ export type {
   BaseUpdateWithFileInput,
   PaginationParams,
   PaginationMeta,
+  IdParam,
+  PostIdParam,
 } from "./commonInterface.ts";
 
 // Auth interfaces
@@ -22,11 +24,8 @@ export type {
   ResetPasswordInput,
   RefreshTokenInput,
   AuthenticationResult,
-  AuthenticationResultData,
   TokenRefreshResult,
-  TokenRefreshResultData,
   PasswordResetTokenResult,
-  PasswordResetTokenResultData,
 } from "./authInterface.ts";
 
 // User interfaces
@@ -38,7 +37,6 @@ export type {
   UserIdEmailToken,
   UserIdAndName,
   UserImagePublicId,
-  UserModelData,
   UpdateUserInput,
   ListUsersQuery,
   GetUserPostsQuery,
@@ -66,7 +64,6 @@ export type {
   UpdatePostServiceInput,
   UpdatePostServiceResult,
   DeletePostServiceInput,
-  GetPostServiceResult,
   GetPostCommentsServiceInput,
   GetPostCommentsServiceResult,
 } from "./postInterface.ts";
@@ -87,8 +84,13 @@ export type {
   UpdateCommentServiceInput,
   UpdateCommentServiceResult,
   DeleteCommentServiceInput,
-  GetCommentServiceResult,
   ListCommentsServiceInput,
   ListCommentsServiceResult,
 } from "./commentInterface.ts";
+
+// Cloudinary interfaces
+export type {
+  CloudinaryUploadResult,
+  CloudinaryDeletionResult,
+} from "./cloudinaryInterface.ts";
 

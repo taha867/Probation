@@ -6,29 +6,35 @@ import { AppError } from "../utils/errors.js";
 import { signToken, verifyToken } from "../utils/jwt.js";
 import { comparePassword } from "../utils/bcrypt.js";
 import { emailService } from "./emailService.js";
-import {
+// All interfaces imported from barrel export (index.ts)
+import type {
+  // Common interfaces
+  ServiceResult,
+  // Auth interfaces
   AuthenticationResult,
   TokenRefreshResult,
   AccessRefreshTokenPayload,
   SignUpInput,
   SignInInput,
   PasswordResetTokenResult,
-} from "../interfaces/authInterface.js";
-import type { ServiceResult } from "../interfaces/commonInterface.js";
-import type {
+  // User interfaces
   AuthUserData,
   UserTokenVersion,
   UserIdEmailToken,
   UserIdAndName,
-} from "../interfaces/userInterface.js";
+} from "../interfaces/index.js";
 import { DatabaseModels } from "../models/index.js";
 
 const { UNPROCESSABLE_ENTITY, UNAUTHORIZED, NOT_FOUND } = HTTP_STATUS;
 const { LOGGED_IN, LOGGED_OUT } = USER_STATUS;
 
 /**
- * User model type
- * Extracted from DatabaseModels for type safety
+ * in sequelize Models are loaded dynamically at runtime,
+ * TypeScript doesn't know:
+-> That models.User exists
+-> What methods models.User has
+-> The return types of those methods
+          create a type that describes the methods used
  */
 type UserModel = ModelStatic<Model<any, any>> & {
   findOne: (options?: any) => Promise<Model<any, any> | null>;

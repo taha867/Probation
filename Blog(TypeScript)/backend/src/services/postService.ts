@@ -23,15 +23,59 @@ import {
   GetPostCommentsServiceResult,
   PostWithAuthor,
   BasePost,
-  PostModelData,
   PostUserId,
   PostImagePublicId,
 } from "../interfaces/postInterface.js";
 import type { ServiceResult } from "../interfaces/commonInterface.js";
+import type { BaseUserProfile } from "../interfaces/userInterface.js";
 import { DatabaseModels } from "../models/index.js";
 import type { PostStatus } from "../models/post.js";
 
-const { NOT_FOUND, FORBIDDEN } = HTTP_STATUS;
+const { NOT_FOUND, FORBIDDEN, INTERNAL_SERVER_ERROR } = HTTP_STATUS;
+
+/**
+ * Author attributes for Sequelize includes
+ * Reusable constant to avoid duplication across all post queries
+ */
+const AUTHOR_ATTRIBUTES = ["id", "name", "email", "image"];
+
+/**
+ * Post attributes for Sequelize queries
+ * Fields needed for PostWithAuthor interface
+ */
+const POST_ATTRIBUTES = [
+  "id",
+  "title",
+  "body",
+  "userId",
+  "status",
+  "image",
+  "imagePublicId",
+];
+
+/**
+ * Maps Sequelize author data to BaseUserProfile
+ * Helper function to avoid duplication and ensure consistency
+ *
+ * @param authorData - Author data from Sequelize include (can be null/undefined)
+ * @returns BaseUserProfile object
+ */
+const mapAuthorData = (authorData: any): BaseUserProfile => {
+  // Sequelize includes guarantee author exists when configured correctly
+  // This fallback should rarely be needed, but provides safety
+  if (!authorData) {
+    throw new Error(
+      "Author data missing - Sequelize include may be misconfigured"
+    );
+  }
+const{id, name, email, image}=authorData;
+  return {
+    id,
+    name,
+    email,
+    image: image || null,
+  };
+};
 
 /**
  * Sequelize model types
@@ -40,11 +84,15 @@ const { NOT_FOUND, FORBIDDEN } = HTTP_STATUS;
 type PostModel = ModelStatic<Model<any, any>> & {
   create: (values: any) => Promise<Model<any, any>>;
   findByPk: (id: number) => Promise<Model<any, any> | null>;
-  findAndCountAll: (options?: any) => Promise<{ rows: Model<any, any>[]; count: number }>;
+  findAndCountAll: (
+    options?: any
+  ) => Promise<{ rows: Model<any, any>[]; count: number }>;
 };
 
 type CommentModel = ModelStatic<Model<any, any>> & {
-  findAndCountAll: (options?: any) => Promise<{ rows: Model<any, any>[]; count: number }>;
+  findAndCountAll: (
+    options?: any
+  ) => Promise<{ rows: Model<any, any>[]; count: number }>;
 };
 
 type UserModel = ModelStatic<Model<any, any>> & {
@@ -77,7 +125,7 @@ export class PostService {
 
   /**
    * Constructor initializes the service with database models
-   * 
+   *
    * @param models - Database models object containing all Sequelize models
    */
   constructor(models: DatabaseModels) {
@@ -89,7 +137,7 @@ export class PostService {
 
   /**
    * Create a new post
-   * 
+   *
    * @param params - Create parameters
    * @param params.userId - ID of user creating the post
    * @param params.data - Post data (title, body, status)
@@ -101,11 +149,11 @@ export class PostService {
     params: CreatePostServiceInput
   ): Promise<CreatePostServiceResult> {
     const { authUserId, data, image, imagePublicId } = params;
-
+    const { title, body, status } = data;
     const createdPost = await this.Post.create({
-      title: data.title,
-      body: data.body,
-      status: data.status || "draft",
+      title,
+      body,
+      status: status || "draft",
       userId: authUserId,
       image: image || null,
       imagePublicId: imagePublicId || null,
@@ -113,9 +161,9 @@ export class PostService {
 
     // Fetch post with author for response
     const post = await this.findPostWithAuthor(createdPost.get("id") as number);
-    
+
     if (!post) {
-      throw new AppError("POST_CREATION_FAILED", HTTP_STATUS.INTERNAL_SERVER_ERROR);
+      throw new AppError("POST_CREATION_FAILED", INTERNAL_SERVER_ERROR);
     }
 
     return {
@@ -126,7 +174,7 @@ export class PostService {
 
   /**
    * Get paginated list of posts with optional filtering
-   * 
+   *
    * @param params - Query parameters
    * @param params.page - Page number (1-indexed)
    * @param params.limit - Number of posts per page
@@ -136,9 +184,14 @@ export class PostService {
    * @returns Promise resolving to paginated post list
    */
   async listPosts(params: ListPostsQuery): Promise<ListPostsResult> {
-    const { page = 1, limit = 10, search, userId, status } = params;
-    const { offset } = getPaginationParams({ page, limit });
+    // Controllers guarantee page and limit exist (Joi validation applies defaults)
+    const { page, limit, search, userId, status } = params;
+    // Non-null assertions: Joi validation ensures these are always present
+    const pageNum = page!;
+    const limitNum = limit!;
+    const { offset } = getPaginationParams({ page: pageNum, limit: limitNum });
 
+    // where is an object Sequelize uses to filter records
     const where: Record<string, any> = {};
     if (userId) {
       where.userId = userId;
@@ -155,31 +208,26 @@ export class PostService {
 
     const { rows, count } = await this.Post.findAndCountAll({
       where,
+      attributes: POST_ATTRIBUTES,
       include: [
         {
           model: this.User,
           as: "author",
-          attributes: ["id", "name", "email", "image"],
+          attributes: AUTHOR_ATTRIBUTES,
         },
       ],
       order: [["createdAt", "DESC"]],
-      limit,
+      limit: limitNum,
       offset,
     });
 
     // Map Sequelize models to PostWithAuthor interface
-    // Reuses PostModelData type to avoid redundant type definitions
+    // Since we fetch only needed fields via attributes, we can map directly
     const postRows: PostWithAuthor[] = rows.map((post) => {
-      const authorData = (post.get("author") as any) || null;
-      const {
-        id,
-        title,
-        body,
-        userId,
-        status,
-        image,
-        imagePublicId,
-      } = post.get() as PostModelData;
+      const postData = post.toJSON ? post.toJSON() : post.get();
+      const { id, title, body, userId, status, image, imagePublicId } = postData;
+      const authorData = (postData as any).author;
+
       return {
         id,
         title,
@@ -188,41 +236,34 @@ export class PostService {
         status: status as PostStatus,
         image: image ?? null,
         imagePublicId: imagePublicId ?? null,
-        author: authorData
-          ? {
-              id: authorData.id,
-              name: authorData.name,
-              email: authorData.email,
-              image: authorData.image || null,
-            }
-          : {
-              id: 0,
-              name: "",
-              email: "",
-              image: null,
-            },
+        author: mapAuthorData(authorData),
       };
     });
 
     return {
       rows: postRows,
-      meta: buildPaginationMeta({ total: count, page, limit }),
+      meta: buildPaginationMeta({
+        total: count,
+        page: pageNum,
+        limit: limitNum,
+      }),
     };
   }
 
   /**
    * Find post by ID with author information
-   * 
+   *
    * @param id - Post ID to find
    * @returns Promise resolving to post with author or null if not found
    */
   async findPostWithAuthor(id: number): Promise<PostWithAuthor | null> {
     const post = await this.Post.findByPk(id, {
+      attributes: POST_ATTRIBUTES,
       include: [
         {
           model: this.User,
           as: "author",
-          attributes: ["id", "name", "email", "image"],
+          attributes: AUTHOR_ATTRIBUTES,
         },
       ],
     });
@@ -231,20 +272,9 @@ export class PostService {
       return null;
     }
 
-    const postData = post.toJSON ? post.toJSON() : post;
-    const authorData = (postData as any).author || null;
-
-    // Reuses PostModelData type to avoid redundant type definitions
-    // Note: Renamed id to postId to avoid conflict with function parameter
-    const {
-      id: postId,
-      title,
-      body,
-      userId,
-      status,
-      image,
-      imagePublicId,
-    } = post.get() as PostModelData;
+    const postData = post.toJSON ? post.toJSON() : post.get();
+    const { id: postId, title, body, userId, status, image, imagePublicId } = postData;
+    const authorData = (postData as any).author;
 
     return {
       id: postId,
@@ -254,25 +284,13 @@ export class PostService {
       status: status as PostStatus,
       image: image ?? null,
       imagePublicId: imagePublicId ?? null,
-      author: authorData
-        ? {
-            id: authorData.id || 0,
-            name: authorData.name || "",
-            email: authorData.email || "",
-            image: authorData.image || null,
-          }
-        : {
-            id: 0,
-            name: "",
-            email: "",
-            image: null,
-          },
+      author: mapAuthorData(authorData),
     };
   }
 
   /**
    * Get post with paginated comments and nested replies
-   * 
+   *
    * @param params - Query parameters
    * @param params.postId - Post ID to get comments for
    * @param params.page - Page number
@@ -285,22 +303,17 @@ export class PostService {
     const { postId, page, limit } = params;
     const { offset } = getPaginationParams({ page, limit });
 
-    const postExists = await this.Post.findByPk(postId);
+    const postExists = await this.Post.findByPk(postId, {
+      attributes: POST_ATTRIBUTES,
+    });
     if (!postExists) {
       return { post: null, comments: [], meta: null };
     }
 
-    // Reuses PostModelData type to avoid redundant type definitions
-    const {
-      id,
-      title,
-      body,
-      userId,
-      status,
-      image,
-      imagePublicId,
-    } = postExists.get() as PostModelData;
-
+    // Since we fetch only BasePost fields via attributes, we can use BasePost directly
+    const postData = postExists.toJSON ? postExists.toJSON() : postExists.get();
+    const { id, title, body, userId, status, image, imagePublicId } = postData;
+    
     const post: BasePost = {
       id,
       title,
@@ -317,7 +330,7 @@ export class PostService {
         {
           model: this.User,
           as: "author",
-          attributes: ["id", "name", "email", "image"],
+          attributes: AUTHOR_ATTRIBUTES,
         },
         {
           model: this.Comment,
@@ -326,7 +339,7 @@ export class PostService {
             {
               model: this.User,
               as: "author",
-              attributes: ["id", "name", "email", "image"],
+              attributes: AUTHOR_ATTRIBUTES,
             },
           ],
           separate: true,
@@ -349,7 +362,7 @@ export class PostService {
    * Update post (owner-only)
    * Users can only update their own posts
    * Handles Cloudinary image management
-   * 
+   *
    * @param params - Update parameters
    * @param params.postId - ID of post to update
    * @param params.authUserId - ID of authenticated user (must match post owner)
@@ -415,7 +428,10 @@ export class PostService {
     // Fetch updated post with author
     const updatedPost = await this.findPostWithAuthor(postId);
     if (!updatedPost) {
-      throw new AppError("POST_UPDATE_FAILED", HTTP_STATUS.INTERNAL_SERVER_ERROR);
+      throw new AppError(
+        "POST_UPDATE_FAILED",
+        HTTP_STATUS.INTERNAL_SERVER_ERROR
+      );
     }
 
     return {
@@ -428,7 +444,7 @@ export class PostService {
    * Delete post (owner-only)
    * Users can only delete their own posts
    * Deletes associated Cloudinary images before deleting post
-   * 
+   *
    * @param params - Delete parameters
    * @param params.postId - ID of post to delete
    * @param params.authUserId - ID of authenticated user (must match post owner)
@@ -465,4 +481,3 @@ export class PostService {
 
 // Export singleton instance
 export const postService = new PostService(models);
-

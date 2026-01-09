@@ -71,20 +71,6 @@ export type UserImagePublicId = {
 };
 
 /**
- * User data from Sequelize model
- * Complete user data structure returned from user.get()
- * Used when destructuring user data from Sequelize models
- */
-export type UserModelData = PublicUserProfile & {
-  imagePublicId?: string | null;
-  password?: string;
-  tokenVersion?: number;
-  createdAt?: Date;
-  updatedAt?: Date;
-  lastLoginAt?: Date | null;
-};
-
-/**
  * Update user input interface
  * Data that can be updated by user
  * All fields are optional (partial update)

@@ -1,9 +1,3 @@
-/**
- * Upload Middleware
- * Handles file uploads using Multer with memory storage
- * Files are stored in memory and uploaded directly to Cloudinary
- */
-
 import multer from "multer";
 import { Request, Response, NextFunction } from "express";
 import { HTTP_STATUS, ERROR_MESSAGES } from "../utils/constants.js";

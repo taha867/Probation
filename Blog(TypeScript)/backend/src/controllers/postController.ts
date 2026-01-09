@@ -5,7 +5,6 @@ import {
   ERROR_MESSAGES,
 } from "../utils/constants.js";
 import { validateRequest } from "../utils/validations.js";
-import { getPaginationParams } from "../utils/pagination.js";
 import {
   createPostSchema,
   updatePostSchema,
@@ -19,8 +18,9 @@ import {
 import { postService } from "../services/postService.js";
 import { handleAppError } from "../utils/errors.js";
 import { uploadImageToCloudinary } from "../services/cloudinaryService.js";
+import type { IdParam, PostIdParam } from "../interfaces/index.js";
 
-const { INTERNAL_SERVER_ERROR, OK, NOT_FOUND, CREATED } = HTTP_STATUS;
+const { INTERNAL_SERVER_ERROR, OK, NOT_FOUND, CREATED,UNAUTHORIZED } = HTTP_STATUS;
 const {
   UNABLE_TO_CREATE_POST,
   UNABLE_TO_FETCH_POST,
@@ -28,28 +28,13 @@ const {
   UNABLE_TO_FETCH_POST_COMMENTS,
   UNABLE_TO_DELETE_POST,
   UNABLE_TO_UPDATE_POST,
+  ACCESS_TOKEN_REQUIRED
 } = ERROR_MESSAGES;
 const {
   POST_CREATED,
   POST_UPDATED,
   POST_DELETED,
 } = SUCCESS_MESSAGES;
-
-/**
- * Post ID parameter interface
- * Extracted from validated route parameters
- */
-interface PostIdParam {
-  id: number;
-}
-
-/**
- * Post ID parameter for comments interface
- * Extracted from validated route parameters
- */
-interface PostIdParamForComments {
-  postId: number;
-}
 
 /**
  * Creates a new post
@@ -63,8 +48,8 @@ interface PostIdParamForComments {
 export async function create(req: Request, res: Response): Promise<void> {
   // Type guard: Ensure user exists
   if (!req.user) {
-    res.status(HTTP_STATUS.UNAUTHORIZED).send({
-      data: { message: ERROR_MESSAGES.ACCESS_TOKEN_REQUIRED },
+    res.status(UNAUTHORIZED).send({
+      data: { message: ACCESS_TOKEN_REQUIRED },
     });
     return;
   }
@@ -140,22 +125,22 @@ export async function list(req: Request, res: Response): Promise<void> {
   );
   if (!validatedQuery) return;
 
-  const { page, limit } = getPaginationParams(validatedQuery);
-  const { search, userId, status } = validatedQuery;
+  // Joi validation ensures page and limit are always present (defaults applied)
+  const { page, limit, search, userId, status } = validatedQuery;
 
   try {
     const result = await postService.listPosts({
-      page: page || 1,
-      limit: limit || 10,
+      page: page!,   
+      limit: limit!, 
       search,
       userId,
       status,
     });
-
+    const {rows:items, meta}=result;
     res.status(OK).send({
       data: {
-        items: result.rows,
-        meta: result.meta,
+        items,
+        meta,
       },
     });
   } catch (error: unknown) {
@@ -177,7 +162,7 @@ export async function list(req: Request, res: Response): Promise<void> {
  */
 export async function get(req: Request, res: Response): Promise<void> {
   try {
-    const validatedParams = validateRequest<PostIdParam>(
+    const validatedParams = validateRequest<IdParam>(
       postIdParamSchema,
       req.params,
       res,
@@ -215,7 +200,7 @@ export async function get(req: Request, res: Response): Promise<void> {
  * @throws {500} If there's an error during the retrieval process
  */
 export async function listForPost(req: Request, res: Response): Promise<void> {
-  const validatedParams = validateRequest<PostIdParamForComments>(
+  const validatedParams = validateRequest<PostIdParam>(
     postIdParamForCommentsSchema,
     req.params,
     res,
@@ -233,16 +218,17 @@ export async function listForPost(req: Request, res: Response): Promise<void> {
   );
   if (!validatedQuery) return;
 
-  const { page, limit } = getPaginationParams(validatedQuery);
+  // Joi validation ensures page and limit are always present (defaults applied)
+  const { page, limit } = validatedQuery;
 
   try {
     const result = await postService.getPostWithComments({
       postId,
-      page: page || 1,
-      limit: limit || 10,
+      page: page!,   
+      limit: limit!, 
     });
-
-    if (!result.post) {
+    const{post,comments,meta}=result;
+    if (!post) {
       res.status(NOT_FOUND).send({
         data: { message: POST_NOT_FOUND },
       });
@@ -251,9 +237,9 @@ export async function listForPost(req: Request, res: Response): Promise<void> {
 
     res.status(OK).send({
       data: {
-        post: result.post,
-        comments: result.comments,
-        meta: result.meta,
+        post,
+        comments,
+        meta,
       },
     });
   } catch (error: unknown) {
@@ -278,13 +264,13 @@ export async function update(req: Request, res: Response): Promise<void> {
   try {
     // Type guard: Ensure user exists
     if (!req.user) {
-      res.status(HTTP_STATUS.UNAUTHORIZED).send({
-        data: { message: ERROR_MESSAGES.ACCESS_TOKEN_REQUIRED },
+      res.status(UNAUTHORIZED).send({
+        data: { message: ACCESS_TOKEN_REQUIRED },
       });
       return;
     }
 
-    const validatedParams = validateRequest<PostIdParam>(
+    const validatedParams = validateRequest<IdParam>(
       postIdParamSchema,
       req.params,
       res,
@@ -351,15 +337,15 @@ export async function remove(req: Request, res: Response): Promise<void> {
   try {
     // Type guard: Ensure user exists
     if (!req.user) {
-      res.status(HTTP_STATUS.UNAUTHORIZED).send({
-        data: { message: ERROR_MESSAGES.ACCESS_TOKEN_REQUIRED },
+      res.status(UNAUTHORIZED).send({
+        data: { message: ACCESS_TOKEN_REQUIRED },
       });
       return;
     }
 
     const { id: userId } = req.user;
 
-    const validatedParams = validateRequest<PostIdParam>(
+    const validatedParams = validateRequest<IdParam>(
       postIdParamSchema,
       req.params,
       res,

@@ -21,8 +21,8 @@ import {
 // Types imported from interfaces are used via type inference
 import { authService } from "../services/authService.js";
 
-const { INTERNAL_SERVER_ERROR, OK } = HTTP_STATUS;
-const { OPERATION_FAILED } = ERROR_MESSAGES;
+const { INTERNAL_SERVER_ERROR, OK, UNAUTHORIZED } = HTTP_STATUS;
+const { OPERATION_FAILED, ACCESS_TOKEN_REQUIRED } = ERROR_MESSAGES;
 const {
   ACCOUNT_CREATED,
   SIGNED_IN,
@@ -49,6 +49,7 @@ export async function signUp(
     req.body,
     res
   );
+   // Early return: validation failed, error response already sent to client
   if (!validatedBody) return;
 
   const { email, password, name, phone, image } = validatedBody;
@@ -94,6 +95,7 @@ export async function signIn(
     req.body,
     res
   );
+  // Early return: validation failed, error response already sent to client
   if (!validatedBody) return;
 
   const { email, phone, password } = validatedBody;
@@ -105,11 +107,12 @@ export async function signIn(
       password,
     });
 
-    if (!result.data) {
+    const { data } = result;
+    if (!data) {
       throw new Error("Authentication result missing data");
     }
 
-    const { user, accessToken, refreshToken } = result.data;
+    const { user, accessToken, refreshToken } = data;
     const {
       id,
       name,
@@ -159,8 +162,8 @@ export async function signOut(
   try {
     // Type guard: Ensure user exists
     if (!req.user) {
-      res.status(HTTP_STATUS.UNAUTHORIZED).send({
-        data: { message: ERROR_MESSAGES.ACCESS_TOKEN_REQUIRED },
+      res.status(UNAUTHORIZED).send({
+        data: { message: ACCESS_TOKEN_REQUIRED },
       });
       return;
     }
@@ -200,6 +203,7 @@ export async function refreshToken(
     req.body,
     res
   );
+  // Early return: validation failed, error response already sent to client
   if (!validatedBody) return;
 
   const { refreshToken } = validatedBody;
