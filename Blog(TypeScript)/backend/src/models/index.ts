@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import { Sequelize, DataTypes, Model } from "sequelize";
 import { fileURLToPath } from "url";
-import envVariables from "../../config.js"; // Keep .js extension - TypeScript resolves to .ts
+import envVariables from "../../config.js"; // Use .js extension - TypeScript resolves to .ts at compile time
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
