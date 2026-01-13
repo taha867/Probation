@@ -23,7 +23,13 @@ const ResetPasswordForm = ({ token }) => {
 
   const onSubmit = async (data) => {
     try {
-      await resetUserPassword(token, data.newPassword, data.confirmPassword);
+      // Pass as object since React Query's mutateAsync only passes first argument
+      const { newPassword, confirmPassword } = data;
+      await resetUserPassword({
+        token,
+        newPassword,
+        confirmPassword,
+      });
 
       // Redirect to signin after successful reset
       setTimeout(() => {

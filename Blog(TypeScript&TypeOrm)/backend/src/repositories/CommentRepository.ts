@@ -85,6 +85,7 @@ export class CommentRepository {
 
   /**
    * Create new comment
+   * Timestamps are automatically handled by BaseEntity listeners (@BeforeInsert/@BeforeUpdate)
    */
   async create(commentData: Partial<Comment>): Promise<Comment> {
     const comment = this.repo.create(commentData);
@@ -92,10 +93,33 @@ export class CommentRepository {
   }
 
   /**
-   * Update comment
+   * Update comment using direct SQL UPDATE
+   * ⚠️ Does NOT trigger lifecycle hooks (@BeforeUpdate, @AfterUpdate)
+   * ⚠️ Does NOT automatically update @UpdateDateColumn
+   * 
+   * Use for: Bulk updates, performance-critical operations
+   * For single entity updates with hooks, use updateEntity() instead
    */
   async update(id: number, updateData: Partial<Comment>): Promise<void> {
-    await this.repo.update(id, updateData);
+    // Manually set updatedAt since repository.update() bypasses entity hooks
+    const dataWithTimestamp = {
+      ...updateData,
+      updatedAt: new Date(),
+    };
+    await this.repo.update(id, dataWithTimestamp);
+  }
+
+  /**
+   * Update comment entity using save() method
+   * ✅ Triggers lifecycle hooks (@BeforeUpdate, @AfterUpdate)
+   * ✅ Automatically updates @UpdateDateColumn
+   * 
+   * Industry best practice: Use this for single entity updates
+   * when you need hooks and automatic timestamp management
+   */
+  async updateEntity(comment: Comment, updateData: Partial<Comment>): Promise<Comment> {
+    Object.assign(comment, updateData);
+    return this.repo.save(comment);
   }
 
   /**

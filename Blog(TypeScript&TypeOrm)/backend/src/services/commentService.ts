@@ -1,5 +1,4 @@
 import { AppDataSource } from "../config/data-source.js";
-import { Comment } from "../entities/Comment.js";
 import { HTTP_STATUS } from "../utils/constants.js";
 import { AppError } from "../utils/errors.js";
 import {
@@ -119,13 +118,13 @@ export class CommentService {
       finalPostId = postId;
     }
 
-    const comment = new Comment();
-    comment.body = body;
-    comment.postId = finalPostId;
-    comment.userId = authUserId;
-    comment.parentId = parentId || null;
-
-    await this.commentRepo.save(comment);
+    // Use repository create method which explicitly sets timestamps
+    const comment = await this.commentRepo.create({
+      body,
+      postId: finalPostId,
+      userId: authUserId,
+      parentId: parentId || null,
+    });
 
     // Use repository method to fetch created comment with relations
     const createdComment = await this.commentRepo.findWithRelations(comment.id);
@@ -134,12 +133,11 @@ export class CommentService {
       throw new AppError("COMMENT_CREATION_FAILED", INTERNAL_SERVER_ERROR);
     }
 
-    const commentResult: CommentWithRelations = createdComment;
-
     return {
       ok: true,
-      data: commentResult,
+      data: createdComment,
     };
+
   }
 
   /**
@@ -227,10 +225,9 @@ export class CommentService {
   ): Promise<UpdateCommentServiceResult> {
     const { commentId, authUserId, body } = params;
 
-    const comment = await this.commentRepo.findByIdWithFields(commentId, [
-      "id",
-      "userId",
-    ]);
+    // Load full entity for authorization and update
+    // Industry best practice: Load once, update, save (triggers hooks automatically)
+    const comment = await this.commentRepo.findById(commentId);
 
     if (!comment) {
       throw new AppError("COMMENT_NOT_FOUND", NOT_FOUND);
@@ -240,8 +237,9 @@ export class CommentService {
       throw new AppError("CANNOT_UPDATE_OTHER_COMMENT", FORBIDDEN);
     }
 
-    // Use repository method for update
-    await this.commentRepo.update(commentId, { body });
+    // Use save() method: triggers @BeforeUpdate hook and updates @UpdateDateColumn automatically
+    // Industry best practice: Load → Modify → Save (fewer queries, hooks work)
+    await this.commentRepo.updateEntity(comment, { body });
 
     const updated = await this.findCommentWithRelations(commentId);
     

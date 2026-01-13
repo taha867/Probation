@@ -75,10 +75,33 @@ export class PostRepository {
   }
 
   /**
-   * Update post
+   * Update post using direct SQL UPDATE
+   * ⚠️ Does NOT trigger lifecycle hooks (@BeforeUpdate, @AfterUpdate)
+   * ⚠️ Does NOT automatically update @UpdateDateColumn
+   * 
+   * Use for: Bulk updates, performance-critical operations
+   * For single entity updates with hooks, use updateEntity() instead
    */
   async update(id: number, updateData: Partial<Post>): Promise<void> {
-    await this.repo.update(id, updateData);
+    // Manually set updatedAt since repository.update() bypasses entity hooks
+    const dataWithTimestamp = {
+      ...updateData,
+      updatedAt: new Date(),
+    };
+    await this.repo.update(id, dataWithTimestamp);
+  }
+
+  /**
+   * Update post entity using save() method
+   * ✅ Triggers lifecycle hooks (@BeforeUpdate, @AfterUpdate)
+   * ✅ Automatically updates @UpdateDateColumn
+   * 
+   * Industry best practice: Use this for single entity updates
+   * when you need hooks and automatic timestamp management
+   */
+  async updateEntity(post: Post, updateData: Partial<Post>): Promise<Post> {
+    Object.assign(post, updateData);
+    return this.repo.save(post);
   }
 
   /**
@@ -164,6 +187,8 @@ export class PostRepository {
         "post.status",
         "post.image",
         "post.imagePublicId",
+        "post.createdAt",
+        "post.updatedAt",
         "author.id",
         "author.name",
         "author.email",

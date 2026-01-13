@@ -21,6 +21,14 @@ export const comparePassword = async (
   plainPassword: string,
   hashedPassword: string
 ): Promise<boolean> => {
-  return bcrypt.compare(plainPassword, hashedPassword);
+  if (!hashedPassword || !plainPassword) {
+    return false;
+  }
+
+  try {
+    return await bcrypt.compare(plainPassword, hashedPassword);
+  } catch (error) {
+    return false;
+  }
 };
 

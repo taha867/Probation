@@ -12,7 +12,7 @@ export const initDb = async (res?: Response): Promise<void> => {
   try {
     if (!AppDataSource.isInitialized) {
       await AppDataSource.initialize();
-      console.log("Database connection established successfully.");
+    console.log("Database connection established successfully.");
     }
   } catch (error: unknown) {
     console.error("Unable to connect to the database:", error);

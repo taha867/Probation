@@ -124,10 +124,10 @@ export async function list(req, res) {
       },
     });
   } catch (error) {
-    console.error(error);
+    console.error("Error fetching posts:", error);
     return res
       .status(INTERNAL_SERVER_ERROR)
-      .send({ message: UNABLE_TO_FETCH_POST });
+      .send({ data: { message: UNABLE_TO_FETCH_POST } });
   }
 }
 

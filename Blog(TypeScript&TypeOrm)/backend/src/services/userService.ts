@@ -198,7 +198,7 @@ export class UserService {
       if (phone !== null) {
         const phoneExists = await this.userRepo.phoneExists(phone, requestedUserId);
         if (phoneExists) {
-          throw new AppError("PHONE_ALREADY_EXISTS", UNPROCESSABLE_ENTITY);
+        throw new AppError("PHONE_ALREADY_EXISTS", UNPROCESSABLE_ENTITY);
         }
       }
       updateData.phone = phone;

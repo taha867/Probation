@@ -75,8 +75,9 @@ export async function create(req: Request, res: Response): Promise<void> {
         "blog/posts",
         req.file.originalname
       );
-      imageUrl = uploadResult.secure_url;
-      imagePublicId = uploadResult.public_id;
+      const{secure_url,public_id}=uploadResult;
+      imageUrl = secure_url;
+      imagePublicId = public_id;
     }
 
     const result = await postService.createPost({
@@ -89,13 +90,13 @@ export async function create(req: Request, res: Response): Promise<void> {
       image: imageUrl,
       imagePublicId,
     });
-
-    if (!result.data) {
+    const{data}=result;
+    if (!data) {
       throw new Error("Post creation result missing data");
     }
 
     res.status(CREATED).send({
-      data: result.data,
+      data,
       message: POST_CREATED,
     });
   } catch (err: unknown) {
@@ -304,13 +305,13 @@ export async function update(req: Request, res: Response): Promise<void> {
       fileBuffer,
       fileName,
     });
-
-    if (!result.data) {
+    const{data}=result;
+    if (!data) {
       throw new Error("Update result missing data");
     }
 
     res.status(OK).send({
-      data: result.data,
+      data,
       message: POST_UPDATED,
     });
   } catch (err: unknown) {

@@ -19,13 +19,15 @@ import type {
   PasswordResetTokenResult,
 } from "../interfaces/index.js";
 
-const { UNPROCESSABLE_ENTITY, UNAUTHORIZED, NOT_FOUND } = HTTP_STATUS;
+const { UNPROCESSABLE_ENTITY, UNAUTHORIZED, NOT_FOUND, INTERNAL_SERVER_ERROR } =
+  HTTP_STATUS;
 const { LOGGED_IN, LOGGED_OUT } = USER_STATUS;
 
 export class AuthService {
   /**
-   * User repository instance
-   * Used for database operations on User table
+   * The service needs a repository to talk to the database.
+   * The constructor says: "If you give me a repository, I'll use it. Otherwise, I'll create one myself."
+   * This lets you swap the repository when needed (e.g., for tests).
    */
   private userRepo: UserRepository;
 
@@ -37,7 +39,7 @@ export class AuthService {
   /**
    * Register a new user account
    * Checks for existing user with same email or phone before creating
-   * 
+   *
    * @param input - User registration data
    * @returns Promise resolving to success response
    * @throws AppError if user already exists
@@ -46,7 +48,10 @@ export class AuthService {
     const { name, email, phone, password, image } = input;
 
     // Use repository method instead of direct query
-    const exists = await this.userRepo.existsByEmailOrPhone(email, phone || undefined);
+    const exists = await this.userRepo.existsByEmailOrPhone(
+      email,
+      phone || undefined
+    );
 
     if (exists) {
       // Service throws a domain error; controller decides how to respond
@@ -70,14 +75,12 @@ export class AuthService {
   /**
    * Authenticate a user and generate JWT tokens
    * Validates credentials and returns user data with access/refresh tokens
-   * 
+   *
    * @param input - User credentials (email or phone + password)
    * @returns Promise resolving to authentication result with tokens
    * @throws AppError if credentials are invalid
    */
-  async authenticateUser(
-    input: SignInInput
-  ): Promise<AuthenticationResult> {
+  async authenticateUser(input: SignInInput): Promise<AuthenticationResult> {
     const { email, phone, password } = input;
 
     // Use repository method for authentication
@@ -87,16 +90,23 @@ export class AuthService {
       throw new AppError("INVALID_CREDENTIALS", UNAUTHORIZED);
     }
 
+    if (!user.password) {
+      throw new AppError("INVALID_CREDENTIALS", UNAUTHORIZED);
+    }
+
     const isPasswordValid = await comparePassword(password, user.password);
 
     if (!isPasswordValid) {
       throw new AppError("INVALID_CREDENTIALS", UNAUTHORIZED);
     }
 
-    // Update user
-    user.status = LOGGED_IN;
-    user.lastLoginAt = new Date();
-    await this.userRepo.save(user);
+    // Update user status and lastLoginAt WITHOUT triggering password subscriber
+    // Using update() instead of save() prevents subscriber from being triggered
+    // This avoids potential double-hashing issues when password field is loaded in entity
+    await this.userRepo.update(user.id, {
+      status: LOGGED_IN,
+      lastLoginAt: new Date(),
+    });
 
     // Destructure user properties
     const {
@@ -144,7 +154,7 @@ export class AuthService {
   /**
    * Logout a user by updating their status
    * Increments tokenVersion to invalidate all existing tokens
-   * 
+   *
    * @param userId - ID of the user to logout
    * @returns Promise resolving to success response
    * @throws AppError if user is not found
@@ -168,7 +178,7 @@ export class AuthService {
   /**
    * Verify refresh token and generate new access token
    * Validates token signature, expiration, and token version
-   * 
+   *
    * @param refreshToken - JWT refresh token string
    * @returns Promise resolving to new access token
    * @throws AppError if token is invalid, expired, or user not found
@@ -197,11 +207,7 @@ export class AuthService {
       throw new AppError("USER_NOT_FOUND", NOT_FOUND);
     }
 
-    const {
-      id,
-      email,
-      tokenVersion = 0,
-    } = user;
+    const { id, email, tokenVersion = 0 } = user;
 
     // Type guard: Check if decoded token is AccessRefreshTokenPayload
     const refreshPayload = decoded as AccessRefreshTokenPayload;
@@ -231,7 +237,7 @@ export class AuthService {
    * Create password reset token and send email
    * Generates JWT token and sends password reset email to user
    * Returns success even if user not found (security best practice)
-   * 
+   *
    * @param email - User's email address
    * @returns Promise resolving to result indicating if email was sent
    * @throws AppError if email sending fails
@@ -247,10 +253,7 @@ export class AuthService {
       return { ok: true, data: { emailSent: false } };
     }
 
-    const {
-      id: userId,
-      name = "User",
-    } = user;
+    const { id: userId, name = "User" } = user;
 
     const resetToken = signToken(
       { userId, type: "password_reset" },
@@ -274,7 +277,7 @@ export class AuthService {
   /**
    * Reset user password using reset token
    * Validates token and updates user password
-   * 
+   *
    * @param token - Password reset JWT token
    * @param newPassword - New password to set
    * @returns Promise resolving to success response
@@ -294,19 +297,41 @@ export class AuthService {
       }
       throw new AppError("INVALID_RESET_TOKEN", UNAUTHORIZED);
     }
-
-    if (decoded.type !== "password_reset") {
+    const { type, userId } = decoded;
+    if (type !== "password_reset") {
       throw new AppError("INVALID_RESET_TOKEN", UNAUTHORIZED);
     }
 
-    const user = await this.userRepo.findById(decoded.userId);
+    // Load user with password field (needed for subscriber to compare old vs new)
+    const user = await this.userRepo.findByIdWithFields(userId, [
+      "id",
+      "name",
+      "email",
+      "phone",
+      "password",
+      "status",
+      "image",
+      "tokenVersion",
+    ]);
 
     if (!user) {
       throw new AppError("USER_NOT_FOUND", NOT_FOUND);
     }
 
-    user.password = newPassword; // Will be hashed in @BeforeUpdate hook
+    // Store old password hash for comparison
+    const oldPasswordHash = user.password;
+
+    user.password = newPassword; // Will be hashed by UserSubscriber
     await this.userRepo.save(user);
+
+    // Verify password was hashed correctly
+    if (user.password === oldPasswordHash) {
+      throw new AppError("PASSWORD_RESET_FAILED", INTERNAL_SERVER_ERROR);
+    }
+
+    if (!user.password?.startsWith("$")) {
+      throw new AppError("PASSWORD_RESET_FAILED", INTERNAL_SERVER_ERROR);
+    }
 
     return { ok: true };
   }

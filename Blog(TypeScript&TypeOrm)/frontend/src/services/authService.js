@@ -38,11 +38,7 @@ export const forgotPassword = async ({ email }) => {
   return response;
 };
 
-export const resetPassword = async ({
-  token,
-  newPassword,
-  confirmPassword,
-}) => {
+export const resetPassword = async ({ token, newPassword, confirmPassword }) => {
   const response = await fetchClient("/auth/resetPassword", {
     method: "POST",
     body: JSON.stringify({
@@ -54,7 +50,7 @@ export const resetPassword = async ({
   return response;
 };
 
-export const refreshAccessToken = async (refreshToken) => {
+export const refreshAccessToken = async ({ refreshToken }) => {
   const response = await fetchClient("/auth/refreshToken", {
     method: "POST",
     body: JSON.stringify({ refreshToken }),

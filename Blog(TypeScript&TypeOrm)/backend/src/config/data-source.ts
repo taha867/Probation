@@ -6,6 +6,7 @@ import { dirname } from "path";
 import { User } from "../entities/User.js";
 import { Post } from "../entities/Post.js";
 import { Comment } from "../entities/Comment.js";
+import { UserSubscriber } from "../subscribers/UserSubscriber.js";
 
 dotenv.config();
 
@@ -23,6 +24,9 @@ export const AppDataSource = new DataSource({
   // Entities
   entities: [User, Post, Comment],
   
+  // Subscribers (for password hashing on update with change tracking)
+  subscribers: [UserSubscriber],
+  
   // Migrations
   migrations: [__dirname + "/../migrations/*.{ts,js}"],
   migrationsTableName: "migrations",
@@ -36,8 +40,8 @@ export const AppDataSource = new DataSource({
   
   // Connection pool
   extra: {
-    max: 10, // Maximum pool size
-    min: 2,  // Minimum pool size
+    max: 10, // Maximum pool size ( maximum number of connection in the pool )
+    min: 2,  // Minimum pool size ( minimum number of connection to keep alive )
   },
 });
 

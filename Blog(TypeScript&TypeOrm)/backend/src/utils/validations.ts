@@ -2,10 +2,7 @@ import { Response } from "express";
 import { ObjectSchema, ValidationError } from "joi";
 import { HTTP_STATUS, ERROR_MESSAGES } from "./constants.js";
 
-/**
- * Validation options interface
- * Configures how Joi validation behaves
- */
+
 export interface ValidationOptions {
   /**
    * Convert types (e.g., string "123" to number 123)

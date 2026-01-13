@@ -254,12 +254,9 @@ export class PostService {
   ): Promise<UpdatePostServiceResult> {
     const { postId, authUserId, data, fileBuffer, fileName } = params;
 
-    // Load minimal fields for authorization and Cloudinary
-    const post = await this.postRepo.findByIdWithFields(postId, [
-      "id",
-      "userId",
-      "imagePublicId",
-    ]);
+    // Load full entity for authorization and update
+    // Industry best practice: Load once, update, save (triggers hooks automatically)
+    const post = await this.postRepo.findById(postId);
 
     if (!post) {
       throw new AppError("POST_NOT_FOUND", NOT_FOUND);
@@ -269,9 +266,8 @@ export class PostService {
       throw new AppError("CANNOT_UPDATE_OTHER_POST", FORBIDDEN);
     }
 
-    const updateData: Partial<Post> = {};
-
     // Build update object with only provided fields
+    const updateData: Partial<Post> = {};
     if (data.title !== undefined) updateData.title = data.title;
     if (data.body !== undefined) updateData.body = data.body;
     if (data.status !== undefined) updateData.status = data.status as PostStatus;
@@ -300,12 +296,13 @@ export class PostService {
     }
     // If image field not provided, keep existing image (don't touch it)
 
-    // Use repository method for update
-    await this.postRepo.update(postId, updateData);
+    // Use save() method: triggers @BeforeUpdate hook and updates @UpdateDateColumn automatically
+    // Industry best practice: Load → Modify → Save (fewer queries, hooks work)
+    const updatedPost = await this.postRepo.updateEntity(post, updateData);
 
-    // Fetch updated post with author
-    const updatedPost = await this.findPostWithAuthor(postId);
-    if (!updatedPost) {
+    // Fetch updated post with author for response
+    const postWithAuthor = await this.findPostWithAuthor(updatedPost.id);
+    if (!postWithAuthor) {
       throw new AppError(
         "POST_UPDATE_FAILED",
         HTTP_STATUS.INTERNAL_SERVER_ERROR
@@ -314,7 +311,7 @@ export class PostService {
 
     return {
       ok: true,
-      data: updatedPost,
+      data: postWithAuthor,
     };
   }
 

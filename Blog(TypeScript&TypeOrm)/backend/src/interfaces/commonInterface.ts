@@ -1,26 +1,7 @@
 
 
 /**
- * Generic service result DTO
- * Standard structure for all service method responses
- * 
  * @template T - Type of data payload (defaults to void for simple success responses)
- * 
- * @example
- * // Simple success response
- * type LogoutResult = ServiceResult<void>;
- * 
- * @example
- * // Response with data
- * type UserResult = ServiceResult<PublicUserProfile>;
- * 
- * @example
- * // Response with complex data
- * type AuthResult = ServiceResult<{
- *   user: PublicUserProfile;
- *   accessToken: string;
- *   refreshToken: string;
- * }>;
  */
 export interface ServiceResult<T = void> {
   ok: boolean;
@@ -54,14 +35,6 @@ export interface PaginationMeta {
  * Generic paginated result DTO
  * Standard structure for all paginated service responses
  * Reuses PaginationMeta to avoid duplication
- * 
- * @template T - Type of items in the paginated list
- * 
- * @example
- * type ListUsersResult = PaginatedResult<PublicUserProfile>;
- * 
- * @example
- * type ListPostsResult = PaginatedResult<Post>;
  */
 export interface PaginatedResult<T> {
   rows: T[];
@@ -82,15 +55,6 @@ export interface BaseQuery {
  * ID parameter interface
  * Common interface for validated route ID parameters
  * Used across all controllers for type-safe parameter extraction
- * 
- * @example
- * // In controller:
- * const validatedParams = validateRequest<IdParam>(
- *   idParamSchema("User ID"),
- *   req.params,
- *   res
- * );
- * const { id } = validatedParams; // TypeScript knows id is number
  */
 export interface IdParam {
   id: number;
@@ -99,15 +63,6 @@ export interface IdParam {
 /**
  * Post ID parameter interface for comments endpoint
  * Used when route parameter is named "postId" instead of "id"
- * 
- * @example
- * // Route: /posts/:postId/comments
- * const validatedParams = validateRequest<PostIdParam>(
- *   postIdParamForCommentsSchema,
- *   req.params,
- *   res
- * );
- * const { postId } = validatedParams; // TypeScript knows postId is number
  */
 export interface PostIdParam {
   postId: number;
@@ -136,19 +91,6 @@ export interface FileUploadInput {
  * Base authorization input DTO
  * Common structure for operations requiring authentication
  * All authenticated service inputs should extend this
- * 
- * @example
- * // User operations
- * interface UpdateUserServiceInput extends BaseAuthorizationInput {
- *   requestedUserId: number;
- *   data: UpdateUserInput;
- * }
- * 
- * @example
- * // Post/Comment operations (future)
- * interface UpdatePostServiceInput extends BaseAuthorizationInput {
- *   postId: number;
- *   data: UpdatePostInput;
  * }
  */
 export interface BaseAuthorizationInput {
@@ -160,11 +102,6 @@ export interface BaseAuthorizationInput {
  * Common structure for operations that check entity ownership
  * Extends BaseAuthorizationInput with entity ID
  * Used for delete operations and ownership checks
- * 
- * @example
- * interface DeleteUserServiceInput extends BaseEntityOwnershipInput {
- *   requestedUserId: number; // Override entityId with specific name
- * }
  */
 export interface BaseEntityOwnershipInput extends BaseAuthorizationInput {
   entityId: number;
@@ -174,13 +111,6 @@ export interface BaseEntityOwnershipInput extends BaseAuthorizationInput {
  * Base update with file upload input DTO
  * Common structure for update operations that accept file uploads
  * Combines authorization, file upload, and update data
- * 
- * @template T - Type of update data
- * 
- * @example
- * interface UpdateUserServiceInput extends BaseUpdateWithFileInput<UpdateUserInput> {
- *   requestedUserId: number; // Override entityId
- * }
  */
 export interface BaseUpdateWithFileInput<T> extends BaseAuthorizationInput, FileUploadInput {
   entityId: number;

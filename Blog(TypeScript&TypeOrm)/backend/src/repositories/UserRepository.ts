@@ -2,19 +2,13 @@ import { Repository, DataSource, Not } from "typeorm";
 import { User } from "../entities/User.js";
 import type { BaseUserProfile } from "../interfaces/userInterface.js";
 
-/**
- * User Repository
- * Handles all data access operations for User entity
- * Follows Repository Pattern for separation of concerns
- */
+
 export class UserRepository {
   private repo: Repository<User>;
 
   constructor(dataSource: DataSource) {
     this.repo = dataSource.getRepository(User);
   }
-
-  // ============ Basic CRUD Operations ============
 
   /**
    * Find user by ID
@@ -70,7 +64,7 @@ export class UserRepository {
         "name",
         "email",
         "phone",
-        "password",
+        "password", // password has select: false in the entity, Must explicitly select it when needed
         "status",
         "image",
         "tokenVersion",
@@ -141,9 +135,18 @@ export class UserRepository {
 
   /**
    * Update user
+   * Note: repository.update() doesn't trigger @BeforeUpdate hooks,
+   * so we manually set updatedAt to ensure timestamps are updated
+   * This method uses update() instead of save() to avoid triggering
+   * UserSubscriber for non-password field updates
    */
   async update(id: number, updateData: Partial<User>): Promise<void> {
-    await this.repo.update(id, updateData);
+    // Manually set updatedAt since repository.update() bypasses entity hooks
+    const dataWithTimestamp = {
+      ...updateData,
+      updatedAt: new Date(),
+    };
+    await this.repo.update(id, dataWithTimestamp);
   }
 
   /**
@@ -165,7 +168,6 @@ export class UserRepository {
       .execute();
   }
 
-  // ============ Query Operations ============
 
   /**
    * Find users with pagination

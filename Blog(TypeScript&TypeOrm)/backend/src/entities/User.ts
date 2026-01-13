@@ -2,57 +2,50 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
-  CreateDateColumn,
-  UpdateDateColumn,
   OneToMany,
   BeforeInsert,
-  BeforeUpdate,
 } from "typeorm";
-import { hashPassword } from "../utils/bcrypt.js";
 import { Post } from "./Post.js";
 import { Comment } from "./Comment.js";
+import { hashPassword } from "../utils/bcrypt.js";
+import { BaseEntity } from "./BaseEntity.js";
 
 /**
  * User entity
  * Represents a user in the database
+ * Extends BaseEntity for automatic timestamp management
  */
 @Entity("Users")
-export class User {
-  @PrimaryGeneratedColumn()
+export class User extends BaseEntity {
+  @PrimaryGeneratedColumn() //Auto increment
   id!: number;
 
-  @Column({ nullable: false })
-  name!: string;
+  @Column({ type: "varchar", nullable: false }) // nullable if true relation column can be null
+  name!: string; // ! is a compile type assertion that tells typescript that this will be assigned before use
 
-  @Column({ unique: true, nullable: false })
+  @Column({ type: "varchar", unique: true, nullable: false }) 
   email!: string;
 
-  @Column({ unique: true, nullable: true })
+  @Column({ type: "varchar", unique: true, nullable: true })
   phone: string | null = null;
 
-  @Column({ nullable: false, select: false })
+  @Column({ type: "varchar", nullable: false, select: false }) // select false stores password but never return password in queries, it fails when Explicit select: ["password"]
   password!: string;
 
-  @Column({ nullable: true })
+  @Column({ type: "varchar", nullable: true })
   status: string | null = null;
 
-  @Column({ nullable: true })
+  @Column({ type: "varchar", nullable: true })
   image: string | null = null;
 
-  @Column({ nullable: true })
+  @Column({ type: "varchar", nullable: true })
   imagePublicId: string | null = null;
 
-  @Column({ name: "last_login_at", nullable: true })
+  @Column({ type: "timestamp", name: "last_login_at", nullable: true })
   lastLoginAt: Date | null = null;
 
-  @Column({ default: 0, nullable: false })
+  @Column({ type: "integer", default: 0, nullable: false })
   tokenVersion!: number;
-
-  @CreateDateColumn()
-  createdAt!: Date;
-
-  @UpdateDateColumn()
-  updatedAt!: Date;
 
   // Relations
   @OneToMany(() => Post, (post: Post) => post.author, { cascade: true, onDelete: "CASCADE" })
@@ -61,7 +54,7 @@ export class User {
   @OneToMany(() => Comment, (comment: Comment) => comment.author, { cascade: true, onDelete: "CASCADE" })
   comments!: Comment[];
 
-  // Hooks
+  // Entity Listner
   @BeforeInsert()
   async hashPasswordBeforeInsert() {
     if (this.password) {
@@ -69,20 +62,10 @@ export class User {
     }
   }
 
-  @BeforeUpdate()
-  async hashPasswordBeforeUpdate() {
-    // TypeORM doesn't track changes like Sequelize
-    // We check if password looks like plain text (not a bcrypt hash)
-    // Bcrypt hashes start with $2a$, $2b$, or $2y$ and are ~60 chars
-    if (this.password && !this.password.startsWith("$2") && this.password.length < 60) {
-      this.password = await hashPassword(this.password);
-    }
-  }
-
-  // Custom method to exclude password from JSON
-  toJSON(): Omit<User, "password" | "hashPasswordBeforeInsert" | "hashPasswordBeforeUpdate" | "toJSON"> {
-    const { password, hashPasswordBeforeInsert, hashPasswordBeforeUpdate, toJSON, ...rest } = this;
-    return rest as Omit<User, "password" | "hashPasswordBeforeInsert" | "hashPasswordBeforeUpdate" | "toJSON">;
+  // Custom method to exclude password from JSON, it never fails
+  toJSON(): Omit<User, "password" | "hashPasswordBeforeInsert" | "toJSON"> {
+    const { password, hashPasswordBeforeInsert, toJSON, ...rest } = this;
+    return rest as Omit<User, "password" | "hashPasswordBeforeInsert" | "toJSON">;
   }
 }
 

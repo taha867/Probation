@@ -175,8 +175,9 @@ export async function getUserPostsWithComment(
       limit: limit!, // Non-null assertion: Joi guaranteed default
       search,
     });
+    const{user}=result;
 
-    if (!result.user) {
+    if (!user) {
       res.status(NOT_FOUND).send({
         data: { message: USER_NOT_FOUND },
       });
@@ -266,8 +267,8 @@ export async function update(req: Request, res: Response): Promise<void> {
       fileBuffer,
       fileName,
     });
-
-    if (!result.data) {
+    const{data}=result;
+    if (!data) {
       throw new Error("Update result missing data");
     }
 
@@ -278,7 +279,7 @@ export async function update(req: Request, res: Response): Promise<void> {
       phone: userPhone,
       image: userImage,
       status,
-    } = result.data;
+    } = data;
 
     res.status(OK).send({
       data: {

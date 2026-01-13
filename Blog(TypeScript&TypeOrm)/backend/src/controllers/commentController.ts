@@ -207,13 +207,13 @@ export async function update(req: Request, res: Response): Promise<void> {
       authUserId: userId,
       body,
     });
-
-    if (!result.data) {
+    const{data}=result;
+    if (!data) {
       throw new Error("Update result missing data");
     }
 
     res.status(OK).send({
-      data: result.data,
+      data,
       message: COMMENT_UPDATED,
     });
   } catch (err: unknown) {

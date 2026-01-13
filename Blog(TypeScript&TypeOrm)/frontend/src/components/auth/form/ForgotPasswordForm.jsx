@@ -19,7 +19,7 @@ const ForgotPasswordForm = () => {
 
   const onSubmit = async (data) => {
     try {
-      await requestPasswordReset(data.email);
+      await requestPasswordReset({ email: data.email });
       form.reset();
     } catch (error) {
       // Error message is handled by axios interceptor
