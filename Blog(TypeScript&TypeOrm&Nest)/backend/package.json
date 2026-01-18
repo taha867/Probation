@@ -4,10 +4,10 @@
     "dev": "tsx watch server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "migration:generate": "typeorm-ts-node-esm migration:generate -d src/config/data-source.ts",
-    "migration:run": "typeorm-ts-node-esm migration:run -d src/config/data-source.ts",
-    "migration:revert": "typeorm-ts-node-esm migration:revert -d src/config/data-source.ts",
-    "migration:show": "typeorm-ts-node-esm migration:show -d src/config/data-source.ts"
+    "migration:generate": "typeorm-ts-node-esm migration:generate -d src/config/dataSource.ts",
+    "migration:run": "typeorm-ts-node-esm migration:run -d src/config/dataSource.ts",
+    "migration:revert": "typeorm-ts-node-esm migration:revert -d src/config/dataSource.ts",
+    "migration:show": "typeorm-ts-node-esm migration:show -d src/config/dataSource.ts"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",

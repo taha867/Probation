@@ -43,3 +43,4 @@ export const AppDataSource = new DataSource({
     min: 2, // Minimum pool size ( minimum number of connection to keep alive )
   },
 });
+

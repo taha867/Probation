@@ -1,4 +1,4 @@
-import { AppDataSource } from "../config/data-source.js";
+import { AppDataSource } from "../config/dataSource.js";
 import { HTTP_STATUS } from "../utils/constants.js";
 import { AppError } from "../utils/errors.js";
 import {

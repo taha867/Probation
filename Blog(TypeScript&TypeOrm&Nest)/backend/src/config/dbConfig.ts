@@ -1,5 +1,5 @@
 import { Response } from "express";
-import { AppDataSource } from "./data-source.js";
+import { AppDataSource } from "./dataSource.js";
 import { HTTP_STATUS, ERROR_MESSAGES } from "../utils/constants.js";
 
 /**
