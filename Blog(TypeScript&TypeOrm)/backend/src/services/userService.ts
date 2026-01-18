@@ -9,6 +9,7 @@ import {
   deleteImageFromCloudinary,
   uploadImageToCloudinary,
 } from "./cloudinaryService.js";
+import { hashPassword } from "../utils/bcrypt.js";
 import {
   UserRepository,
   PostRepository,
@@ -76,14 +77,17 @@ export class UserService {
     const [users, total] = await this.userRepo.findPaginated(page, limit);
 
     // Map TypeORM entities to PublicUserProfile interface
-    const userRows: PublicUserProfile[] = users.map((user) => ({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      phone: user.phone,
-      status: user.status,
-      image: user.image,
-    }));
+    const userRows: PublicUserProfile[] = users.map((user) => {
+      const { id, name, email, phone, status, image } = user;
+      return {
+        id,
+        name,
+        email,
+        phone,
+        status,
+        image,
+      };
+    });
 
     return {
       rows: userRows,
@@ -204,7 +208,7 @@ export class UserService {
       updateData.phone = phone;
     }
 
-    if (password !== undefined) updateData.password = password;
+    if (password !== undefined) updateData.password = await hashPassword(password);
 
     // Handle image-related business logic (all Cloudinary operations)
     if (fileBuffer) {

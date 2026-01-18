@@ -3,7 +3,7 @@ import { User } from "../entities/User.js";
 import { HTTP_STATUS, USER_STATUS } from "../utils/constants.js";
 import { AppError } from "../utils/errors.js";
 import { signToken, verifyToken } from "../utils/jwt.js";
-import { comparePassword } from "../utils/bcrypt.js";
+import { comparePassword, hashPassword } from "../utils/bcrypt.js";
 import { emailService } from "./emailService.js";
 import { UserRepository } from "../repositories/index.js";
 // All interfaces imported from barrel export (index.ts)
@@ -28,6 +28,7 @@ export class AuthService {
    * The service needs a repository to talk to the database.
    * The constructor says: "If you give me a repository, I'll use it. Otherwise, I'll create one myself."
    * This lets you swap the repository when needed (e.g., for tests).
+   * Dependency Injection
    */
   private userRepo: UserRepository;
 
@@ -62,7 +63,7 @@ export class AuthService {
     const user = new User();
     user.name = name;
     user.email = email;
-    user.password = password; // Will be hashed automatically
+    user.password = await hashPassword(password); // Hashing explicitly
     user.phone = phone || null;
     user.image = image || null;
     user.status = LOGGED_OUT;
@@ -321,7 +322,7 @@ export class AuthService {
     // Store old password hash for comparison
     const oldPasswordHash = user.password;
 
-    user.password = newPassword; // Will be hashed by UserSubscriber
+    user.password = await hashPassword(newPassword); // Hashing explicitly
     await this.userRepo.save(user);
 
     // Verify password was hashed correctly

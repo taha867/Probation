@@ -150,15 +150,25 @@ export class PostService {
 
     // Map TypeORM entities to PostWithAuthor interface
     const postRows: PostWithAuthor[] = posts.map((post: any) => {
+      const {
+        id,
+        title,
+        body,
+        userId,
+        status,
+        image,
+        imagePublicId,
+        author,
+      } = post;
       return {
-        id: post.id,
-        title: post.title,
-        body: post.body,
-        userId: post.userId,
-        status: post.status as PostStatus,
-        image: post.image ?? null,
-        imagePublicId: post.imagePublicId ?? null,
-        author: mapAuthorData(post.author),
+        id,
+        title,
+        body,
+        userId,
+        status: status as PostStatus,
+        image: image ?? null,
+        imagePublicId: imagePublicId ?? null,
+        author: mapAuthorData(author),
       };
     });
 
@@ -210,15 +220,15 @@ export class PostService {
     if (!post) {
       return { post: null, comments: [], meta: null };
     }
-
+    const{id,title,body,userId,status,image,imagePublicId}=post;
     const basePost: BasePost = {
-      id: post.id,
-      title: post.title,
-      body: post.body,
-      userId: post.userId,
-      status: post.status as PostStatus,
-      image: post.image ?? null,
-      imagePublicId: post.imagePublicId ?? null,
+      id,
+      title,
+      body,
+      userId,
+      status: status as PostStatus,
+      image: image ?? null,
+      imagePublicId: imagePublicId ?? null,
     };
 
     // Use repository method for comments
@@ -341,14 +351,14 @@ export class PostService {
     if (!post) {
       throw new AppError("POST_NOT_FOUND", NOT_FOUND);
     }
-
-    if (post.userId !== authUserId) {
+    const{userId, imagePublicId}=post;
+    if (userId !== authUserId) {
       throw new AppError("CANNOT_DELETE_OTHER_POST", FORBIDDEN);
     }
 
     // Delete associated image from Cloudinary before deleting post
-    if (post.imagePublicId) {
-      await deleteImageFromCloudinary(post.imagePublicId);
+    if (imagePublicId) {
+      await deleteImageFromCloudinary(imagePublicId);
     }
 
     // Use repository method for deletion

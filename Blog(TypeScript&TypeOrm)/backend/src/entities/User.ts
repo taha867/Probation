@@ -3,12 +3,11 @@ import {
   PrimaryGeneratedColumn,
   Column,
   OneToMany,
-  BeforeInsert,
 } from "typeorm";
 import { Post } from "./Post.js";
 import { Comment } from "./Comment.js";
-import { hashPassword } from "../utils/bcrypt.js";
 import { BaseEntity } from "./BaseEntity.js";
+
 
 /**
  * User entity
@@ -55,17 +54,12 @@ export class User extends BaseEntity {
   comments!: Comment[];
 
   // Entity Listner
-  @BeforeInsert()
-  async hashPasswordBeforeInsert() {
-    if (this.password) {
-      this.password = await hashPassword(this.password);
-    }
-  }
+
 
   // Custom method to exclude password from JSON, it never fails
-  toJSON(): Omit<User, "password" | "hashPasswordBeforeInsert" | "toJSON"> {
-    const { password, hashPasswordBeforeInsert, toJSON, ...rest } = this;
-    return rest as Omit<User, "password" | "hashPasswordBeforeInsert" | "toJSON">;
+  toJSON(): Omit<User, "password" | "toJSON"> {
+    const { password, toJSON, ...rest } = this;
+    return rest as Omit<User, "password" | "toJSON">;
   }
 }
 

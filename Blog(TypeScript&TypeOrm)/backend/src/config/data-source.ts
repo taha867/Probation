@@ -6,7 +6,7 @@ import { dirname } from "path";
 import { User } from "../entities/User.js";
 import { Post } from "../entities/Post.js";
 import { Comment } from "../entities/Comment.js";
-import { UserSubscriber } from "../subscribers/UserSubscriber.js";
+
 
 dotenv.config();
 
@@ -24,8 +24,8 @@ export const AppDataSource = new DataSource({
   // Entities
   entities: [User, Post, Comment],
   
-  // Subscribers (for password hashing on update with change tracking)
-  subscribers: [UserSubscriber],
+  // Subscribers
+  subscribers: [],
   
   // Migrations
   migrations: [__dirname + "/../migrations/*.{ts,js}"],

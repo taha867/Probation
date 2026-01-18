@@ -157,15 +157,17 @@ export class CommentService {
 
     // Map TypeORM entities to CommentWithAuthor interface
     const commentRows: CommentWithAuthor[] = comments.map((comment: any) => {
+      const {id,body,postId,userId,parentId,createdAt,updatedAt,author} = comment;
       return {
-        id: comment.id,
-        body: comment.body,
-        postId: comment.postId,
-        userId: comment.userId,
-        parentId: comment.parentId ?? null,
-        createdAt: comment.createdAt,
-        updatedAt: comment.updatedAt,
-        author: mapAuthorData(comment.author),
+        
+        id,
+        body,
+        postId,
+        userId,
+        parentId: parentId ?? null,
+        createdAt,
+        updatedAt,
+        author: mapAuthorData(author),
       };
     });
 
@@ -191,15 +193,17 @@ export class CommentService {
 
     // Map replies to CommentWithAuthor interface
     const replyRows: CommentWithAuthor[] = replies.map((reply) => {
+      const { id, body, postId, userId, parentId, createdAt, updatedAt, author } =
+        reply;
       return {
-        id: reply.id,
-        body: reply.body,
-        postId: reply.postId,
-        userId: reply.userId,
-        parentId: reply.parentId ?? null,
-        createdAt: reply.createdAt,
-        updatedAt: reply.updatedAt,
-        author: mapAuthorData(reply.author),
+        id,
+        body,
+        postId,
+        userId,
+        parentId: parentId ?? null,
+        createdAt,
+        updatedAt,
+        author: mapAuthorData(author),
       };
     });
 

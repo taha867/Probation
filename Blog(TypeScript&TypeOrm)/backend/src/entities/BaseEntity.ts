@@ -8,10 +8,6 @@ import {
 /**
  * Base Entity Class
  * Provides common timestamp fields and automatic timestamp management
- * 
- * Industry Best Practice: Combines TypeORM decorators with entity listeners
- * - @CreateDateColumn/@UpdateDateColumn: TypeORM's automatic handling
- * - @BeforeInsert/@BeforeUpdate: Safety net to ensure timestamps are always set
  */
 export abstract class BaseEntity {
   /**

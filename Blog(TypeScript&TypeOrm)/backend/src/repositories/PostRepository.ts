@@ -33,8 +33,6 @@ export class PostRepository {
     this.repo = dataSource.getRepository(Post);
   }
 
-  // ============ Basic CRUD Operations ============
-
   /**
    * Find post by ID
    */
