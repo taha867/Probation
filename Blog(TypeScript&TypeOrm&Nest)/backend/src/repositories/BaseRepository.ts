@@ -100,11 +100,8 @@ export abstract class BaseRepository<T extends BaseEntity> {
 
   /**
    * Update entity using save() method
-   * Triggers lifecycle hooks (@BeforeUpdate, @AfterUpdate)
    * Automatically updates @UpdateDateColumn
-   * 
-   * Industry best practice: Use this for single entity updates
-   * when you need hooks and automatic timestamp management
+   * Use this for single entity updates
    * 
    * @param entity - Entity instance to update
    * @param updateData - Partial entity data to update

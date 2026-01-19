@@ -1,0 +1,98 @@
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Param,
+  Query,
+  Body,
+  UseInterceptors,
+  UploadedFile,
+  ParseIntPipe,
+  BadRequestException,
+  NotFoundException,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { PostsService } from './posts.service';
+import { CreatePostDto } from './dto/createPost.dto';
+import { UpdatePostDto } from './dto/updatePost.dto';
+import { ListPostsQueryDto } from './dto/listPostsQuery.dto';
+import { PaginationQueryDto } from './dto/paginationQuery.dto';
+import { User } from '../common/decorators/user.decorator';
+import { SUCCESS_MESSAGES } from '../shared/constants/constants';
+
+@Controller('posts')
+export class PostsController {
+  constructor(private postsService: PostsService) {}
+
+  @Post()
+  @UseInterceptors(FileInterceptor('image'))
+  @HttpCode(HttpStatus.CREATED)
+  async create(
+    @Body() createPostDto: CreatePostDto,
+    @User('id') userId: number,
+    @UploadedFile() file?: Express.Multer.File
+  ) {
+    return this.postsService.createPost(createPostDto, userId, file);
+  }
+
+  @Get()
+  async list(@Query() query: ListPostsQueryDto) {
+    return this.postsService.listPosts(query);
+  }
+
+  @Get(':id')
+  async getOne(@Param('id', ParseIntPipe) id: number) {
+    const post = await this.postsService.findPostWithAuthor(id);
+    if (!post) {
+      throw new NotFoundException('POST_NOT_FOUND');
+    }
+    return {
+      data: post,
+    };
+  }
+
+  @Get(':postId/comments')
+  async getPostComments(
+    @Param('postId', ParseIntPipe) postId: number,
+    @Query() query: PaginationQueryDto
+  ) {
+    return this.postsService.getPostWithComments(postId, query);
+  }
+
+  @Put(':id')
+  @UseInterceptors(FileInterceptor('image'))
+  @HttpCode(HttpStatus.OK)
+  async update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updatePostDto: UpdatePostDto,
+    @User('id') userId: number,
+    @UploadedFile() file?: Express.Multer.File
+  ) {
+    // Check if at least one field is being updated
+    const hasBodyFields = Object.keys(updatePostDto).length > 0;
+    const hasFileUpload = file !== undefined;
+
+    if (!hasBodyFields && !hasFileUpload) {
+      throw new BadRequestException('At least one field must be provided to update');
+    }
+
+    return this.postsService.updatePost(id, userId, updatePostDto, file);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.OK)
+  async delete(
+    @Param('id', ParseIntPipe) id: number,
+    @User('id') userId: number
+  ) {
+    await this.postsService.deletePost(id, userId);
+    return {
+      data: { message: SUCCESS_MESSAGES.POST_DELETED },
+    };
+  }
+}
+

@@ -6,7 +6,7 @@ import {
   OneToMany,
   JoinColumn,
 } from "typeorm";
-import type { User } from "./User.js";
+import type { User } from "./User.js"; // no runtime circular import
 import type { Comment } from "./Comment.js";
 import { BaseEntity } from "./BaseEntity.js";
 
@@ -51,7 +51,7 @@ export class Post extends BaseEntity {
   imagePublicId: string | null;
 
   // Relations
-  @ManyToOne("User", (user: User) => user.posts, { onDelete: "CASCADE" })
+  @ManyToOne("User", (user: User) => user.posts, { onDelete: "CASCADE" }) //delays evaluation untill runtime -> no crash
   @JoinColumn({ name: "userId" }) // foreign key owner
   author: User;
 
