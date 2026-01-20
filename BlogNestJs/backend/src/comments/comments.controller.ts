@@ -17,7 +17,7 @@ import { CreateCommentDto } from './dto/createComment.dto';
 import { UpdateCommentDto } from './dto/updateComment.dto';
 import { ListCommentsQueryDto } from './dto/listCommentsQuery.dto';
 import { User } from '../common/decorators/user.decorator';
-import { SUCCESS_MESSAGES } from '../shared/constants/constants';
+import { SUCCESS_MESSAGES } from '../lib/constants';
 
 @Controller('comments')
 export class CommentsController {
@@ -27,7 +27,7 @@ export class CommentsController {
   @HttpCode(HttpStatus.CREATED)
   async create(
     @Body() createCommentDto: CreateCommentDto,
-    @User('id') userId: number
+    @User('id') userId: number,
   ) {
     return this.commentsService.createCommentOrReply(createCommentDto, userId);
   }
@@ -53,7 +53,7 @@ export class CommentsController {
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateCommentDto: UpdateCommentDto,
-    @User('id') userId: number
+    @User('id') userId: number,
   ) {
     return this.commentsService.updateComment(id, userId, updateCommentDto);
   }
@@ -62,7 +62,7 @@ export class CommentsController {
   @HttpCode(HttpStatus.OK)
   async delete(
     @Param('id', ParseIntPipe) id: number,
-    @User('id') userId: number
+    @User('id') userId: number,
   ) {
     await this.commentsService.deleteComment(id, userId);
     return {
@@ -70,4 +70,3 @@ export class CommentsController {
     };
   }
 }
-

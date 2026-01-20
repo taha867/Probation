@@ -7,31 +7,29 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AppModule = void 0;
+const typeorm_1 = require("@nestjs/typeorm");
+const data_source_options_1 = require("./config/data-source-options");
 const common_1 = require("@nestjs/common");
 const core_1 = require("@nestjs/core");
 const throttler_1 = require("@nestjs/throttler");
 const app_controller_1 = require("./app.controller");
 const app_service_1 = require("./app.service");
-const common_module_1 = require("./common/common.module");
-const database_module_1 = require("./config/database.module");
-const auth_module_1 = require("./auth/auth.module");
 const users_module_1 = require("./users/users.module");
 const posts_module_1 = require("./posts/posts.module");
 const comments_module_1 = require("./comments/comments.module");
-const auth_guard_1 = require("./auth/guards/auth.guard");
+const auth_guard_1 = require("./users/auth/guards/auth.guard");
+// Exclude migrations from runtime config (only needed for CLI)
+const { migrations, migrationsTableName, ...nestOptions } = data_source_options_1.dataSourceOptions;
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            database_module_1.DatabaseModule, // ← Database connection (TypeORM)
-            common_module_1.CommonModule, // ← Shared utilities
-            auth_module_1.AuthModule, // ← Authentication routes (/auth/*)
-            users_module_1.UsersModule, // ← User routes (/users/*)
-            posts_module_1.PostsModule, // ← Post routes (/posts/*)
-            comments_module_1.CommentsModule, // ← Comment routes (/comments/*)
-            // Global rate limiting configuration
+            typeorm_1.TypeOrmModule.forRoot({
+                ...nestOptions,
+                autoLoadEntities: true,
+            }),
             throttler_1.ThrottlerModule.forRoot([
                 {
                     name: 'short', // Short-lived requests (e.g., login)
@@ -49,9 +47,13 @@ exports.AppModule = AppModule = __decorate([
                     limit: 5, // 5 login attempts per minute
                 },
             ]),
+            users_module_1.UsersModule, // ← User routes (/users/*) and Auth routes (/auth/*)
+            posts_module_1.PostsModule, // ← Post routes (/posts/*)
+            comments_module_1.CommentsModule, // ← Comment routes (/comments/*)
         ],
         controllers: [app_controller_1.AppController],
         providers: [
+            // providers are injectable classes
             app_service_1.AppService,
             {
                 provide: core_1.APP_GUARD,

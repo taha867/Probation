@@ -11,19 +11,17 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const posts_controller_1 = require("./posts.controller");
 const posts_service_1 = require("./posts.service");
-const Post_1 = require("../entities/Post");
-const Comment_1 = require("../entities/Comment");
-const cloudinary_service_1 = require("../shared/services/cloudinary.service");
+const post_entity_1 = require("./post.entity");
+const comment_entity_1 = require("../comments/comment.entity");
+const cloudinary_module_1 = require("../cloudinary/cloudinary.module");
 let PostsModule = class PostsModule {
 };
 exports.PostsModule = PostsModule;
 exports.PostsModule = PostsModule = __decorate([
     (0, common_1.Module)({
-        imports: [
-            typeorm_1.TypeOrmModule.forFeature([Post_1.Post, Comment_1.Comment]),
-        ],
+        imports: [typeorm_1.TypeOrmModule.forFeature([post_entity_1.Post, comment_entity_1.Comment]), cloudinary_module_1.CloudinaryModule],
         controllers: [posts_controller_1.PostsController],
-        providers: [posts_service_1.PostsService, cloudinary_service_1.CloudinaryService],
+        providers: [posts_service_1.PostsService],
         exports: [posts_service_1.PostsService],
     })
 ], PostsModule);

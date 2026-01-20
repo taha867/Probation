@@ -1,4 +1,4 @@
-import { PostStatus } from '../../entities/Post';
+import { PostStatus } from '../post.entity';
 export declare class UpdatePostDto {
     title?: string;
     body?: string;

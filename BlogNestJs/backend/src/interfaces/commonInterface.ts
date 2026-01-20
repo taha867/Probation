@@ -1,5 +1,3 @@
-
-
 /**
  * @template T - Type of data payload (defaults to void for simple success responses)
  */
@@ -112,8 +110,8 @@ export interface BaseEntityOwnershipInput extends BaseAuthorizationInput {
  * Common structure for update operations that accept file uploads
  * Combines authorization, file upload, and update data
  */
-export interface BaseUpdateWithFileInput<T> extends BaseAuthorizationInput, FileUploadInput {
+export interface BaseUpdateWithFileInput<T>
+  extends BaseAuthorizationInput, FileUploadInput {
   entityId: number;
   data: Partial<T>;
 }
-

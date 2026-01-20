@@ -19,7 +19,7 @@ const createComment_dto_1 = require("./dto/createComment.dto");
 const updateComment_dto_1 = require("./dto/updateComment.dto");
 const listCommentsQuery_dto_1 = require("./dto/listCommentsQuery.dto");
 const user_decorator_1 = require("../common/decorators/user.decorator");
-const constants_1 = require("../shared/constants/constants");
+const constants_1 = require("../lib/constants");
 let CommentsController = class CommentsController {
     constructor(commentsService) {
         this.commentsService = commentsService;

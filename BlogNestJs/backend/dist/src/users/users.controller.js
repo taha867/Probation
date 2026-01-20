@@ -20,8 +20,8 @@ const listUsersQuery_dto_1 = require("./dto/listUsersQuery.dto");
 const getUserPostsQuery_dto_1 = require("./dto/getUserPostsQuery.dto");
 const updateUser_dto_1 = require("./dto/updateUser.dto");
 const user_decorator_1 = require("../common/decorators/user.decorator");
-const public_decorator_1 = require("../auth/decorators/public.decorator");
-const constants_1 = require("../shared/constants/constants");
+const public_decorator_1 = require("./auth/decorators/public.decorator");
+const constants_1 = require("../lib/constants");
 let UsersController = class UsersController {
     constructor(usersService) {
         this.usersService = usersService;
@@ -40,7 +40,7 @@ let UsersController = class UsersController {
         const hasBodyFields = Object.keys(updateUserDto).length > 0;
         const hasFileUpload = file !== undefined;
         if (!hasBodyFields && !hasFileUpload) {
-            throw new common_1.BadRequestException('At least one field must be provided to update');
+            throw new common_1.BadRequestException(constants_1.ERROR_MESSAGES.AT_LEAST_ONE_FIELD_REQUIRED);
         }
         return this.usersService.updateUser(id, userId, updateUserDto, file);
     }

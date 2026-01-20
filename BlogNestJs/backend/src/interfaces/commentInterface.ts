@@ -2,9 +2,9 @@ import type {
   ServiceResult,
   BaseEntityOwnershipInput,
   BaseAuthorizationInput,
-} from "./commonInterface";
-import type { BaseUserProfile } from "./userInterface";
-import type { PostSummary } from "./postInterface";
+} from './commonInterface';
+import type { BaseUserProfile } from './userInterface';
+import type { PostSummary } from './postInterface';
 
 /**
  * Base comment interface
@@ -86,12 +86,14 @@ export type CreateCommentServiceResult = ServiceResult<CommentWithRelations>;
  * Update comment service input
  * Input parameters for updateCommentForUser service method
  * Uses DRY principle: Extends base interfaces for authorization
- * 
+ *
  * Note: Uses Omit to override entityId with commentId for clarity
  * authUserId comes from BaseEntityOwnershipInput
  */
-export interface UpdateCommentServiceInput 
-  extends Omit<BaseEntityOwnershipInput, "entityId"> {
+export interface UpdateCommentServiceInput extends Omit<
+  BaseEntityOwnershipInput,
+  'entityId'
+> {
   commentId: number; // Override entityId with comment-specific name
   body: string; // Comment body to update
 }
@@ -107,12 +109,14 @@ export type UpdateCommentServiceResult = ServiceResult<CommentWithRelations>;
  * Delete comment service input
  * Input parameters for deleteCommentForUser service method
  * Uses DRY principle: Extends BaseEntityOwnershipInput for authorization
- * 
+ *
  * Note: Uses Omit to override entityId with commentId for clarity
  * authUserId comes from BaseEntityOwnershipInput
  */
-export interface DeleteCommentServiceInput 
-  extends Omit<BaseEntityOwnershipInput, "entityId"> {
+export interface DeleteCommentServiceInput extends Omit<
+  BaseEntityOwnershipInput,
+  'entityId'
+> {
   commentId: number; // Override entityId with comment-specific name
 }
 
@@ -153,4 +157,3 @@ export type CommentPostId = {
  * Used when destructuring comment data from TypeORM entities
  */
 export type CommentModelData = BaseComment;
-

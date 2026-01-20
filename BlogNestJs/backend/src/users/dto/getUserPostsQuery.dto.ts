@@ -19,4 +19,3 @@ export class GetUserPostsQueryDto {
   @IsString()
   search?: string;
 }
-

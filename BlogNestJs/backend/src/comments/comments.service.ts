@@ -1,13 +1,20 @@
-import { Injectable, NotFoundException, ForbiddenException, HttpStatus, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  HttpStatus,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Comment } from '../entities/Comment';
-import { Post } from '../entities/Post';
-import { mapAuthorData } from '../shared/utils/mappers';
+import { Comment } from './comment.entity';
+import { Post } from '../posts/post.entity';
+import { mapAuthorData } from '../lib/utils/mappers';
 import { AppException } from '../common/exceptions/app.exception';
 import { CreateCommentDto } from './dto/createComment.dto';
 import { UpdateCommentDto } from './dto/updateComment.dto';
 import { ListCommentsQueryDto } from './dto/listCommentsQuery.dto';
+import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '../lib/constants';
 
 @Injectable()
 export class CommentsService {
@@ -15,15 +22,20 @@ export class CommentsService {
     @InjectRepository(Comment)
     private commentRepository: Repository<Comment>,
     @InjectRepository(Post)
-    private postRepository: Repository<Post>
+    private postRepository: Repository<Post>,
   ) {}
 
-  async createCommentOrReply(createCommentDto: CreateCommentDto, userId: number) {
+  async createCommentOrReply(
+    createCommentDto: CreateCommentDto,
+    userId: number,
+  ) {
     const { body, postId, parentId } = createCommentDto;
 
     // Validate that either postId or parentId is provided
     if (!postId && !parentId) {
-      throw new BadRequestException('Either postId or parentId is required');
+      throw new BadRequestException(
+        ERROR_MESSAGES.EITHER_POST_ID_OR_PARENT_ID_REQUIRED,
+      );
     }
 
     let finalPostId: number;
@@ -46,7 +58,7 @@ export class CommentsService {
     } else {
       // This is a top-level comment
       if (!postId) {
-        throw new BadRequestException('POST_ID_REQUIRED');
+        throw new BadRequestException(ERROR_MESSAGES.POST_ID_REQUIRED);
       }
 
       const post = await this.postRepository.findOne({
@@ -74,12 +86,15 @@ export class CommentsService {
     const createdComment = await this.findCommentWithRelations(comment.id);
 
     if (!createdComment) {
-      throw new AppException('COMMENT_CREATION_FAILED', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new AppException(
+        'COMMENT_CREATION_FAILED',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
 
     return {
       data: createdComment,
-      message: 'Comment created successfully',
+      message: SUCCESS_MESSAGES.COMMENT_CREATED,
     };
   }
 
@@ -118,7 +133,16 @@ export class CommentsService {
     });
 
     const commentRows = comments.map((comment) => {
-      const { id, body, postId, userId, parentId, createdAt, updatedAt, author } = comment;
+      const {
+        id,
+        body,
+        postId,
+        userId,
+        parentId,
+        createdAt,
+        updatedAt,
+        author,
+      } = comment;
       return {
         id,
         body,
@@ -190,7 +214,16 @@ export class CommentsService {
     });
 
     const replyRows = replies.map((reply) => {
-      const { id, body, postId, userId, parentId, createdAt, updatedAt, author } = reply;
+      const {
+        id,
+        body,
+        postId,
+        userId,
+        parentId,
+        createdAt,
+        updatedAt,
+        author,
+      } = reply;
       return {
         id,
         body,
@@ -203,7 +236,17 @@ export class CommentsService {
       };
     });
 
-    const { id: commentId, body, postId, userId, parentId, createdAt, updatedAt, author, post } = comment;
+    const {
+      id: commentId,
+      body,
+      postId,
+      userId,
+      parentId,
+      createdAt,
+      updatedAt,
+      author,
+      post,
+    } = comment;
 
     return {
       id: commentId,
@@ -222,7 +265,11 @@ export class CommentsService {
     };
   }
 
-  async updateComment(commentId: number, userId: number, updateCommentDto: UpdateCommentDto) {
+  async updateComment(
+    commentId: number,
+    userId: number,
+    updateCommentDto: UpdateCommentDto,
+  ) {
     const comment = await this.commentRepository.findOne({
       where: { id: commentId },
     });
@@ -243,12 +290,15 @@ export class CommentsService {
     const updated = await this.findCommentWithRelations(commentId);
 
     if (!updated) {
-      throw new AppException('COMMENT_UPDATE_FAILED', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new AppException(
+        'COMMENT_UPDATE_FAILED',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
 
     return {
       data: updated,
-      message: 'Comment updated successfully',
+      message: SUCCESS_MESSAGES.COMMENT_UPDATED,
     };
   }
 
@@ -273,4 +323,3 @@ export class CommentsService {
     await this.commentRepository.delete(commentId);
   }
 }
-

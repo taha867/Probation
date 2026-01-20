@@ -1,4 +1,4 @@
-import { MigrationInterface, QueryRunner } from "typeorm";
+import { MigrationInterface, QueryRunner } from 'typeorm';
 /**
  * Migration: Remove database defaults for createdAt and updatedAt
  *

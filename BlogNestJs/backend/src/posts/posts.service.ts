@@ -1,12 +1,18 @@
-import { Injectable, NotFoundException, ForbiddenException, HttpStatus } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  HttpStatus,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Brackets } from 'typeorm';
-import { Post, PostStatus } from '../entities/Post';
-import { Comment } from '../entities/Comment';
-import { CloudinaryService } from '../shared/services/cloudinary.service';
-import { buildPaginationMeta } from '../shared/utils/pagination';
-import { mapAuthorData } from '../shared/utils/mappers';
+import { Post, PostStatus } from './post.entity';
+import { Comment } from '../comments/comment.entity';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
+import { buildPaginationMeta } from '../lib/utils/pagination';
+import { mapAuthorData } from '../lib/utils/mappers';
 import { AppException } from '../common/exceptions/app.exception';
+import { SUCCESS_MESSAGES, DEFAULTS } from '../lib/constants';
 import { CreatePostDto } from './dto/createPost.dto';
 import { UpdatePostDto } from './dto/updatePost.dto';
 import { ListPostsQueryDto } from './dto/listPostsQuery.dto';
@@ -19,10 +25,14 @@ export class PostsService {
     private postRepository: Repository<Post>,
     @InjectRepository(Comment)
     private commentRepository: Repository<Comment>,
-    private cloudinaryService: CloudinaryService
+    private cloudinaryService: CloudinaryService,
   ) {}
 
-  async createPost(createPostDto: CreatePostDto, userId: number, file?: Express.Multer.File) {
+  async createPost(
+    createPostDto: CreatePostDto,
+    userId: number,
+    file?: Express.Multer.File,
+  ) {
     const { title, body, status = PostStatus.DRAFT } = createPostDto;
 
     let imageUrl: string | null = null;
@@ -32,8 +42,8 @@ export class PostsService {
     if (file) {
       const uploadResult = await this.cloudinaryService.uploadImage(
         file.buffer,
-        'blog/posts',
-        file.originalname || 'post-image'
+        DEFAULTS.CLOUDINARY_POSTS_FOLDER,
+        file.originalname || DEFAULTS.CLOUDINARY_POST_IMAGE_NAME,
       );
       imageUrl = uploadResult.secure_url;
       imagePublicId = uploadResult.public_id;
@@ -53,12 +63,15 @@ export class PostsService {
     // Fetch post with author
     const postWithAuthor = await this.findPostWithAuthor(post.id);
     if (!postWithAuthor) {
-      throw new AppException('POST_CREATION_FAILED', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new AppException(
+        'POST_CREATION_FAILED',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
 
     return {
       data: postWithAuthor,
-      message: 'Post created successfully',
+      message: SUCCESS_MESSAGES.POST_CREATED,
     };
   }
 
@@ -96,9 +109,10 @@ export class PostsService {
     if (search) {
       qb.andWhere(
         new Brackets((qb) => {
-          qb.where('post.title ILIKE :search', { search: `%${search}%` })
-            .orWhere('post.body ILIKE :search', { search: `%${search}%` });
-        })
+          qb.where('post.title ILIKE :search', {
+            search: `%${search}%`,
+          }).orWhere('post.body ILIKE :search', { search: `%${search}%` });
+        }),
       );
     }
 
@@ -109,7 +123,8 @@ export class PostsService {
       .getManyAndCount();
 
     const postRows = posts.map((post) => {
-      const { id, title, body, userId, status, image, imagePublicId, author } = post;
+      const { id, title, body, userId, status, image, imagePublicId, author } =
+        post;
       return {
         id,
         title,
@@ -155,7 +170,16 @@ export class PostsService {
       return null;
     }
 
-    const { id: postId, title, body, userId, status, image, imagePublicId, author } = post;
+    const {
+      id: postId,
+      title,
+      body,
+      userId,
+      status,
+      image,
+      imagePublicId,
+      author,
+    } = post;
     return {
       id: postId,
       title,
@@ -227,7 +251,7 @@ export class PostsService {
     postId: number,
     userId: number,
     updatePostDto: UpdatePostDto,
-    file?: Express.Multer.File
+    file?: Express.Multer.File,
   ) {
     const post = await this.postRepository.findOne({
       where: { id: postId },
@@ -257,8 +281,8 @@ export class PostsService {
 
       const uploadResult = await this.cloudinaryService.uploadImage(
         file.buffer,
-        'blog/posts',
-        file.originalname || 'updated-image'
+        DEFAULTS.CLOUDINARY_POSTS_FOLDER,
+        file.originalname || DEFAULTS.CLOUDINARY_POST_IMAGE_NAME,
       );
       updateData.image = uploadResult.secure_url;
       updateData.imagePublicId = uploadResult.public_id;
@@ -278,12 +302,15 @@ export class PostsService {
     // Fetch updated post with author
     const postWithAuthor = await this.findPostWithAuthor(post.id);
     if (!postWithAuthor) {
-      throw new AppException('POST_UPDATE_FAILED', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new AppException(
+        'POST_UPDATE_FAILED',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
 
     return {
       data: postWithAuthor,
-      message: 'Post updated successfully',
+      message: SUCCESS_MESSAGES.POST_UPDATED,
     };
   }
 
@@ -314,4 +341,3 @@ export class PostsService {
     await this.postRepository.delete(postId);
   }
 }
-

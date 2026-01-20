@@ -1,29 +1,28 @@
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { dataSourceOptions } from './config/data-source-options';
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { CommonModule } from './common/common.module';
-import { DatabaseModule } from './config/database.module';
-import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { PostsModule } from './posts/posts.module';
 import { CommentsModule } from './comments/comments.module';
-import { AuthGuard } from './auth/guards/auth.guard';
+import { AuthGuard } from './users/auth/guards/auth.guard';
+
+// Exclude migrations from runtime config (only needed for CLI)
+const { migrations, migrationsTableName, ...nestOptions } = dataSourceOptions;
 
 @Module({
   imports: [
-    DatabaseModule, // ← Database connection (TypeORM)
-    CommonModule, // ← Shared utilities
-    AuthModule, // ← Authentication routes (/auth/*)
-    UsersModule, // ← User routes (/users/*)
-    PostsModule, // ← Post routes (/posts/*)
-    CommentsModule, // ← Comment routes (/comments/*)
-    // Global rate limiting configuration
+    TypeOrmModule.forRoot({
+      ...nestOptions,
+      autoLoadEntities: true,
+    }),
     ThrottlerModule.forRoot([
       {
         name: 'short', // Short-lived requests (e.g., login)
-        ttl: 1000, 
+        ttl: 1000,
         limit: 3, // max 3 requests per second
       },
       {
@@ -37,9 +36,13 @@ import { AuthGuard } from './auth/guards/auth.guard';
         limit: 5, // 5 login attempts per minute
       },
     ]),
+    UsersModule, // ← User routes (/users/*) and Auth routes (/auth/*)
+    PostsModule, // ← Post routes (/posts/*)
+    CommentsModule, // ← Comment routes (/comments/*)
   ],
   controllers: [AppController],
-  providers: [ // providers are injectable classes
+  providers: [
+    // providers are injectable classes
     AppService,
     {
       provide: APP_GUARD,
@@ -52,4 +55,3 @@ import { AuthGuard } from './auth/guards/auth.guard';
   ],
 })
 export class AppModule {}
-

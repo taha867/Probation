@@ -16,12 +16,13 @@ exports.UsersService = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
-const User_1 = require("../entities/User");
-const Post_1 = require("../entities/Post");
-const cloudinary_service_1 = require("../shared/services/cloudinary.service");
-const pagination_1 = require("../shared/utils/pagination");
-const bcrypt_1 = require("../shared/utils/bcrypt");
+const user_entity_1 = require("./user.entity");
+const post_entity_1 = require("../posts/post.entity");
+const cloudinary_service_1 = require("../cloudinary/cloudinary.service");
+const pagination_1 = require("../lib/utils/pagination");
+const bcrypt_1 = require("../lib/utils/bcrypt");
 const app_exception_1 = require("../common/exceptions/app.exception");
+const constants_1 = require("../lib/constants");
 let UsersService = class UsersService {
     constructor(userRepository, postRepository, cloudinaryService) {
         this.userRepository = userRepository;
@@ -100,8 +101,9 @@ let UsersService = class UsersService {
             .where('post.userId = :userId', { userId });
         if (search) {
             qb.andWhere(new typeorm_2.Brackets((qb) => {
-                qb.where('post.title ILIKE :search', { search: `%${search}%` })
-                    .orWhere('post.body ILIKE :search', { search: `%${search}%` });
+                qb.where('post.title ILIKE :search', {
+                    search: `%${search}%`,
+                }).orWhere('post.body ILIKE :search', { search: `%${search}%` });
             }));
         }
         const [posts, total] = await qb
@@ -177,7 +179,7 @@ let UsersService = class UsersService {
             if (user.imagePublicId) {
                 await this.cloudinaryService.deleteImage(user.imagePublicId);
             }
-            const uploadResult = await this.cloudinaryService.uploadImage(file.buffer, 'blog/users', file.originalname || 'profile-image');
+            const uploadResult = await this.cloudinaryService.uploadImage(file.buffer, constants_1.DEFAULTS.CLOUDINARY_USERS_FOLDER, file.originalname || constants_1.DEFAULTS.CLOUDINARY_PROFILE_IMAGE_NAME);
             updateData.image = uploadResult.secure_url;
             updateData.imagePublicId = uploadResult.public_id;
         }
@@ -209,7 +211,7 @@ let UsersService = class UsersService {
         }
         return {
             data: {
-                message: 'User updated successfully',
+                message: constants_1.SUCCESS_MESSAGES.USER_UPDATED,
                 user: {
                     id: updatedUser.id,
                     name: updatedUser.name,
@@ -247,8 +249,8 @@ let UsersService = class UsersService {
 exports.UsersService = UsersService;
 exports.UsersService = UsersService = __decorate([
     (0, common_1.Injectable)(),
-    __param(0, (0, typeorm_1.InjectRepository)(User_1.User)),
-    __param(1, (0, typeorm_1.InjectRepository)(Post_1.Post)),
+    __param(0, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
+    __param(1, (0, typeorm_1.InjectRepository)(post_entity_1.Post)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
         typeorm_2.Repository,
         cloudinary_service_1.CloudinaryService])

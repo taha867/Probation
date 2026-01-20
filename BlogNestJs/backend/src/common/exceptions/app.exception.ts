@@ -4,10 +4,9 @@ export class AppException extends HttpException {
   constructor(
     public readonly code: string,
     statusCode: HttpStatus,
-    message?: string
+    message?: string,
   ) {
     super(message || code, statusCode);
     this.code = code;
   }
 }
-

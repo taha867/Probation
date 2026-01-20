@@ -1,4 +1,4 @@
-import { PostStatus } from '../../entities/Post';
+import { PostStatus } from '../post.entity';
 export declare class ListPostsQueryDto {
     page?: number;
     limit?: number;

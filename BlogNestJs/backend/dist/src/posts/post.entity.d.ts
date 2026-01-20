@@ -1,0 +1,27 @@
+import type { User } from '../users/user.entity';
+import type { Comment } from '../comments/comment.entity';
+import { BaseEntity } from '../common/entities/BaseEntity';
+/**
+ * Post status enum, best for roles, status, updates, etc.
+ */
+export declare enum PostStatus {
+    DRAFT = "draft",
+    PUBLISHED = "published"
+}
+/**
+ * Post entity
+ * Represents a blog post in the database
+ * Extends BaseEntity for automatic timestamp management
+ */
+export declare class Post extends BaseEntity {
+    id: number;
+    title: string;
+    body: string;
+    userId: number;
+    status: PostStatus;
+    image: string | null;
+    imagePublicId: string | null;
+    author: User;
+    comments: Comment[];
+}
+//# sourceMappingURL=post.entity.d.ts.map

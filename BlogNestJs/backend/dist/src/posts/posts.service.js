@@ -16,12 +16,13 @@ exports.PostsService = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
-const Post_1 = require("../entities/Post");
-const Comment_1 = require("../entities/Comment");
-const cloudinary_service_1 = require("../shared/services/cloudinary.service");
-const pagination_1 = require("../shared/utils/pagination");
-const mappers_1 = require("../shared/utils/mappers");
+const post_entity_1 = require("./post.entity");
+const comment_entity_1 = require("../comments/comment.entity");
+const cloudinary_service_1 = require("../cloudinary/cloudinary.service");
+const pagination_1 = require("../lib/utils/pagination");
+const mappers_1 = require("../lib/utils/mappers");
 const app_exception_1 = require("../common/exceptions/app.exception");
+const constants_1 = require("../lib/constants");
 let PostsService = class PostsService {
     constructor(postRepository, commentRepository, cloudinaryService) {
         this.postRepository = postRepository;
@@ -29,12 +30,12 @@ let PostsService = class PostsService {
         this.cloudinaryService = cloudinaryService;
     }
     async createPost(createPostDto, userId, file) {
-        const { title, body, status = Post_1.PostStatus.DRAFT } = createPostDto;
+        const { title, body, status = post_entity_1.PostStatus.DRAFT } = createPostDto;
         let imageUrl = null;
         let imagePublicId = null;
         // Upload image if provided
         if (file) {
-            const uploadResult = await this.cloudinaryService.uploadImage(file.buffer, 'blog/posts', file.originalname || 'post-image');
+            const uploadResult = await this.cloudinaryService.uploadImage(file.buffer, constants_1.DEFAULTS.CLOUDINARY_POSTS_FOLDER, file.originalname || constants_1.DEFAULTS.CLOUDINARY_POST_IMAGE_NAME);
             imageUrl = uploadResult.secure_url;
             imagePublicId = uploadResult.public_id;
         }
@@ -54,7 +55,7 @@ let PostsService = class PostsService {
         }
         return {
             data: postWithAuthor,
-            message: 'Post created successfully',
+            message: constants_1.SUCCESS_MESSAGES.POST_CREATED,
         };
     }
     async listPosts(query) {
@@ -86,8 +87,9 @@ let PostsService = class PostsService {
         }
         if (search) {
             qb.andWhere(new typeorm_2.Brackets((qb) => {
-                qb.where('post.title ILIKE :search', { search: `%${search}%` })
-                    .orWhere('post.body ILIKE :search', { search: `%${search}%` });
+                qb.where('post.title ILIKE :search', {
+                    search: `%${search}%`,
+                }).orWhere('post.body ILIKE :search', { search: `%${search}%` });
             }));
         }
         const [posts, total] = await qb
@@ -138,7 +140,7 @@ let PostsService = class PostsService {
         if (!post) {
             return null;
         }
-        const { id: postId, title, body, userId, status, image, imagePublicId, author } = post;
+        const { id: postId, title, body, userId, status, image, imagePublicId, author, } = post;
         return {
             id: postId,
             title,
@@ -223,7 +225,7 @@ let PostsService = class PostsService {
             if (post.imagePublicId) {
                 await this.cloudinaryService.deleteImage(post.imagePublicId);
             }
-            const uploadResult = await this.cloudinaryService.uploadImage(file.buffer, 'blog/posts', file.originalname || 'updated-image');
+            const uploadResult = await this.cloudinaryService.uploadImage(file.buffer, constants_1.DEFAULTS.CLOUDINARY_POSTS_FOLDER, file.originalname || constants_1.DEFAULTS.CLOUDINARY_POST_IMAGE_NAME);
             updateData.image = uploadResult.secure_url;
             updateData.imagePublicId = uploadResult.public_id;
         }
@@ -245,7 +247,7 @@ let PostsService = class PostsService {
         }
         return {
             data: postWithAuthor,
-            message: 'Post updated successfully',
+            message: constants_1.SUCCESS_MESSAGES.POST_UPDATED,
         };
     }
     async deletePost(postId, userId) {
@@ -274,8 +276,8 @@ let PostsService = class PostsService {
 exports.PostsService = PostsService;
 exports.PostsService = PostsService = __decorate([
     (0, common_1.Injectable)(),
-    __param(0, (0, typeorm_1.InjectRepository)(Post_1.Post)),
-    __param(1, (0, typeorm_1.InjectRepository)(Comment_1.Comment)),
+    __param(0, (0, typeorm_1.InjectRepository)(post_entity_1.Post)),
+    __param(1, (0, typeorm_1.InjectRepository)(comment_entity_1.Comment)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
         typeorm_2.Repository,
         cloudinary_service_1.CloudinaryService])

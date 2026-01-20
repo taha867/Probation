@@ -1,5 +1,5 @@
-import type { ServiceResult } from "./commonInterface";
-import type { PublicUserProfile } from "./userInterface";
+import type { ServiceResult } from './commonInterface';
+import type { PublicUserProfile } from './userInterface';
 
 /**
  * JWT token payload structure
@@ -8,7 +8,7 @@ import type { PublicUserProfile } from "./userInterface";
  */
 export interface TokenPayload {
   userId: number;
-  type: "access" | "refresh" | "password_reset";
+  type: 'access' | 'refresh' | 'password_reset';
   iat?: number;
   exp?: number;
 }
@@ -18,7 +18,7 @@ export interface TokenPayload {
  * Includes tokenVersion for token invalidation
  */
 export interface AccessRefreshTokenPayload extends TokenPayload {
-  type: "access" | "refresh";
+  type: 'access' | 'refresh';
   tokenVersion: number;
   email?: string; // Present in access tokens
 }
@@ -119,5 +119,5 @@ export interface PasswordResetTokenResultData {
  * Indicates whether email was sent successfully
  * Uses ServiceResult<T> DTO for consistency
  */
-export type PasswordResetTokenResult = ServiceResult<PasswordResetTokenResultData>;
-
+export type PasswordResetTokenResult =
+  ServiceResult<PasswordResetTokenResultData>;

@@ -21,7 +21,7 @@ const updatePost_dto_1 = require("./dto/updatePost.dto");
 const listPostsQuery_dto_1 = require("./dto/listPostsQuery.dto");
 const paginationQuery_dto_1 = require("./dto/paginationQuery.dto");
 const user_decorator_1 = require("../common/decorators/user.decorator");
-const constants_1 = require("../shared/constants/constants");
+const constants_1 = require("../lib/constants");
 let PostsController = class PostsController {
     constructor(postsService) {
         this.postsService = postsService;
@@ -49,7 +49,7 @@ let PostsController = class PostsController {
         const hasBodyFields = Object.keys(updatePostDto).length > 0;
         const hasFileUpload = file !== undefined;
         if (!hasBodyFields && !hasFileUpload) {
-            throw new common_1.BadRequestException('At least one field must be provided to update');
+            throw new common_1.BadRequestException(constants_1.ERROR_MESSAGES.AT_LEAST_ONE_FIELD_REQUIRED);
         }
         return this.postsService.updatePost(id, userId, updatePostDto, file);
     }

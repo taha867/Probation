@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UpdateUserDto = void 0;
 const class_validator_1 = require("class-validator");
+const constants_1 = require("../../lib/constants");
 class UpdateUserDto {
 }
 exports.UpdateUserDto = UpdateUserDto;
@@ -19,7 +20,7 @@ __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.MinLength)(2),
     (0, class_validator_1.Matches)(/^[A-Za-z\s]+$/, {
-        message: 'Name must contain only letters and spaces',
+        message: constants_1.VALIDATION_MESSAGES.NAME_INVALID_CHARS,
     }),
     __metadata("design:type", String)
 ], UpdateUserDto.prototype, "name", void 0);
@@ -32,7 +33,7 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.Matches)(/^\+?[0-9]{10,15}$/, {
-        message: 'Phone number must be 10 to 15 digits',
+        message: constants_1.VALIDATION_MESSAGES.PHONE_INVALID_FORMAT,
     }),
     __metadata("design:type", Object)
 ], UpdateUserDto.prototype, "phone", void 0);

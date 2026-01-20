@@ -7,8 +7,8 @@ export declare class UsersController {
     constructor(usersService: UsersService);
     list(query: ListUsersQueryDto): Promise<{
         data: {
-            users: import("../entities/User").User[];
-            meta: import("../interfaces").PaginationMeta;
+            users: import("./user.entity").User[];
+            meta: import("../interfaces/commonInterface").PaginationMeta;
         };
     }>;
     getCurrentUser(userId: number): Promise<{
@@ -29,13 +29,13 @@ export declare class UsersController {
                 email: string;
                 image: string | null;
             };
-            posts: import("../entities/Post").Post[];
-            meta: import("../interfaces").PaginationMeta;
+            posts: import("../posts/post.entity").Post[];
+            meta: import("../interfaces/commonInterface").PaginationMeta;
         };
     }>;
     update(id: number, updateUserDto: UpdateUserDto, userId: number, file?: Express.Multer.File): Promise<{
         data: {
-            message: string;
+            message: "User updated successfully";
             user: {
                 id: number;
                 name: string;

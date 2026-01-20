@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.CreateCommentDto = void 0;
 const class_validator_1 = require("class-validator");
 const class_transformer_1 = require("class-transformer");
+const constants_1 = require("../../lib/constants");
 class CreateCommentDto {
 }
 exports.CreateCommentDto = CreateCommentDto;
@@ -20,7 +21,7 @@ __decorate([
     (0, class_validator_1.MinLength)(1),
     (0, class_validator_1.MaxLength)(2000),
     (0, class_validator_1.Matches)(/^[^<>]*$/, {
-        message: 'Comment body contains invalid characters',
+        message: constants_1.VALIDATION_MESSAGES.COMMENT_BODY_INVALID_CHARS,
     }),
     __metadata("design:type", String)
 ], CreateCommentDto.prototype, "body", void 0);

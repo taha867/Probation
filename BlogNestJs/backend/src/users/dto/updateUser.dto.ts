@@ -1,11 +1,19 @@
-import { IsString, IsEmail, IsOptional, MinLength, Matches, IsUrl } from 'class-validator';
+import {
+  IsString,
+  IsEmail,
+  IsOptional,
+  MinLength,
+  Matches,
+  IsUrl,
+} from 'class-validator';
+import { VALIDATION_MESSAGES } from '../../lib/constants';
 
 export class UpdateUserDto {
   @IsOptional()
   @IsString()
   @MinLength(2)
   @Matches(/^[A-Za-z\s]+$/, {
-    message: 'Name must contain only letters and spaces',
+    message: VALIDATION_MESSAGES.NAME_INVALID_CHARS,
   })
   name?: string;
 
@@ -16,7 +24,7 @@ export class UpdateUserDto {
   @IsOptional()
   @IsString()
   @Matches(/^\+?[0-9]{10,15}$/, {
-    message: 'Phone number must be 10 to 15 digits',
+    message: VALIDATION_MESSAGES.PHONE_INVALID_FORMAT,
   })
   phone?: string | null;
 
@@ -29,4 +37,3 @@ export class UpdateUserDto {
   @IsUrl()
   image?: string | null;
 }
-

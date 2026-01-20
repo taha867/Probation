@@ -41,13 +41,12 @@ dotenv.config();
 const core_1 = require("@nestjs/core"); // A factory class that creates a NestJS application instance
 const app_module_1 = require("./app.module"); // The root module of the application
 const common_1 = require("@nestjs/common"); // A global validation pipe that validates all DTOs automatically
-const http_exception_filter_1 = require("./common/filters/http-exception.filter"); // A global exception filter that catches all errors
+const httpException_filter_1 = require("./common/filters/httpException.filter"); // A global exception filter that catches all errors
 const helmet_1 = __importDefault(require("helmet")); // A middleware that sets various HTTP headers for security
 const cookie_parser_1 = __importDefault(require("cookie-parser")); // A middleware that parses cookies from the request
+const constants_1 = require("./lib/constants");
 async function bootstrap() {
-    // Environment variables are already loaded above
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
-    // Security middleware (ORDER MATTERS!)
     app.use((0, helmet_1.default)()); //Protects against: XSS, Clickjacking, MIME sniffing
     app.use((0, cookie_parser_1.default)());
     // CORS configuration
@@ -62,18 +61,18 @@ async function bootstrap() {
         whitelist: true, // Strip away properties that do not have any decorators
         forbidNonWhitelisted: true, // Throw an error if non-whitelisted properties are present
         transform: true, // Automatically transform payloads to DTO instances
-        validateCustomDecorators: true,
+        validateCustomDecorators: true, // Validate custom decorators
         transformOptions: {
-            enableImplicitConversion: true, // Automatically transform primitive types
+            enableImplicitConversion: true, // Automatically converts string query/route parameters to their expected types.
         },
     }));
     // Global exception filter(Error handling Layer)
-    app.useGlobalFilters(new http_exception_filter_1.AppExceptionFilter());
+    app.useGlobalFilters(new httpException_filter_1.AppExceptionFilter());
     // Trust proxy (if behind load balancer/reverse proxy)
     app.set('trust proxy', true);
     const port = process.env.PORT || 3000;
     await app.listen(port);
-    console.log(`Application is running on: ${await app.getUrl()}`);
+    console.log(`${constants_1.LOG_MESSAGES.APP_RUNNING} ${await app.getUrl()}`);
 }
 bootstrap();
 //# sourceMappingURL=main.js.map

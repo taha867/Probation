@@ -11,16 +11,14 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const comments_controller_1 = require("./comments.controller");
 const comments_service_1 = require("./comments.service");
-const Comment_1 = require("../entities/Comment");
-const Post_1 = require("../entities/Post");
+const comment_entity_1 = require("./comment.entity");
+const post_entity_1 = require("../posts/post.entity");
 let CommentsModule = class CommentsModule {
 };
 exports.CommentsModule = CommentsModule;
 exports.CommentsModule = CommentsModule = __decorate([
     (0, common_1.Module)({
-        imports: [
-            typeorm_1.TypeOrmModule.forFeature([Comment_1.Comment, Post_1.Post]),
-        ],
+        imports: [typeorm_1.TypeOrmModule.forFeature([comment_entity_1.Comment, post_entity_1.Post])],
         controllers: [comments_controller_1.CommentsController],
         providers: [comments_service_1.CommentsService],
         exports: [comments_service_1.CommentsService],

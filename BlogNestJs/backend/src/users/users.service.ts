@@ -1,12 +1,18 @@
-import { Injectable, NotFoundException, ForbiddenException, HttpStatus } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  HttpStatus,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Brackets, Not } from 'typeorm';
-import { User } from '../entities/User';
-import { Post } from '../entities/Post';
-import { CloudinaryService } from '../shared/services/cloudinary.service';
-import { buildPaginationMeta } from '../shared/utils/pagination';
-import { hashPassword } from '../shared/utils/bcrypt';
+import { User } from './user.entity';
+import { Post } from '../posts/post.entity';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
+import { buildPaginationMeta } from '../lib/utils/pagination';
+import { hashPassword } from '../lib/utils/bcrypt';
 import { AppException } from '../common/exceptions/app.exception';
+import { SUCCESS_MESSAGES, DEFAULTS } from '../lib/constants';
 import { ListUsersQueryDto } from './dto/listUsersQuery.dto';
 import { GetUserPostsQueryDto } from './dto/getUserPostsQuery.dto';
 import { UpdateUserDto } from './dto/updateUser.dto';
@@ -18,7 +24,7 @@ export class UsersService {
     private userRepository: Repository<User>,
     @InjectRepository(Post)
     private postRepository: Repository<Post>,
-    private cloudinaryService: CloudinaryService
+    private cloudinaryService: CloudinaryService,
   ) {}
 
   async listUsers(query: ListUsersQueryDto) {
@@ -74,10 +80,7 @@ export class UsersService {
     };
   }
 
-  async getUserPostsWithComments(
-    userId: number,
-    query: GetUserPostsQueryDto
-  ) {
+  async getUserPostsWithComments(userId: number, query: GetUserPostsQueryDto) {
     const { page = 1, limit = 20, search } = query;
     const offset = (page - 1) * limit;
 
@@ -107,9 +110,10 @@ export class UsersService {
     if (search) {
       qb.andWhere(
         new Brackets((qb) => {
-          qb.where('post.title ILIKE :search', { search: `%${search}%` })
-            .orWhere('post.body ILIKE :search', { search: `%${search}%` });
-        })
+          qb.where('post.title ILIKE :search', {
+            search: `%${search}%`,
+          }).orWhere('post.body ILIKE :search', { search: `%${search}%` });
+        }),
       );
     }
 
@@ -139,7 +143,7 @@ export class UsersService {
     requestedUserId: number,
     authUserId: number,
     updateUserDto: UpdateUserDto,
-    file?: Express.Multer.File
+    file?: Express.Multer.File,
   ) {
     // Authorization check
     if (requestedUserId !== authUserId) {
@@ -173,7 +177,10 @@ export class UsersService {
         where: { email, id: Not(requestedUserId) },
       });
       if (emailExists) {
-        throw new AppException('EMAIL_ALREADY_EXISTS', HttpStatus.UNPROCESSABLE_ENTITY);
+        throw new AppException(
+          'EMAIL_ALREADY_EXISTS',
+          HttpStatus.UNPROCESSABLE_ENTITY,
+        );
       }
       updateData.email = email;
     }
@@ -184,7 +191,10 @@ export class UsersService {
           where: { phone, id: Not(requestedUserId) },
         });
         if (phoneExists) {
-          throw new AppException('PHONE_ALREADY_EXISTS', HttpStatus.UNPROCESSABLE_ENTITY);
+          throw new AppException(
+            'PHONE_ALREADY_EXISTS',
+            HttpStatus.UNPROCESSABLE_ENTITY,
+          );
         }
       }
       updateData.phone = phone;
@@ -203,8 +213,8 @@ export class UsersService {
 
       const uploadResult = await this.cloudinaryService.uploadImage(
         file.buffer,
-        'blog/users',
-        file.originalname || 'profile-image'
+        DEFAULTS.CLOUDINARY_USERS_FOLDER,
+        file.originalname || DEFAULTS.CLOUDINARY_PROFILE_IMAGE_NAME,
       );
       updateData.image = uploadResult.secure_url;
       updateData.imagePublicId = uploadResult.public_id;
@@ -235,12 +245,15 @@ export class UsersService {
     });
 
     if (!updatedUser) {
-      throw new AppException('USER_UPDATE_FAILED', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new AppException(
+        'USER_UPDATE_FAILED',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
 
     return {
       data: {
-        message: 'User updated successfully',
+        message: SUCCESS_MESSAGES.USER_UPDATED,
         user: {
           id: updatedUser.id,
           name: updatedUser.name,
@@ -280,4 +293,3 @@ export class UsersService {
     await this.userRepository.delete(requestedUserId);
   }
 }
-

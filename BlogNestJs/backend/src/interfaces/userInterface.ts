@@ -6,7 +6,7 @@ import type {
   BaseUpdateWithFileInput,
   BaseEntityOwnershipInput,
   PaginationMeta,
-} from "./commonInterface";
+} from './commonInterface';
 
 /**
  * Base user profile interface
@@ -52,7 +52,7 @@ export type UserTokenVersion = {
  * User ID and email with token version type
  * Used for token refresh operations that need id, email, and tokenVersion
  */
-export type UserIdEmailToken = Pick<PublicUserProfile, "id" | "email"> & {
+export type UserIdEmailToken = Pick<PublicUserProfile, 'id' | 'email'> & {
   tokenVersion?: number;
 };
 
@@ -60,7 +60,7 @@ export type UserIdEmailToken = Pick<PublicUserProfile, "id" | "email"> & {
  * User ID and name type
  * Used for operations that only need user identification and name
  */
-export type UserIdAndName = Pick<BaseUserProfile, "id" | "name">;
+export type UserIdAndName = Pick<BaseUserProfile, 'id' | 'name'>;
 
 /**
  * User image public ID type
@@ -75,8 +75,9 @@ export type UserImagePublicId = {
  * Data that can be updated by user
  * All fields are optional (partial update)
  */
-export interface UpdateUserInput 
-  extends Partial<Omit<PublicUserProfile, "id" | "status">> {
+export interface UpdateUserInput extends Partial<
+  Omit<PublicUserProfile, 'id' | 'status'>
+> {
   password?: string; // Password is not part of PublicUserProfile
 }
 
@@ -105,12 +106,14 @@ export type ListUsersResult = PaginatedResult<PublicUserProfile>;
  * Update user service input
  * Input parameters for updateUserForSelf service method
  * Uses DRY principle: Extends base interfaces for authorization and file upload
- * 
+ *
  * Note: Uses intersection type to override entityId with requestedUserId for clarity
  * All other fields (authUserId, data, fileBuffer, fileName) come from BaseUpdateWithFileInput
  */
-export interface UpdateUserServiceInput 
-  extends Omit<BaseUpdateWithFileInput<UpdateUserInput>, "entityId"> {
+export interface UpdateUserServiceInput extends Omit<
+  BaseUpdateWithFileInput<UpdateUserInput>,
+  'entityId'
+> {
   requestedUserId: number; // Override entityId with user-specific name
 }
 
@@ -125,20 +128,21 @@ export type UpdateUserServiceResult = ServiceResult<PublicUserProfile>;
  * Delete user service input
  * Input parameters for deleteUserForSelf service method
  * Uses DRY principle: Extends BaseEntityOwnershipInput for authorization
- * 
+ *
  * Note: Uses Omit to override entityId with requestedUserId for clarity
  * authUserId comes from BaseEntityOwnershipInput
  */
-export interface DeleteUserServiceInput 
-  extends Omit<BaseEntityOwnershipInput, "entityId"> {
+export interface DeleteUserServiceInput extends Omit<
+  BaseEntityOwnershipInput,
+  'entityId'
+> {
   requestedUserId: number; // Override entityId with user-specific name
 }
-
 
 /**
  * Get user posts service input
  * Input parameters for getUserPostsWithComments service method
- * 
+ *
  * Note: Kept explicit (not extending SearchableQuery) because:
  * - page and limit are required here (not optional like in SearchableQuery)
  * - offset is calculated, not part of input
@@ -162,4 +166,3 @@ export interface GetUserPostsServiceResult {
   posts: any[]; // TODO: Type this properly with Post interface
   meta: PaginationMeta | null;
 }
-

@@ -17,8 +17,8 @@ import { ListUsersQueryDto } from './dto/listUsersQuery.dto';
 import { GetUserPostsQueryDto } from './dto/getUserPostsQuery.dto';
 import { UpdateUserDto } from './dto/updateUser.dto';
 import { User } from '../common/decorators/user.decorator';
-import { Public } from '../auth/decorators/public.decorator';
-import { SUCCESS_MESSAGES } from '../shared/constants/constants';
+import { Public } from './auth/decorators/public.decorator';
+import { SUCCESS_MESSAGES, ERROR_MESSAGES } from '../lib/constants';
 
 @Controller('users')
 export class UsersController {
@@ -39,7 +39,7 @@ export class UsersController {
   @Get(':id/posts')
   async getUserPosts(
     @Param('id', ParseIntPipe) id: number,
-    @Query() query: GetUserPostsQueryDto
+    @Query() query: GetUserPostsQueryDto,
   ) {
     return this.usersService.getUserPostsWithComments(id, query);
   }
@@ -50,14 +50,14 @@ export class UsersController {
     @Param('id', ParseIntPipe) id: number,
     @Body() updateUserDto: UpdateUserDto,
     @User('id') userId: number,
-    @UploadedFile() file?: Express.Multer.File
+    @UploadedFile() file?: Express.Multer.File,
   ) {
     // Check if at least one field is being updated
     const hasBodyFields = Object.keys(updateUserDto).length > 0;
     const hasFileUpload = file !== undefined;
 
     if (!hasBodyFields && !hasFileUpload) {
-      throw new BadRequestException('At least one field must be provided to update');
+      throw new BadRequestException(ERROR_MESSAGES.AT_LEAST_ONE_FIELD_REQUIRED);
     }
 
     return this.usersService.updateUser(id, userId, updateUserDto, file);
@@ -66,7 +66,7 @@ export class UsersController {
   @Delete(':id')
   async delete(
     @Param('id', ParseIntPipe) id: number,
-    @User('id') userId: number
+    @User('id') userId: number,
   ) {
     await this.usersService.deleteUser(id, userId);
     return {
@@ -74,4 +74,3 @@ export class UsersController {
     };
   }
 }
-

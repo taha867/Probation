@@ -1,6 +1,6 @@
-import type { ServiceResult, BaseEntityOwnershipInput, BaseAuthorizationInput } from "./commonInterface";
-import type { BaseUserProfile } from "./userInterface";
-import type { PostSummary } from "./postInterface";
+import type { ServiceResult, BaseEntityOwnershipInput, BaseAuthorizationInput } from './commonInterface';
+import type { BaseUserProfile } from './userInterface';
+import type { PostSummary } from './postInterface';
 /**
  * Base comment interface
  * Common comment fields used across the application
@@ -77,7 +77,7 @@ export type CreateCommentServiceResult = ServiceResult<CommentWithRelations>;
  * Note: Uses Omit to override entityId with commentId for clarity
  * authUserId comes from BaseEntityOwnershipInput
  */
-export interface UpdateCommentServiceInput extends Omit<BaseEntityOwnershipInput, "entityId"> {
+export interface UpdateCommentServiceInput extends Omit<BaseEntityOwnershipInput, 'entityId'> {
     commentId: number;
     body: string;
 }
@@ -95,7 +95,7 @@ export type UpdateCommentServiceResult = ServiceResult<CommentWithRelations>;
  * Note: Uses Omit to override entityId with commentId for clarity
  * authUserId comes from BaseEntityOwnershipInput
  */
-export interface DeleteCommentServiceInput extends Omit<BaseEntityOwnershipInput, "entityId"> {
+export interface DeleteCommentServiceInput extends Omit<BaseEntityOwnershipInput, 'entityId'> {
     commentId: number;
 }
 /**

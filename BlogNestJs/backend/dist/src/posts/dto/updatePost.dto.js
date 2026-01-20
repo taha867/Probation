@@ -11,7 +11,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UpdatePostDto = void 0;
 const class_validator_1 = require("class-validator");
-const Post_1 = require("../../entities/Post");
+const post_entity_1 = require("../post.entity");
+const constants_1 = require("../../lib/constants");
 class UpdatePostDto {
 }
 exports.UpdatePostDto = UpdatePostDto;
@@ -21,7 +22,7 @@ __decorate([
     (0, class_validator_1.MinLength)(1),
     (0, class_validator_1.MaxLength)(200),
     (0, class_validator_1.Matches)(/^[^<>]*$/, {
-        message: 'Title contains invalid characters',
+        message: constants_1.VALIDATION_MESSAGES.TITLE_INVALID_CHARS,
     }),
     __metadata("design:type", String)
 ], UpdatePostDto.prototype, "title", void 0);
@@ -31,13 +32,13 @@ __decorate([
     (0, class_validator_1.MinLength)(1),
     (0, class_validator_1.MaxLength)(5000),
     (0, class_validator_1.Matches)(/^[^<>]*$/, {
-        message: 'Body contains invalid characters',
+        message: constants_1.VALIDATION_MESSAGES.BODY_INVALID_CHARS,
     }),
     __metadata("design:type", String)
 ], UpdatePostDto.prototype, "body", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsEnum)(Post_1.PostStatus),
+    (0, class_validator_1.IsEnum)(post_entity_1.PostStatus),
     __metadata("design:type", String)
 ], UpdatePostDto.prototype, "status", void 0);
 __decorate([

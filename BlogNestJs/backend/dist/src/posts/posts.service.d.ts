@@ -1,7 +1,7 @@
 import { Repository } from 'typeorm';
-import { Post, PostStatus } from '../entities/Post';
-import { Comment } from '../entities/Comment';
-import { CloudinaryService } from '../shared/services/cloudinary.service';
+import { Post, PostStatus } from './post.entity';
+import { Comment } from '../comments/comment.entity';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { CreatePostDto } from './dto/createPost.dto';
 import { UpdatePostDto } from './dto/updatePost.dto';
 import { ListPostsQueryDto } from './dto/listPostsQuery.dto';
@@ -20,9 +20,9 @@ export declare class PostsService {
             status: PostStatus;
             image: string | null;
             imagePublicId: string | null;
-            author: import("../interfaces").BaseUserProfile;
+            author: import("../interfaces/userInterface").BaseUserProfile;
         };
-        message: string;
+        message: "Post created successfully";
     }>;
     listPosts(query: ListPostsQueryDto): Promise<{
         data: {
@@ -34,9 +34,9 @@ export declare class PostsService {
                 status: PostStatus;
                 image: string | null;
                 imagePublicId: string | null;
-                author: import("../interfaces").BaseUserProfile;
+                author: import("../interfaces/userInterface").BaseUserProfile;
             }[];
-            meta: import("../interfaces").PaginationMeta;
+            meta: import("../interfaces/commonInterface").PaginationMeta;
         };
     }>;
     findPostWithAuthor(id: number): Promise<{
@@ -47,7 +47,7 @@ export declare class PostsService {
         status: PostStatus;
         image: string | null;
         imagePublicId: string | null;
-        author: import("../interfaces").BaseUserProfile;
+        author: import("../interfaces/userInterface").BaseUserProfile;
     } | null>;
     getPostWithComments(postId: number, query: PaginationQueryDto): Promise<{
         data: {
@@ -61,7 +61,7 @@ export declare class PostsService {
                 imagePublicId: string | null;
             };
             comments: Comment[];
-            meta: import("../interfaces").PaginationMeta;
+            meta: import("../interfaces/commonInterface").PaginationMeta;
         };
     }>;
     updatePost(postId: number, userId: number, updatePostDto: UpdatePostDto, file?: Express.Multer.File): Promise<{
@@ -73,9 +73,9 @@ export declare class PostsService {
             status: PostStatus;
             image: string | null;
             imagePublicId: string | null;
-            author: import("../interfaces").BaseUserProfile;
+            author: import("../interfaces/userInterface").BaseUserProfile;
         };
-        message: string;
+        message: "Post updated successfully";
     }>;
     deletePost(postId: number, userId: number): Promise<void>;
 }

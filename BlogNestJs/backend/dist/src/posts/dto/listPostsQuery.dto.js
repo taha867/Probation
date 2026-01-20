@@ -12,7 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ListPostsQueryDto = void 0;
 const class_validator_1 = require("class-validator");
 const class_transformer_1 = require("class-transformer");
-const Post_1 = require("../../entities/Post");
+const post_entity_1 = require("../post.entity");
 class ListPostsQueryDto {
     constructor() {
         this.page = 1;
@@ -49,7 +49,7 @@ __decorate([
 ], ListPostsQueryDto.prototype, "userId", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsEnum)(Post_1.PostStatus),
+    (0, class_validator_1.IsEnum)(post_entity_1.PostStatus),
     __metadata("design:type", String)
 ], ListPostsQueryDto.prototype, "status", void 0);
 //# sourceMappingURL=listPostsQuery.dto.js.map

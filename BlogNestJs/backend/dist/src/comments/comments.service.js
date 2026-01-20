@@ -16,10 +16,11 @@ exports.CommentsService = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
-const Comment_1 = require("../entities/Comment");
-const Post_1 = require("../entities/Post");
-const mappers_1 = require("../shared/utils/mappers");
+const comment_entity_1 = require("./comment.entity");
+const post_entity_1 = require("../posts/post.entity");
+const mappers_1 = require("../lib/utils/mappers");
 const app_exception_1 = require("../common/exceptions/app.exception");
+const constants_1 = require("../lib/constants");
 let CommentsService = class CommentsService {
     constructor(commentRepository, postRepository) {
         this.commentRepository = commentRepository;
@@ -29,7 +30,7 @@ let CommentsService = class CommentsService {
         const { body, postId, parentId } = createCommentDto;
         // Validate that either postId or parentId is provided
         if (!postId && !parentId) {
-            throw new common_1.BadRequestException('Either postId or parentId is required');
+            throw new common_1.BadRequestException(constants_1.ERROR_MESSAGES.EITHER_POST_ID_OR_PARENT_ID_REQUIRED);
         }
         let finalPostId;
         if (parentId) {
@@ -49,7 +50,7 @@ let CommentsService = class CommentsService {
         else {
             // This is a top-level comment
             if (!postId) {
-                throw new common_1.BadRequestException('POST_ID_REQUIRED');
+                throw new common_1.BadRequestException(constants_1.ERROR_MESSAGES.POST_ID_REQUIRED);
             }
             const post = await this.postRepository.findOne({
                 where: { id: postId },
@@ -74,7 +75,7 @@ let CommentsService = class CommentsService {
         }
         return {
             data: createdComment,
-            message: 'Comment created successfully',
+            message: constants_1.SUCCESS_MESSAGES.COMMENT_CREATED,
         };
     }
     async listTopLevelComments(query) {
@@ -108,7 +109,7 @@ let CommentsService = class CommentsService {
             },
         });
         const commentRows = comments.map((comment) => {
-            const { id, body, postId, userId, parentId, createdAt, updatedAt, author } = comment;
+            const { id, body, postId, userId, parentId, createdAt, updatedAt, author, } = comment;
             return {
                 id,
                 body,
@@ -175,7 +176,7 @@ let CommentsService = class CommentsService {
             },
         });
         const replyRows = replies.map((reply) => {
-            const { id, body, postId, userId, parentId, createdAt, updatedAt, author } = reply;
+            const { id, body, postId, userId, parentId, createdAt, updatedAt, author, } = reply;
             return {
                 id,
                 body,
@@ -187,7 +188,7 @@ let CommentsService = class CommentsService {
                 author: (0, mappers_1.mapAuthorData)(author),
             };
         });
-        const { id: commentId, body, postId, userId, parentId, createdAt, updatedAt, author, post } = comment;
+        const { id: commentId, body, postId, userId, parentId, createdAt, updatedAt, author, post, } = comment;
         return {
             id: commentId,
             body,
@@ -224,7 +225,7 @@ let CommentsService = class CommentsService {
         }
         return {
             data: updated,
-            message: 'Comment updated successfully',
+            message: constants_1.SUCCESS_MESSAGES.COMMENT_UPDATED,
         };
     }
     async deleteComment(commentId, userId) {
@@ -248,8 +249,8 @@ let CommentsService = class CommentsService {
 exports.CommentsService = CommentsService;
 exports.CommentsService = CommentsService = __decorate([
     (0, common_1.Injectable)(),
-    __param(0, (0, typeorm_1.InjectRepository)(Comment_1.Comment)),
-    __param(1, (0, typeorm_1.InjectRepository)(Post_1.Post)),
+    __param(0, (0, typeorm_1.InjectRepository)(comment_entity_1.Comment)),
+    __param(1, (0, typeorm_1.InjectRepository)(post_entity_1.Post)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
         typeorm_2.Repository])
 ], CommentsService);

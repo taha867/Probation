@@ -1,5 +1,13 @@
-import { IsString, IsEnum, IsOptional, MinLength, MaxLength, Matches } from 'class-validator';
-import { PostStatus } from '../../entities/Post';
+import {
+  IsString,
+  IsEnum,
+  IsOptional,
+  MinLength,
+  MaxLength,
+  Matches,
+} from 'class-validator';
+import { PostStatus } from '../post.entity';
+import { VALIDATION_MESSAGES } from '../../lib/constants';
 
 export class UpdatePostDto {
   @IsOptional()
@@ -7,7 +15,7 @@ export class UpdatePostDto {
   @MinLength(1)
   @MaxLength(200)
   @Matches(/^[^<>]*$/, {
-    message: 'Title contains invalid characters',
+    message: VALIDATION_MESSAGES.TITLE_INVALID_CHARS,
   })
   title?: string;
 
@@ -16,7 +24,7 @@ export class UpdatePostDto {
   @MinLength(1)
   @MaxLength(5000)
   @Matches(/^[^<>]*$/, {
-    message: 'Body contains invalid characters',
+    message: VALIDATION_MESSAGES.BODY_INVALID_CHARS,
   })
   body?: string;
 
@@ -28,4 +36,3 @@ export class UpdatePostDto {
   @IsString()
   image?: string | null;
 }
-

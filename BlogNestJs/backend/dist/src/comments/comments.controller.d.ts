@@ -14,7 +14,7 @@ export declare class CommentsController {
             parentId: number | null;
             createdAt: Date;
             updatedAt: Date;
-            author: import("../interfaces").BaseUserProfile;
+            author: import("../interfaces/userInterface").BaseUserProfile;
             post: {
                 id: number;
                 title: string;
@@ -27,10 +27,10 @@ export declare class CommentsController {
                 parentId: number | null;
                 createdAt: Date;
                 updatedAt: Date;
-                author: import("../interfaces").BaseUserProfile;
+                author: import("../interfaces/userInterface").BaseUserProfile;
             }[];
         };
-        message: string;
+        message: "Comment created successfully";
     }>;
     list(query: ListCommentsQueryDto): Promise<{
         data: {
@@ -41,7 +41,7 @@ export declare class CommentsController {
             parentId: number | null;
             createdAt: Date;
             updatedAt: Date;
-            author: import("../interfaces").BaseUserProfile;
+            author: import("../interfaces/userInterface").BaseUserProfile;
         }[];
     }>;
     getOne(id: number): Promise<{
@@ -53,7 +53,7 @@ export declare class CommentsController {
             parentId: number | null;
             createdAt: Date;
             updatedAt: Date;
-            author: import("../interfaces").BaseUserProfile;
+            author: import("../interfaces/userInterface").BaseUserProfile;
             post: {
                 id: number;
                 title: string;
@@ -66,7 +66,7 @@ export declare class CommentsController {
                 parentId: number | null;
                 createdAt: Date;
                 updatedAt: Date;
-                author: import("../interfaces").BaseUserProfile;
+                author: import("../interfaces/userInterface").BaseUserProfile;
             }[];
         };
     }>;
@@ -79,7 +79,7 @@ export declare class CommentsController {
             parentId: number | null;
             createdAt: Date;
             updatedAt: Date;
-            author: import("../interfaces").BaseUserProfile;
+            author: import("../interfaces/userInterface").BaseUserProfile;
             post: {
                 id: number;
                 title: string;
@@ -92,10 +92,10 @@ export declare class CommentsController {
                 parentId: number | null;
                 createdAt: Date;
                 updatedAt: Date;
-                author: import("../interfaces").BaseUserProfile;
+                author: import("../interfaces/userInterface").BaseUserProfile;
             }[];
         };
-        message: string;
+        message: "Comment updated successfully";
     }>;
     delete(id: number, userId: number): Promise<{
         data: {

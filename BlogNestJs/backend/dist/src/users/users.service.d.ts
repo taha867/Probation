@@ -1,7 +1,7 @@
 import { Repository } from 'typeorm';
-import { User } from '../entities/User';
-import { Post } from '../entities/Post';
-import { CloudinaryService } from '../shared/services/cloudinary.service';
+import { User } from './user.entity';
+import { Post } from '../posts/post.entity';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { ListUsersQueryDto } from './dto/listUsersQuery.dto';
 import { GetUserPostsQueryDto } from './dto/getUserPostsQuery.dto';
 import { UpdateUserDto } from './dto/updateUser.dto';
@@ -13,7 +13,7 @@ export declare class UsersService {
     listUsers(query: ListUsersQueryDto): Promise<{
         data: {
             users: User[];
-            meta: import("../interfaces").PaginationMeta;
+            meta: import("../interfaces/commonInterface").PaginationMeta;
         };
     }>;
     findUserById(id: number): Promise<{
@@ -35,12 +35,12 @@ export declare class UsersService {
                 image: string | null;
             };
             posts: Post[];
-            meta: import("../interfaces").PaginationMeta;
+            meta: import("../interfaces/commonInterface").PaginationMeta;
         };
     }>;
     updateUser(requestedUserId: number, authUserId: number, updateUserDto: UpdateUserDto, file?: Express.Multer.File): Promise<{
         data: {
-            message: string;
+            message: "User updated successfully";
             user: {
                 id: number;
                 name: string;

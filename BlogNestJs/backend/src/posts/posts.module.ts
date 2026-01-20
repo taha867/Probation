@@ -2,17 +2,14 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PostsController } from './posts.controller';
 import { PostsService } from './posts.service';
-import { Post } from '../entities/Post';
-import { Comment } from '../entities/Comment';
-import { CloudinaryService } from '../shared/services/cloudinary.service';
+import { Post } from './post.entity';
+import { Comment } from '../comments/comment.entity';
+import { CloudinaryModule } from '../cloudinary/cloudinary.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Post, Comment]),
-  ],
+  imports: [TypeOrmModule.forFeature([Post, Comment]), CloudinaryModule],
   controllers: [PostsController],
-  providers: [PostsService, CloudinaryService],
+  providers: [PostsService],
   exports: [PostsService],
 })
 export class PostsModule {}
-

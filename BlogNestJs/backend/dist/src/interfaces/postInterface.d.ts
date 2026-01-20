@@ -1,11 +1,11 @@
-import type { SearchableQuery, PaginatedResult, ServiceResult, BaseUpdateWithFileInput, BaseEntityOwnershipInput, BaseAuthorizationInput, PaginationMeta } from "./commonInterface";
-import type { BaseUserProfile } from "./userInterface";
-import type { CommentWithAuthor } from "./commentInterface";
+import type { SearchableQuery, PaginatedResult, ServiceResult, BaseUpdateWithFileInput, BaseEntityOwnershipInput, BaseAuthorizationInput, PaginationMeta } from './commonInterface';
+import type { BaseUserProfile } from './userInterface';
+import type { CommentWithAuthor } from './commentInterface';
 /**
  * Post status type
  * Valid post status values
  */
-export type PostStatus = "draft" | "published";
+export type PostStatus = 'draft' | 'published';
 /**
  * Post summary interface
  * Minimal post information (id and title only)
@@ -97,7 +97,7 @@ export type CreatePostServiceResult = ServiceResult<PostWithAuthor>;
  * Note: Uses Omit to override entityId with postId for clarity
  * All other fields (authUserId, data, fileBuffer, fileName) come from BaseUpdateWithFileInput
  */
-export interface UpdatePostServiceInput extends Omit<BaseUpdateWithFileInput<UpdatePostInput>, "entityId"> {
+export interface UpdatePostServiceInput extends Omit<BaseUpdateWithFileInput<UpdatePostInput>, 'entityId'> {
     postId: number;
 }
 /**
@@ -114,7 +114,7 @@ export type UpdatePostServiceResult = ServiceResult<PostWithAuthor>;
  * Note: Uses Omit to override entityId with postId for clarity
  * authUserId comes from BaseEntityOwnershipInput
  */
-export interface DeletePostServiceInput extends Omit<BaseEntityOwnershipInput, "entityId"> {
+export interface DeletePostServiceInput extends Omit<BaseEntityOwnershipInput, 'entityId'> {
     postId: number;
 }
 /**

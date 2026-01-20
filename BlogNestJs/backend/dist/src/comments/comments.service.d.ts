@@ -1,6 +1,6 @@
 import { Repository } from 'typeorm';
-import { Comment } from '../entities/Comment';
-import { Post } from '../entities/Post';
+import { Comment } from './comment.entity';
+import { Post } from '../posts/post.entity';
 import { CreateCommentDto } from './dto/createComment.dto';
 import { UpdateCommentDto } from './dto/updateComment.dto';
 import { ListCommentsQueryDto } from './dto/listCommentsQuery.dto';
@@ -17,7 +17,7 @@ export declare class CommentsService {
             parentId: number | null;
             createdAt: Date;
             updatedAt: Date;
-            author: import("../interfaces").BaseUserProfile;
+            author: import("../interfaces/userInterface").BaseUserProfile;
             post: {
                 id: number;
                 title: string;
@@ -30,10 +30,10 @@ export declare class CommentsService {
                 parentId: number | null;
                 createdAt: Date;
                 updatedAt: Date;
-                author: import("../interfaces").BaseUserProfile;
+                author: import("../interfaces/userInterface").BaseUserProfile;
             }[];
         };
-        message: string;
+        message: "Comment created successfully";
     }>;
     listTopLevelComments(query: ListCommentsQueryDto): Promise<{
         data: {
@@ -44,7 +44,7 @@ export declare class CommentsService {
             parentId: number | null;
             createdAt: Date;
             updatedAt: Date;
-            author: import("../interfaces").BaseUserProfile;
+            author: import("../interfaces/userInterface").BaseUserProfile;
         }[];
     }>;
     findCommentWithRelations(id: number): Promise<{
@@ -55,7 +55,7 @@ export declare class CommentsService {
         parentId: number | null;
         createdAt: Date;
         updatedAt: Date;
-        author: import("../interfaces").BaseUserProfile;
+        author: import("../interfaces/userInterface").BaseUserProfile;
         post: {
             id: number;
             title: string;
@@ -68,7 +68,7 @@ export declare class CommentsService {
             parentId: number | null;
             createdAt: Date;
             updatedAt: Date;
-            author: import("../interfaces").BaseUserProfile;
+            author: import("../interfaces/userInterface").BaseUserProfile;
         }[];
     } | null>;
     updateComment(commentId: number, userId: number, updateCommentDto: UpdateCommentDto): Promise<{
@@ -80,7 +80,7 @@ export declare class CommentsService {
             parentId: number | null;
             createdAt: Date;
             updatedAt: Date;
-            author: import("../interfaces").BaseUserProfile;
+            author: import("../interfaces/userInterface").BaseUserProfile;
             post: {
                 id: number;
                 title: string;
@@ -93,10 +93,10 @@ export declare class CommentsService {
                 parentId: number | null;
                 createdAt: Date;
                 updatedAt: Date;
-                author: import("../interfaces").BaseUserProfile;
+                author: import("../interfaces/userInterface").BaseUserProfile;
             }[];
         };
-        message: string;
+        message: "Comment updated successfully";
     }>;
     deleteComment(commentId: number, userId: number): Promise<void>;
 }

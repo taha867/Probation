@@ -1,4 +1,4 @@
-import type { BaseQuery, SearchableQuery, PaginatedResult, ServiceResult, BaseUpdateWithFileInput, BaseEntityOwnershipInput, PaginationMeta } from "./commonInterface";
+import type { BaseQuery, SearchableQuery, PaginatedResult, ServiceResult, BaseUpdateWithFileInput, BaseEntityOwnershipInput, PaginationMeta } from './commonInterface';
 /**
  * Base user profile interface
  * Common user fields used across the application
@@ -39,14 +39,14 @@ export type UserTokenVersion = {
  * User ID and email with token version type
  * Used for token refresh operations that need id, email, and tokenVersion
  */
-export type UserIdEmailToken = Pick<PublicUserProfile, "id" | "email"> & {
+export type UserIdEmailToken = Pick<PublicUserProfile, 'id' | 'email'> & {
     tokenVersion?: number;
 };
 /**
  * User ID and name type
  * Used for operations that only need user identification and name
  */
-export type UserIdAndName = Pick<BaseUserProfile, "id" | "name">;
+export type UserIdAndName = Pick<BaseUserProfile, 'id' | 'name'>;
 /**
  * User image public ID type
  * Used for operations that only need imagePublicId for Cloudinary deletion
@@ -59,7 +59,7 @@ export type UserImagePublicId = {
  * Data that can be updated by user
  * All fields are optional (partial update)
  */
-export interface UpdateUserInput extends Partial<Omit<PublicUserProfile, "id" | "status">> {
+export interface UpdateUserInput extends Partial<Omit<PublicUserProfile, 'id' | 'status'>> {
     password?: string;
 }
 /**
@@ -88,7 +88,7 @@ export type ListUsersResult = PaginatedResult<PublicUserProfile>;
  * Note: Uses intersection type to override entityId with requestedUserId for clarity
  * All other fields (authUserId, data, fileBuffer, fileName) come from BaseUpdateWithFileInput
  */
-export interface UpdateUserServiceInput extends Omit<BaseUpdateWithFileInput<UpdateUserInput>, "entityId"> {
+export interface UpdateUserServiceInput extends Omit<BaseUpdateWithFileInput<UpdateUserInput>, 'entityId'> {
     requestedUserId: number;
 }
 /**
@@ -105,7 +105,7 @@ export type UpdateUserServiceResult = ServiceResult<PublicUserProfile>;
  * Note: Uses Omit to override entityId with requestedUserId for clarity
  * authUserId comes from BaseEntityOwnershipInput
  */
-export interface DeleteUserServiceInput extends Omit<BaseEntityOwnershipInput, "entityId"> {
+export interface DeleteUserServiceInput extends Omit<BaseEntityOwnershipInput, 'entityId'> {
     requestedUserId: number;
 }
 /**

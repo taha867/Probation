@@ -12,12 +12,12 @@ export declare class PostsController {
             title: string;
             body: string;
             userId: number;
-            status: import("../entities/Post").PostStatus;
+            status: import("./post.entity").PostStatus;
             image: string | null;
             imagePublicId: string | null;
-            author: import("../interfaces").BaseUserProfile;
+            author: import("../interfaces/userInterface").BaseUserProfile;
         };
-        message: string;
+        message: "Post created successfully";
     }>;
     list(query: ListPostsQueryDto): Promise<{
         data: {
@@ -26,12 +26,12 @@ export declare class PostsController {
                 title: string;
                 body: string;
                 userId: number;
-                status: import("../entities/Post").PostStatus;
+                status: import("./post.entity").PostStatus;
                 image: string | null;
                 imagePublicId: string | null;
-                author: import("../interfaces").BaseUserProfile;
+                author: import("../interfaces/userInterface").BaseUserProfile;
             }[];
-            meta: import("../interfaces").PaginationMeta;
+            meta: import("../interfaces/commonInterface").PaginationMeta;
         };
     }>;
     getOne(id: number): Promise<{
@@ -40,10 +40,10 @@ export declare class PostsController {
             title: string;
             body: string;
             userId: number;
-            status: import("../entities/Post").PostStatus;
+            status: import("./post.entity").PostStatus;
             image: string | null;
             imagePublicId: string | null;
-            author: import("../interfaces").BaseUserProfile;
+            author: import("../interfaces/userInterface").BaseUserProfile;
         };
     }>;
     getPostComments(postId: number, query: PaginationQueryDto): Promise<{
@@ -53,12 +53,12 @@ export declare class PostsController {
                 title: string;
                 body: string;
                 userId: number;
-                status: import("../entities/Post").PostStatus;
+                status: import("./post.entity").PostStatus;
                 image: string | null;
                 imagePublicId: string | null;
             };
-            comments: import("../entities/Comment").Comment[];
-            meta: import("../interfaces").PaginationMeta;
+            comments: import("../comments/comment.entity").Comment[];
+            meta: import("../interfaces/commonInterface").PaginationMeta;
         };
     }>;
     update(id: number, updatePostDto: UpdatePostDto, userId: number, file?: Express.Multer.File): Promise<{
@@ -67,12 +67,12 @@ export declare class PostsController {
             title: string;
             body: string;
             userId: number;
-            status: import("../entities/Post").PostStatus;
+            status: import("./post.entity").PostStatus;
             image: string | null;
             imagePublicId: string | null;
-            author: import("../interfaces").BaseUserProfile;
+            author: import("../interfaces/userInterface").BaseUserProfile;
         };
-        message: string;
+        message: "Post updated successfully";
     }>;
     delete(id: number, userId: number): Promise<{
         data: {

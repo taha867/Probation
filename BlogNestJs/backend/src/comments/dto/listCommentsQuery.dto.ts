@@ -8,4 +8,3 @@ export class ListCommentsQueryDto {
   @Min(1)
   postId?: number;
 }
-

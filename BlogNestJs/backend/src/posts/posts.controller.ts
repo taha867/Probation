@@ -22,7 +22,7 @@ import { UpdatePostDto } from './dto/updatePost.dto';
 import { ListPostsQueryDto } from './dto/listPostsQuery.dto';
 import { PaginationQueryDto } from './dto/paginationQuery.dto';
 import { User } from '../common/decorators/user.decorator';
-import { SUCCESS_MESSAGES } from '../shared/constants/constants';
+import { SUCCESS_MESSAGES, ERROR_MESSAGES } from '../lib/constants';
 
 @Controller('posts')
 export class PostsController {
@@ -34,7 +34,7 @@ export class PostsController {
   async create(
     @Body() createPostDto: CreatePostDto,
     @User('id') userId: number,
-    @UploadedFile() file?: Express.Multer.File
+    @UploadedFile() file?: Express.Multer.File,
   ) {
     return this.postsService.createPost(createPostDto, userId, file);
   }
@@ -58,7 +58,7 @@ export class PostsController {
   @Get(':postId/comments')
   async getPostComments(
     @Param('postId', ParseIntPipe) postId: number,
-    @Query() query: PaginationQueryDto
+    @Query() query: PaginationQueryDto,
   ) {
     return this.postsService.getPostWithComments(postId, query);
   }
@@ -70,14 +70,14 @@ export class PostsController {
     @Param('id', ParseIntPipe) id: number,
     @Body() updatePostDto: UpdatePostDto,
     @User('id') userId: number,
-    @UploadedFile() file?: Express.Multer.File
+    @UploadedFile() file?: Express.Multer.File,
   ) {
     // Check if at least one field is being updated
     const hasBodyFields = Object.keys(updatePostDto).length > 0;
     const hasFileUpload = file !== undefined;
 
     if (!hasBodyFields && !hasFileUpload) {
-      throw new BadRequestException('At least one field must be provided to update');
+      throw new BadRequestException(ERROR_MESSAGES.AT_LEAST_ONE_FIELD_REQUIRED);
     }
 
     return this.postsService.updatePost(id, userId, updatePostDto, file);
@@ -87,7 +87,7 @@ export class PostsController {
   @HttpCode(HttpStatus.OK)
   async delete(
     @Param('id', ParseIntPipe) id: number,
-    @User('id') userId: number
+    @User('id') userId: number,
   ) {
     await this.postsService.deletePost(id, userId);
     return {
@@ -95,4 +95,3 @@ export class PostsController {
     };
   }
 }
-

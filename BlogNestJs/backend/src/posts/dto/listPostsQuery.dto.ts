@@ -1,6 +1,6 @@
 import { IsOptional, IsInt, Min, Max, IsString, IsEnum } from 'class-validator';
 import { Type } from 'class-transformer';
-import { PostStatus } from '../../entities/Post';
+import { PostStatus } from '../post.entity';
 
 export class ListPostsQueryDto {
   @IsOptional()
@@ -30,4 +30,3 @@ export class ListPostsQueryDto {
   @IsEnum(PostStatus)
   status?: PostStatus;
 }
-
