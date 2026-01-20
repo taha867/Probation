@@ -4,7 +4,6 @@ import {
   IsOptional,
   MinLength,
   Matches,
-  IsUrl,
 } from 'class-validator';
 import { VALIDATION_MESSAGES } from '../../lib/constants';
 
@@ -34,6 +33,5 @@ export class UpdateUserDto {
   password?: string;
 
   @IsOptional()
-  @IsUrl()
   image?: string | null;
 }

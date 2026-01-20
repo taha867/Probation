@@ -161,7 +161,7 @@ const makeRequest = async (url, options = {}) => {
         throw new Error(TOKEN_REFRESH_FAILED);
       } catch (refreshError) {
         removeTokens();
-        window.location.href = "/auth";
+        window.location.href = "/signin";
         throw new Error(SESSION_EXPIRED);
       }
     }
@@ -176,7 +176,7 @@ const makeRequest = async (url, options = {}) => {
       return makeRequest(url, options);
     } catch (refreshError) {
       removeTokens();
-      window.location.href = "/auth";
+      window.location.href = "/signin";
       throw new Error(SESSION_EXPIRED);
     } finally {
       isRefreshing = false;

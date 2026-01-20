@@ -18,9 +18,9 @@ const ProtectedRoute = () => {
     return <AppInitializer />;
   }
 
-  // Redirect to auth page if not authenticated
+  // Redirect to signin page if not authenticated
   if (!isAuthenticated) {
-    return <Navigate to="/auth" state={{ from: location }} replace />;
+    return <Navigate to="/signin" state={{ from: location }} replace />;
   }
 
   return <Outlet />;
