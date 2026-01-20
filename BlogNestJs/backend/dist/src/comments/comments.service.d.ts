@@ -17,7 +17,12 @@ export declare class CommentsService {
             parentId: number | null;
             createdAt: Date;
             updatedAt: Date;
-            author: import("../interfaces/userInterface").BaseUserProfile;
+            author: {
+                id: number;
+                name: string;
+                email: string;
+                image: string | null;
+            };
             post: {
                 id: number;
                 title: string;
@@ -30,7 +35,12 @@ export declare class CommentsService {
                 parentId: number | null;
                 createdAt: Date;
                 updatedAt: Date;
-                author: import("../interfaces/userInterface").BaseUserProfile;
+                author: {
+                    id: number;
+                    name: string;
+                    email: string;
+                    image: string | null;
+                };
             }[];
         };
         message: "Comment created successfully";
@@ -44,7 +54,12 @@ export declare class CommentsService {
             parentId: number | null;
             createdAt: Date;
             updatedAt: Date;
-            author: import("../interfaces/userInterface").BaseUserProfile;
+            author: {
+                id: number;
+                name: string;
+                email: string;
+                image: string | null;
+            };
         }[];
     }>;
     findCommentWithRelations(id: number): Promise<{
@@ -55,7 +70,12 @@ export declare class CommentsService {
         parentId: number | null;
         createdAt: Date;
         updatedAt: Date;
-        author: import("../interfaces/userInterface").BaseUserProfile;
+        author: {
+            id: number;
+            name: string;
+            email: string;
+            image: string | null;
+        };
         post: {
             id: number;
             title: string;
@@ -68,7 +88,12 @@ export declare class CommentsService {
             parentId: number | null;
             createdAt: Date;
             updatedAt: Date;
-            author: import("../interfaces/userInterface").BaseUserProfile;
+            author: {
+                id: number;
+                name: string;
+                email: string;
+                image: string | null;
+            };
         }[];
     } | null>;
     updateComment(commentId: number, userId: number, updateCommentDto: UpdateCommentDto): Promise<{
@@ -80,7 +105,12 @@ export declare class CommentsService {
             parentId: number | null;
             createdAt: Date;
             updatedAt: Date;
-            author: import("../interfaces/userInterface").BaseUserProfile;
+            author: {
+                id: number;
+                name: string;
+                email: string;
+                image: string | null;
+            };
             post: {
                 id: number;
                 title: string;
@@ -93,7 +123,12 @@ export declare class CommentsService {
                 parentId: number | null;
                 createdAt: Date;
                 updatedAt: Date;
-                author: import("../interfaces/userInterface").BaseUserProfile;
+                author: {
+                    id: number;
+                    name: string;
+                    email: string;
+                    image: string | null;
+                };
             }[];
         };
         message: "Comment updated successfully";

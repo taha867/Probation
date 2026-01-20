@@ -1,4 +1,12 @@
-import type { PaginationMeta } from '../../interfaces/commonInterface';
+/**
+ * Pagination metadata type
+ */
+export type PaginationMeta = {
+    total: number;
+    page: number;
+    limit: number;
+    pagination: number;
+};
 /**
  * Builds standard pagination metadata object
  * Creates pagination response metadata for API responses

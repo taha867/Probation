@@ -20,7 +20,12 @@ export declare class PostsService {
             status: PostStatus;
             image: string | null;
             imagePublicId: string | null;
-            author: import("../interfaces/userInterface").BaseUserProfile;
+            author: {
+                id: number;
+                name: string;
+                email: string;
+                image: string | null;
+            };
         };
         message: "Post created successfully";
     }>;
@@ -34,9 +39,14 @@ export declare class PostsService {
                 status: PostStatus;
                 image: string | null;
                 imagePublicId: string | null;
-                author: import("../interfaces/userInterface").BaseUserProfile;
+                author: {
+                    id: number;
+                    name: string;
+                    email: string;
+                    image: string | null;
+                };
             }[];
-            meta: import("../interfaces/commonInterface").PaginationMeta;
+            meta: import("../lib/utils/pagination").PaginationMeta;
         };
     }>;
     findPostWithAuthor(id: number): Promise<{
@@ -47,7 +57,12 @@ export declare class PostsService {
         status: PostStatus;
         image: string | null;
         imagePublicId: string | null;
-        author: import("../interfaces/userInterface").BaseUserProfile;
+        author: {
+            id: number;
+            name: string;
+            email: string;
+            image: string | null;
+        };
     } | null>;
     getPostWithComments(postId: number, query: PaginationQueryDto): Promise<{
         data: {
@@ -61,7 +76,7 @@ export declare class PostsService {
                 imagePublicId: string | null;
             };
             comments: Comment[];
-            meta: import("../interfaces/commonInterface").PaginationMeta;
+            meta: import("../lib/utils/pagination").PaginationMeta;
         };
     }>;
     updatePost(postId: number, userId: number, updatePostDto: UpdatePostDto, file?: Express.Multer.File): Promise<{
@@ -73,7 +88,12 @@ export declare class PostsService {
             status: PostStatus;
             image: string | null;
             imagePublicId: string | null;
-            author: import("../interfaces/userInterface").BaseUserProfile;
+            author: {
+                id: number;
+                name: string;
+                email: string;
+                image: string | null;
+            };
         };
         message: "Post updated successfully";
     }>;

@@ -1,12 +1,27 @@
-import type { BaseUserProfile } from '../../interfaces/userInterface';
-import type { PostSummary } from '../../interfaces/postInterface';
+/**
+ * Author profile type - minimal user data for post/comment authors
+ */
+type AuthorProfile = {
+  id: number;
+  name: string;
+  email: string;
+  image: string | null;
+};
+
+/**
+ * Post summary type - minimal post data for relations
+ */
+type PostSummary = {
+  id: number;
+  title: string;
+};
 
 /**
  * @param authorData - Author data from TypeORM relation (User entity)
- * @returns BaseUserProfile object
+ * @returns AuthorProfile object
  * @throws Error if authorData is missing
  */
-export const mapAuthorData = (authorData: BaseUserProfile): BaseUserProfile => {
+export const mapAuthorData = (authorData: AuthorProfile): AuthorProfile => {
   if (!authorData) {
     throw new Error(
       'Author data missing - TypeORM relation may be misconfigured',

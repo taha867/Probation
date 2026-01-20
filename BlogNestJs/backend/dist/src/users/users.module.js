@@ -18,6 +18,7 @@ const user_entity_1 = require("./user.entity");
 const post_entity_1 = require("../posts/post.entity");
 const cloudinary_module_1 = require("../cloudinary/cloudinary.module");
 const email_module_1 = require("../email/email.module");
+const user_subscriber_1 = require("./subscribers/user.subscriber");
 let UsersModule = class UsersModule {
 };
 exports.UsersModule = UsersModule;
@@ -34,7 +35,7 @@ exports.UsersModule = UsersModule = __decorate([
             email_module_1.EmailModule,
         ],
         controllers: [users_controller_1.UsersController, auth_controller_1.AuthController],
-        providers: [users_service_1.UsersService, auth_service_1.AuthService],
+        providers: [users_service_1.UsersService, auth_service_1.AuthService, user_subscriber_1.UserSubscriber],
         exports: [users_service_1.UsersService, auth_service_1.AuthService],
     })
 ], UsersModule);

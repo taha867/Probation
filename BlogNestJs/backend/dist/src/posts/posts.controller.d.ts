@@ -15,7 +15,12 @@ export declare class PostsController {
             status: import("./post.entity").PostStatus;
             image: string | null;
             imagePublicId: string | null;
-            author: import("../interfaces/userInterface").BaseUserProfile;
+            author: {
+                id: number;
+                name: string;
+                email: string;
+                image: string | null;
+            };
         };
         message: "Post created successfully";
     }>;
@@ -29,9 +34,14 @@ export declare class PostsController {
                 status: import("./post.entity").PostStatus;
                 image: string | null;
                 imagePublicId: string | null;
-                author: import("../interfaces/userInterface").BaseUserProfile;
+                author: {
+                    id: number;
+                    name: string;
+                    email: string;
+                    image: string | null;
+                };
             }[];
-            meta: import("../interfaces/commonInterface").PaginationMeta;
+            meta: import("../lib/utils/pagination").PaginationMeta;
         };
     }>;
     getOne(id: number): Promise<{
@@ -43,7 +53,12 @@ export declare class PostsController {
             status: import("./post.entity").PostStatus;
             image: string | null;
             imagePublicId: string | null;
-            author: import("../interfaces/userInterface").BaseUserProfile;
+            author: {
+                id: number;
+                name: string;
+                email: string;
+                image: string | null;
+            };
         };
     }>;
     getPostComments(postId: number, query: PaginationQueryDto): Promise<{
@@ -58,7 +73,7 @@ export declare class PostsController {
                 imagePublicId: string | null;
             };
             comments: import("../comments/comment.entity").Comment[];
-            meta: import("../interfaces/commonInterface").PaginationMeta;
+            meta: import("../lib/utils/pagination").PaginationMeta;
         };
     }>;
     update(id: number, updatePostDto: UpdatePostDto, userId: number, file?: Express.Multer.File): Promise<{
@@ -70,7 +85,12 @@ export declare class PostsController {
             status: import("./post.entity").PostStatus;
             image: string | null;
             imagePublicId: string | null;
-            author: import("../interfaces/userInterface").BaseUserProfile;
+            author: {
+                id: number;
+                name: string;
+                email: string;
+                image: string | null;
+            };
         };
         message: "Post updated successfully";
     }>;

@@ -9,7 +9,7 @@ import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '../user.entity';
 import { EmailService } from '../../email/email.service';
-import { comparePassword, hashPassword } from '../../lib/utils/bcrypt';
+import { comparePassword } from '../../lib/utils/bcrypt';
 import { USER_STATUS, SUCCESS_MESSAGES, DEFAULTS } from '../../lib/constants';
 import { AppException } from '../../common/exceptions/app.exception';
 import { SignUpDto } from './dto/signUp.dto';
@@ -38,10 +38,11 @@ export class AuthService {
       );
     }
 
+    // Password will be automatically hashed by UserSubscriber before insert
     await this.userRepository.save({
       name,
       email,
-      password: await hashPassword(password),
+      password, // Plain password - will be hashed automatically by UserSubscriber
       phone: phone || null,
       image: image || null,
       status: USER_STATUS.LOGGED_OUT,
@@ -234,19 +235,25 @@ export class AuthService {
     }
 
     const oldPasswordHash = user.password;
-    user.password = await hashPassword(newPassword);
+    // Password will be automatically hashed by UserSubscriber before update
+    user.password = newPassword;
 
     await this.userRepository.save(user);
 
-    // Verify password was hashed correctly
-    if (user.password === oldPasswordHash) {
+    // Verify password was hashed correctly by subscriber
+    const updatedUser = await this.userRepository.findOne({
+      where: { id: user.id },
+      select: ['id', 'password'],
+    });
+
+    if (!updatedUser || updatedUser.password === oldPasswordHash) {
       throw new AppException(
         'PASSWORD_RESET_FAILED',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
 
-    if (!user.password?.startsWith('$')) {
+    if (!updatedUser.password?.startsWith('$2b$')) {
       throw new AppException(
         'PASSWORD_RESET_FAILED',
         HttpStatus.INTERNAL_SERVER_ERROR,

@@ -13,7 +13,7 @@ export declare class UsersService {
     listUsers(query: ListUsersQueryDto): Promise<{
         data: {
             users: User[];
-            meta: import("../interfaces/commonInterface").PaginationMeta;
+            meta: import("../lib/utils/pagination").PaginationMeta;
         };
     }>;
     findUserById(id: number): Promise<{
@@ -35,7 +35,7 @@ export declare class UsersService {
                 image: string | null;
             };
             posts: Post[];
-            meta: import("../interfaces/commonInterface").PaginationMeta;
+            meta: import("../lib/utils/pagination").PaginationMeta;
         };
     }>;
     updateUser(requestedUserId: number, authUserId: number, updateUserDto: UpdateUserDto, file?: Express.Multer.File): Promise<{

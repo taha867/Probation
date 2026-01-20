@@ -20,7 +20,7 @@ const user_entity_1 = require("./user.entity");
 const post_entity_1 = require("../posts/post.entity");
 const cloudinary_service_1 = require("../cloudinary/cloudinary.service");
 const pagination_1 = require("../lib/utils/pagination");
-const bcrypt_1 = require("../lib/utils/bcrypt");
+// Password hashing is handled automatically by UserSubscriber
 const app_exception_1 = require("../common/exceptions/app.exception");
 const constants_1 = require("../lib/constants");
 let UsersService = class UsersService {
@@ -171,7 +171,8 @@ let UsersService = class UsersService {
             updateData.phone = phone;
         }
         if (password !== undefined) {
-            updateData.password = await (0, bcrypt_1.hashPassword)(password);
+            // Password will be automatically hashed by UserSubscriber before update
+            updateData.password = password;
         }
         // Handle image upload/removal
         if (file) {

@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.mapPostData = exports.mapAuthorData = void 0;
 /**
  * @param authorData - Author data from TypeORM relation (User entity)
- * @returns BaseUserProfile object
+ * @returns AuthorProfile object
  * @throws Error if authorData is missing
  */
 const mapAuthorData = (authorData) => {

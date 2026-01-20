@@ -36,10 +36,11 @@ let AuthService = class AuthService {
         if (exists) {
             throw new app_exception_1.AppException('USER_ALREADY_EXISTS', common_1.HttpStatus.UNPROCESSABLE_ENTITY);
         }
+        // Password will be automatically hashed by UserSubscriber before insert
         await this.userRepository.save({
             name,
             email,
-            password: await (0, bcrypt_1.hashPassword)(password),
+            password, // Plain password - will be hashed automatically by UserSubscriber
             phone: phone || null,
             image: image || null,
             status: constants_1.USER_STATUS.LOGGED_OUT,
@@ -179,13 +180,18 @@ let AuthService = class AuthService {
             throw new common_1.NotFoundException('USER_NOT_FOUND');
         }
         const oldPasswordHash = user.password;
-        user.password = await (0, bcrypt_1.hashPassword)(newPassword);
+        // Password will be automatically hashed by UserSubscriber before update
+        user.password = newPassword;
         await this.userRepository.save(user);
-        // Verify password was hashed correctly
-        if (user.password === oldPasswordHash) {
+        // Verify password was hashed correctly by subscriber
+        const updatedUser = await this.userRepository.findOne({
+            where: { id: user.id },
+            select: ['id', 'password'],
+        });
+        if (!updatedUser || updatedUser.password === oldPasswordHash) {
             throw new app_exception_1.AppException('PASSWORD_RESET_FAILED', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        if (!user.password?.startsWith('$')) {
+        if (!updatedUser.password?.startsWith('$2b$')) {
             throw new app_exception_1.AppException('PASSWORD_RESET_FAILED', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

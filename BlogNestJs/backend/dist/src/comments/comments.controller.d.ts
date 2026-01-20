@@ -14,7 +14,12 @@ export declare class CommentsController {
             parentId: number | null;
             createdAt: Date;
             updatedAt: Date;
-            author: import("../interfaces/userInterface").BaseUserProfile;
+            author: {
+                id: number;
+                name: string;
+                email: string;
+                image: string | null;
+            };
             post: {
                 id: number;
                 title: string;
@@ -27,7 +32,12 @@ export declare class CommentsController {
                 parentId: number | null;
                 createdAt: Date;
                 updatedAt: Date;
-                author: import("../interfaces/userInterface").BaseUserProfile;
+                author: {
+                    id: number;
+                    name: string;
+                    email: string;
+                    image: string | null;
+                };
             }[];
         };
         message: "Comment created successfully";
@@ -41,7 +51,12 @@ export declare class CommentsController {
             parentId: number | null;
             createdAt: Date;
             updatedAt: Date;
-            author: import("../interfaces/userInterface").BaseUserProfile;
+            author: {
+                id: number;
+                name: string;
+                email: string;
+                image: string | null;
+            };
         }[];
     }>;
     getOne(id: number): Promise<{
@@ -53,7 +68,12 @@ export declare class CommentsController {
             parentId: number | null;
             createdAt: Date;
             updatedAt: Date;
-            author: import("../interfaces/userInterface").BaseUserProfile;
+            author: {
+                id: number;
+                name: string;
+                email: string;
+                image: string | null;
+            };
             post: {
                 id: number;
                 title: string;
@@ -66,7 +86,12 @@ export declare class CommentsController {
                 parentId: number | null;
                 createdAt: Date;
                 updatedAt: Date;
-                author: import("../interfaces/userInterface").BaseUserProfile;
+                author: {
+                    id: number;
+                    name: string;
+                    email: string;
+                    image: string | null;
+                };
             }[];
         };
     }>;
@@ -79,7 +104,12 @@ export declare class CommentsController {
             parentId: number | null;
             createdAt: Date;
             updatedAt: Date;
-            author: import("../interfaces/userInterface").BaseUserProfile;
+            author: {
+                id: number;
+                name: string;
+                email: string;
+                image: string | null;
+            };
             post: {
                 id: number;
                 title: string;
@@ -92,7 +122,12 @@ export declare class CommentsController {
                 parentId: number | null;
                 createdAt: Date;
                 updatedAt: Date;
-                author: import("../interfaces/userInterface").BaseUserProfile;
+                author: {
+                    id: number;
+                    name: string;
+                    email: string;
+                    image: string | null;
+                };
             }[];
         };
         message: "Comment updated successfully";
