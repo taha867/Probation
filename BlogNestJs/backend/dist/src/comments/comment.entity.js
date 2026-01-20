@@ -12,22 +12,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Comment = void 0;
 const typeorm_1 = require("typeorm");
 const BaseEntity_1 = require("../common/entities/BaseEntity");
-/**
- * Comment entity
- * Represents a comment on a post, with support for nested replies
- * Extends BaseEntity for automatic timestamp management
- */
 let Comment = class Comment extends BaseEntity_1.BaseEntity {
 };
 exports.Comment = Comment;
 __decorate([
-    (0, typeorm_1.PrimaryGeneratedColumn)() //Auto increment
-    ,
+    (0, typeorm_1.PrimaryGeneratedColumn)(),
     __metadata("design:type", Number)
 ], Comment.prototype, "id", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'text' }) // nullable if true relation column can be null
-    ,
+    (0, typeorm_1.Column)({ type: 'text' }),
     __metadata("design:type", String)
 ], Comment.prototype, "body", void 0);
 __decorate([

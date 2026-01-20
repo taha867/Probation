@@ -8,11 +8,6 @@ export declare enum PostStatus {
     DRAFT = "draft",
     PUBLISHED = "published"
 }
-/**
- * Post entity
- * Represents a blog post in the database
- * Extends BaseEntity for automatic timestamp management
- */
 export declare class Post extends BaseEntity {
     id: number;
     title: string;

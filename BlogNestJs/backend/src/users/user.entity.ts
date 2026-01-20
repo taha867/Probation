@@ -8,34 +8,46 @@ export class User extends BaseEntity {
   @PrimaryGeneratedColumn() //Auto increment
   id: number;
 
-  @Column({ type: 'varchar' })
+ 
+  @Column()
   name: string;
 
-  @Column({ type: 'varchar', unique: true })
+  // Prevents duplicates at DB level, Protects against race condition
+  @Column({ unique: true })
   email: string;
 
-  @Column({ type: 'varchar', unique: true, nullable: true }) // nullable if true relation column can be null
+  // nullable: true = database constraint (allows NULL in DB)
+  // string | null = TypeScript type safety (forces null checks in code)
+  // Explicit type needed: TypeORM can't infer varchar from string | null
+  @Column({ type: 'varchar', unique: true, nullable: true })
   phone: string | null = null;
 
-  @Column({ type: 'varchar', select: false }) // select false stores password but never return password in queries, it fails when Explicit select: ["password"]
+  // select: false prevents password from being returned in queries
+  @Column({ select: false })
   password: string;
 
+ 
   @Column({ type: 'varchar', nullable: true })
   status: string | null;
+
 
   @Column({ type: 'varchar', nullable: true })
   image: string | null;
 
-  @Column({ type: 'varchar', nullable: true }) // nullable: true ensures your database allows empty rows.
-  imagePublicId: string | null; // | null ensures your code handles empty limits safely.
+    @Column({ type: 'varchar', nullable: true })
+  imagePublicId: string | null;
 
+  // Explicit type needed: TypeORM can't infer timestamp from Date
+  // name: 'last_login_at' maps to snake_case DB column
   @Column({ type: 'timestamp', name: 'last_login_at', nullable: true })
   lastLoginAt: Date | null;
 
+  // Explicit type needed: TypeORM can't infer integer from number
+  // default: 0 sets database default value
   @Column({ type: 'integer', default: 0 })
   tokenVersion: number;
 
-  // Relations
+
   @OneToMany('Post', (post: Post) => post.author, {
     cascade: true,
     onDelete: 'CASCADE',
@@ -48,7 +60,6 @@ export class User extends BaseEntity {
   })
   comments: Comment[];
 
-  // Entity Listner
 
   // Custom method to exclude password from JSON, it never fails
   toJSON(): Omit<User, 'password' | 'toJSON'> {

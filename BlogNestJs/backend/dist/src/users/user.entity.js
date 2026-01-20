@@ -15,9 +15,11 @@ const BaseEntity_1 = require("../common/entities/BaseEntity");
 let User = class User extends BaseEntity_1.BaseEntity {
     constructor() {
         super(...arguments);
+        // nullable: true = database constraint (allows NULL in DB)
+        // string | null = TypeScript type safety (forces null checks in code)
+        // Explicit type needed: TypeORM can't infer varchar from string | null
         this.phone = null;
     }
-    // Entity Listner
     // Custom method to exclude password from JSON, it never fails
     toJSON() {
         const { password, toJSON, ...rest } = this;
@@ -31,21 +33,19 @@ __decorate([
     __metadata("design:type", Number)
 ], User.prototype, "id", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'varchar' }),
+    (0, typeorm_1.Column)(),
     __metadata("design:type", String)
 ], User.prototype, "name", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'varchar', unique: true }),
+    (0, typeorm_1.Column)({ unique: true }),
     __metadata("design:type", String)
 ], User.prototype, "email", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'varchar', unique: true, nullable: true }) // nullable if true relation column can be null
-    ,
+    (0, typeorm_1.Column)({ type: 'varchar', unique: true, nullable: true }),
     __metadata("design:type", Object)
 ], User.prototype, "phone", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'varchar', select: false }) // select false stores password but never return password in queries, it fails when Explicit select: ["password"]
-    ,
+    (0, typeorm_1.Column)({ select: false }),
     __metadata("design:type", String)
 ], User.prototype, "password", void 0);
 __decorate([
@@ -57,8 +57,7 @@ __decorate([
     __metadata("design:type", Object)
 ], User.prototype, "image", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'varchar', nullable: true }) // nullable: true ensures your database allows empty rows.
-    ,
+    (0, typeorm_1.Column)({ type: 'varchar', nullable: true }),
     __metadata("design:type", Object)
 ], User.prototype, "imagePublicId", void 0);
 __decorate([

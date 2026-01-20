@@ -18,25 +18,25 @@ export enum PostStatus {
   PUBLISHED = 'published',
 }
 
-/**
- * Post entity
- * Represents a blog post in the database
- * Extends BaseEntity for automatic timestamp management
- */
+
 @Entity('Posts')
 export class Post extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'varchar' })
+  @Column()
   title: string;
 
+  // Explicit type 'text' needed: TEXT vs VARCHAR (unlimited length)
+  // TypeORM would default to VARCHAR(255) without explicit type
   @Column({ type: 'text' })
   body: string;
 
+  // Explicit type needed: TypeORM can't infer integer from number
   @Column({ type: 'integer' })
   userId: number;
 
+  // Explicit type 'enum' required for enum columns
   @Column({
     type: 'enum',
     enum: PostStatus,
@@ -44,14 +44,16 @@ export class Post extends BaseEntity {
   })
   status: PostStatus;
 
+  // nullable: true = database constraint
+  // string | null = TypeScript type safety
+  // Explicit type needed: TypeORM can't infer varchar from string | null
   @Column({ type: 'varchar', nullable: true })
   image: string | null;
 
   @Column({ type: 'varchar', nullable: true })
   imagePublicId: string | null;
 
-  // Relations
-  @ManyToOne('User', (user: User) => user.posts, { onDelete: 'CASCADE' }) //delays evaluation untill runtime -> no crash
+  @ManyToOne('User', (user: User) => user.posts, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'userId' }) // foreign key owner
   author: User;
 

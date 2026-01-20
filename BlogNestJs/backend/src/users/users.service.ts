@@ -10,7 +10,6 @@ import { User } from './user.entity';
 import { Post } from '../posts/post.entity';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { buildPaginationMeta } from '../lib/utils/pagination';
-// Password hashing is handled automatically by UserSubscriber
 import { AppException } from '../common/exceptions/app.exception';
 import { SUCCESS_MESSAGES, DEFAULTS } from '../lib/constants';
 import { ListUsersQueryDto } from './dto/listUsersQuery.dto';

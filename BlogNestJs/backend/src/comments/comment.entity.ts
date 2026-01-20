@@ -10,29 +10,29 @@ import type { User } from '../users/user.entity';
 import type { Post } from '../posts/post.entity';
 import { BaseEntity } from '../common/entities/BaseEntity';
 
-/**
- * Comment entity
- * Represents a comment on a post, with support for nested replies
- * Extends BaseEntity for automatic timestamp management
- */
+
 @Entity('Comments')
 export class Comment extends BaseEntity {
-  @PrimaryGeneratedColumn() //Auto increment
+  @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'text' }) // nullable if true relation column can be null
+  // Explicit type 'text' needed: TEXT vs VARCHAR (unlimited length)
+  // TypeORM would default to VARCHAR(255) without explicit type
+  @Column({ type: 'text' })
   body: string;
 
+  // Explicit type needed: TypeORM can't infer integer from number
   @Column({ type: 'integer' })
   postId: number;
 
   @Column({ type: 'integer' })
   userId: number;
 
+  // nullable: true = database constraint
+  // number | null = TypeScript type safety
   @Column({ type: 'integer', nullable: true })
   parentId: number | null;
 
-  // Relations
   @ManyToOne('Post', (post: Post) => post.comments, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'postId' })
   post: Post;

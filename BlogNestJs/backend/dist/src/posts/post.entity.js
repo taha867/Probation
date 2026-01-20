@@ -20,11 +20,6 @@ var PostStatus;
     PostStatus["DRAFT"] = "draft";
     PostStatus["PUBLISHED"] = "published";
 })(PostStatus || (exports.PostStatus = PostStatus = {}));
-/**
- * Post entity
- * Represents a blog post in the database
- * Extends BaseEntity for automatic timestamp management
- */
 let Post = class Post extends BaseEntity_1.BaseEntity {
 };
 exports.Post = Post;
@@ -33,7 +28,7 @@ __decorate([
     __metadata("design:type", Number)
 ], Post.prototype, "id", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'varchar' }),
+    (0, typeorm_1.Column)(),
     __metadata("design:type", String)
 ], Post.prototype, "title", void 0);
 __decorate([
@@ -61,8 +56,7 @@ __decorate([
     __metadata("design:type", Object)
 ], Post.prototype, "imagePublicId", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)('User', (user) => user.posts, { onDelete: 'CASCADE' }) //delays evaluation untill runtime -> no crash
-    ,
+    (0, typeorm_1.ManyToOne)('User', (user) => user.posts, { onDelete: 'CASCADE' }),
     (0, typeorm_1.JoinColumn)({ name: 'userId' }) // foreign key owner
     ,
     __metadata("design:type", Function)

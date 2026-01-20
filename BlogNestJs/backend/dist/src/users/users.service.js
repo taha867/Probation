@@ -20,7 +20,6 @@ const user_entity_1 = require("./user.entity");
 const post_entity_1 = require("../posts/post.entity");
 const cloudinary_service_1 = require("../cloudinary/cloudinary.service");
 const pagination_1 = require("../lib/utils/pagination");
-// Password hashing is handled automatically by UserSubscriber
 const app_exception_1 = require("../common/exceptions/app.exception");
 const constants_1 = require("../lib/constants");
 let UsersService = class UsersService {

@@ -12,8 +12,6 @@ const data_source_options_1 = require("./config/data-source-options");
 const common_1 = require("@nestjs/common");
 const core_1 = require("@nestjs/core");
 const throttler_1 = require("@nestjs/throttler");
-const app_controller_1 = require("./app.controller");
-const app_service_1 = require("./app.service");
 const users_module_1 = require("./users/users.module");
 const posts_module_1 = require("./posts/posts.module");
 const comments_module_1 = require("./comments/comments.module");
@@ -51,10 +49,9 @@ exports.AppModule = AppModule = __decorate([
             posts_module_1.PostsModule, // ← Post routes (/posts/*)
             comments_module_1.CommentsModule, // ← Comment routes (/comments/*)
         ],
-        controllers: [app_controller_1.AppController],
+        controllers: [],
         providers: [
             // providers are injectable classes
-            app_service_1.AppService,
             {
                 provide: core_1.APP_GUARD,
                 useClass: auth_guard_1.AuthGuard, // Global auth guard
