@@ -20,7 +20,7 @@ const comment_entity_1 = require("./comment.entity");
 const post_entity_1 = require("../posts/post.entity");
 const app_exception_1 = require("../common/exceptions/app.exception");
 const constants_1 = require("../lib/constants");
-const { EITHER_POST_ID_OR_PARENT_ID_REQUIRED, POST_ID_REQUIRED } = constants_1.ERROR_MESSAGES;
+const { EITHER_POST_ID_OR_PARENT_ID_REQUIRED, POST_ID_REQUIRED, PARENT_COMMENT_NOT_FOUND, POST_NOT_FOUND, } = constants_1.ERROR_MESSAGES;
 const { COMMENT_CREATED, COMMENT_UPDATED } = constants_1.SUCCESS_MESSAGES;
 let CommentsService = class CommentsService {
     constructor(commentRepository, postRepository) {
@@ -44,7 +44,7 @@ let CommentsService = class CommentsService {
                 },
             });
             if (!parentComment) {
-                throw new common_1.NotFoundException(constants_1.ERROR_MESSAGES.PARENT_COMMENT_NOT_FOUND);
+                throw new common_1.NotFoundException(PARENT_COMMENT_NOT_FOUND);
             }
             finalPostId = parentComment.postId;
         }
@@ -57,7 +57,7 @@ let CommentsService = class CommentsService {
                 where: { id: postId },
             });
             if (!post) {
-                throw new common_1.NotFoundException(constants_1.ERROR_MESSAGES.POST_NOT_FOUND);
+                throw new common_1.NotFoundException(POST_NOT_FOUND);
             }
             finalPostId = postId;
         }
@@ -72,7 +72,7 @@ let CommentsService = class CommentsService {
         // Fetch created comment with relations
         const createdComment = await this.findCommentWithRelations(comment.id);
         if (!createdComment) {
-            throw new app_exception_1.AppException('COMMENT_CREATION_FAILED', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new app_exception_1.AppException("COMMENT_CREATION_FAILED", common_1.HttpStatus.INTERNAL_SERVER_ERROR);
         }
         return {
             data: createdComment,
@@ -88,7 +88,7 @@ let CommentsService = class CommentsService {
                 select: { id: true },
             });
             if (!post) {
-                throw new common_1.NotFoundException(constants_1.ERROR_MESSAGES.POST_NOT_FOUND);
+                throw new common_1.NotFoundException(POST_NOT_FOUND);
             }
         }
         const whereCondition = {
@@ -116,7 +116,7 @@ let CommentsService = class CommentsService {
                 },
             },
             order: {
-                createdAt: 'DESC',
+                createdAt: "DESC",
             },
         });
         const commentRows = comments.map((comment) => {
@@ -188,11 +188,11 @@ let CommentsService = class CommentsService {
                 },
             },
             order: {
-                createdAt: 'ASC',
+                createdAt: "ASC",
             },
         });
         const replyRows = replies.map((reply) => {
-            const { id, body, postId, userId, parentId, createdAt, updatedAt, author, } = reply;
+            const { id, body, postId, userId, parentId, createdAt, updatedAt, author: { id: authorId, name, email, image: authorImage }, } = reply;
             return {
                 id,
                 body,
@@ -202,10 +202,10 @@ let CommentsService = class CommentsService {
                 createdAt,
                 updatedAt,
                 author: {
-                    id: author.id,
-                    name: author.name,
-                    email: author.email,
-                    image: author.image ?? null,
+                    id: authorId,
+                    name,
+                    email,
+                    image: authorImage ?? null,
                 },
             };
         });
@@ -247,7 +247,7 @@ let CommentsService = class CommentsService {
         // Fetch updated comment with relations
         const updated = await this.findCommentWithRelations(commentId);
         if (!updated) {
-            throw new app_exception_1.AppException('COMMENT_UPDATE_FAILED', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new app_exception_1.AppException("COMMENT_UPDATE_FAILED", common_1.HttpStatus.INTERNAL_SERVER_ERROR);
         }
         return {
             data: updated,

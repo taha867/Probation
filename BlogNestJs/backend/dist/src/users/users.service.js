@@ -110,7 +110,7 @@ let UsersService = class UsersService {
             .addOrderBy("reply.createdAt", "ASC");
         const paginatedResult = await this.paginationService.paginateQueryBuilder(qb, page, limit);
         const { id, name, email, image } = user;
-        const { data: { items, meta } } = paginatedResult;
+        const { data: { items, meta }, } = paginatedResult;
         return {
             data: {
                 id,
@@ -206,16 +206,17 @@ let UsersService = class UsersService {
         if (!updatedUser) {
             throw new app_exception_1.AppException("USER_UPDATE_FAILED", common_1.HttpStatus.INTERNAL_SERVER_ERROR);
         }
+        const { id, name: updatedName, email: updatedEmail, phone: updatedPhone, status, image: updatedImage, } = updatedUser;
         return {
             data: {
                 message: constants_1.SUCCESS_MESSAGES.USER_UPDATED,
                 user: {
-                    id: updatedUser.id,
-                    name: updatedUser.name,
-                    email: updatedUser.email,
-                    phone: updatedUser.phone,
-                    status: updatedUser.status,
-                    image: updatedUser.image,
+                    id,
+                    name: updatedName,
+                    email: updatedEmail,
+                    phone: updatedPhone,
+                    status,
+                    image: updatedImage,
                 },
             },
         };

@@ -78,7 +78,8 @@ __decorate([
 ], UsersController.prototype, "getUserPosts", null);
 __decorate([
     (0, common_1.Put)(':id'),
-    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('image')),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('image')) // Configures Multer to extract a file from the image field in multipart/form-data
+    ,
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __param(1, (0, common_1.Body)()),
     __param(2, (0, user_decorator_1.User)('id')),

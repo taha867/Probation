@@ -45,7 +45,7 @@ export class UsersController {
   }
 
   @Put(':id')
-  @UseInterceptors(FileInterceptor('image'))
+  @UseInterceptors(FileInterceptor('image')) // Configures Multer to extract a file from the image field in multipart/form-data
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateUserDto: UpdateUserDto,

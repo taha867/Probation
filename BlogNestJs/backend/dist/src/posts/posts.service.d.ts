@@ -1,13 +1,13 @@
-import { Repository } from 'typeorm';
-import { Post, PostStatus } from './post.entity';
-import { Comment } from '../comments/comment.entity';
-import { User } from '../users/user.entity';
-import { CloudinaryService } from '../cloudinary/cloudinary.service';
-import { PaginationService } from '../pagination/pagination.service';
-import { CreatePostDto } from './dto/create-post-input.dto';
-import { UpdatePostDto } from './dto/update-post-input.dto';
-import { ListPostsQueryDto } from './dto/list-posts-query-payload.dto';
-import { PaginationQueryDto } from './dto/pagination-query-input.dto';
+import { Repository } from "typeorm";
+import { Post, PostStatus } from "./post.entity";
+import { Comment } from "../comments/comment.entity";
+import { User } from "../users/user.entity";
+import { CloudinaryService } from "../cloudinary/cloudinary.service";
+import { PaginationService } from "../pagination/pagination.service";
+import { CreatePostDto } from "./dto/create-post-input.dto";
+import { UpdatePostDto } from "./dto/update-post-input.dto";
+import { ListPostsQueryDto } from "./dto/list-posts-query-payload.dto";
+import { PaginationQueryDto } from "./dto/pagination-query-input.dto";
 export declare class PostsService {
     private postRepository;
     private commentRepository;

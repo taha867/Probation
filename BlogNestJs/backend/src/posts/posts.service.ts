@@ -3,20 +3,20 @@ import {
   NotFoundException,
   ForbiddenException,
   HttpStatus,
-} from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Brackets } from 'typeorm';
-import { Post, PostStatus } from './post.entity';
-import { Comment } from '../comments/comment.entity';
-import { User } from '../users/user.entity';
-import { CloudinaryService } from '../cloudinary/cloudinary.service';
-import { PaginationService } from '../pagination/pagination.service';
-import { AppException } from '../common/exceptions/app.exception';
-import { SUCCESS_MESSAGES, DEFAULTS, ERROR_MESSAGES } from '../lib/constants';
-import { CreatePostDto } from './dto/create-post-input.dto';
-import { UpdatePostDto } from './dto/update-post-input.dto';
-import { ListPostsQueryDto } from './dto/list-posts-query-payload.dto';
-import { PaginationQueryDto } from './dto/pagination-query-input.dto';
+} from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository, Brackets } from "typeorm";
+import { Post, PostStatus } from "./post.entity";
+import { Comment } from "../comments/comment.entity";
+import { User } from "../users/user.entity";
+import { CloudinaryService } from "../cloudinary/cloudinary.service";
+import { PaginationService } from "../pagination/pagination.service";
+import { AppException } from "../common/exceptions/app.exception";
+import { SUCCESS_MESSAGES, DEFAULTS, ERROR_MESSAGES } from "../lib/constants";
+import { CreatePostDto } from "./dto/create-post-input.dto";
+import { UpdatePostDto } from "./dto/update-post-input.dto";
+import { ListPostsQueryDto } from "./dto/list-posts-query-payload.dto";
+import { PaginationQueryDto } from "./dto/pagination-query-input.dto";
 
 @Injectable()
 export class PostsService {
@@ -67,7 +67,7 @@ export class PostsService {
     const postWithAuthor = await this.findPostWithAuthor(post.id);
     if (!postWithAuthor) {
       throw new AppException(
-        'POST_CREATION_FAILED',
+        "POST_CREATION_FAILED",
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -92,43 +92,43 @@ export class PostsService {
     }
 
     const qb = this.postRepository
-      .createQueryBuilder('post')
-      .leftJoinAndSelect('post.author', 'author')
+      .createQueryBuilder("post")
+      .leftJoinAndSelect("post.author", "author")
       .select([
-        'post.id',
-        'post.title',
-        'post.body',
-        'post.userId',
-        'post.status',
-        'post.image',
-        'post.imagePublicId',
-        'post.createdAt',
-        'post.updatedAt',
-        'author.id',
-        'author.name',
-        'author.email',
-        'author.image',
+        "post.id",
+        "post.title",
+        "post.body",
+        "post.userId",
+        "post.status",
+        "post.image",
+        "post.imagePublicId",
+        "post.createdAt",
+        "post.updatedAt",
+        "author.id",
+        "author.name",
+        "author.email",
+        "author.image",
       ]);
 
     if (userId) {
-      qb.andWhere('post.userId = :userId', { userId });
+      qb.andWhere("post.userId = :userId", { userId });
     }
 
     if (status) {
-      qb.andWhere('post.status = :status', { status });
+      qb.andWhere("post.status = :status", { status });
     }
 
     if (search) {
       qb.andWhere(
         new Brackets((qb) => {
-          qb.where('post.title ILIKE :search', {
+          qb.where("post.title ILIKE :search", {
             search: `%${search}%`,
-          }).orWhere('post.body ILIKE :search', { search: `%${search}%` });
+          }).orWhere("post.body ILIKE :search", { search: `%${search}%` });
         }),
       );
     }
 
-    qb.orderBy('post.createdAt', 'DESC');
+    qb.orderBy("post.createdAt", "DESC");
 
     const paginatedResult = await this.paginationService.paginateQueryBuilder(
       qb,
@@ -137,8 +137,16 @@ export class PostsService {
     );
 
     const postRows = paginatedResult.data.items.map((post) => {
-      const { id, title, body, userId, status, image, imagePublicId, author } =
-        post;
+      const {
+        id,
+        title,
+        body,
+        userId,
+        status,
+        image,
+        imagePublicId,
+        author: { id: authorId, name, email, image: authorImage },
+      } = post;
       return {
         id,
         title,
@@ -148,10 +156,10 @@ export class PostsService {
         image: image ?? null,
         imagePublicId: imagePublicId ?? null,
         author: {
-          id: author.id,
-          name: author.name,
-          email: author.email,
-          image: author.image ?? null,
+          id: authorId,
+          name,
+          email,
+          image: authorImage ?? null,
         },
       };
     });
@@ -249,14 +257,14 @@ export class PostsService {
 
     // Get top-level comments with replies
     const qb = this.commentRepository
-      .createQueryBuilder('comment')
-      .leftJoinAndSelect('comment.author', 'author')
-      .leftJoinAndSelect('comment.replies', 'reply')
-      .leftJoinAndSelect('reply.author', 'replyAuthor')
-      .where('comment.postId = :postId', { postId })
-      .andWhere('comment.parentId IS NULL')
-      .orderBy('comment.createdAt', 'DESC')
-      .addOrderBy('reply.createdAt', 'ASC');
+      .createQueryBuilder("comment")
+      .leftJoinAndSelect("comment.author", "author")
+      .leftJoinAndSelect("comment.replies", "reply")
+      .leftJoinAndSelect("reply.author", "replyAuthor")
+      .where("comment.postId = :postId", { postId })
+      .andWhere("comment.parentId IS NULL")
+      .orderBy("comment.createdAt", "DESC")
+      .addOrderBy("reply.createdAt", "ASC");
 
     const paginatedResult = await this.paginationService.paginateQueryBuilder(
       qb,
@@ -312,7 +320,7 @@ export class PostsService {
       );
       updateData.image = uploadResult.secure_url;
       updateData.imagePublicId = uploadResult.public_id;
-    } else if (image === null || image === '') {
+    } else if (image === null || image === "") {
       // Image explicitly removed
       if (post.imagePublicId) {
         await this.cloudinaryService.deleteImage(post.imagePublicId);
@@ -329,7 +337,7 @@ export class PostsService {
     const postWithAuthor = await this.findPostWithAuthor(post.id);
     if (!postWithAuthor) {
       throw new AppException(
-        'POST_UPDATE_FAILED',
+        "POST_UPDATE_FAILED",
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }

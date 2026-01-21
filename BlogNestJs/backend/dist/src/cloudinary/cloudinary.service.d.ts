@@ -5,7 +5,8 @@ export declare class CloudinaryService {
     private readonly configService;
     constructor(configService: ConfigService);
     deleteImage(publicId: string | null | undefined): Promise<CloudinaryDeletionResultDto | null>;
-    uploadImage(fileBuffer: Buffer, folder?: string, originalName?: string): Promise<CloudinaryUploadResultDto>;
+    uploadImage(fileBuffer: Buffer, folder?: string, // Default folder 
+    originalName?: string): Promise<CloudinaryUploadResultDto>;
     extractPublicIdFromUrl(url: string | null | undefined): string | null;
 }
 //# sourceMappingURL=cloudinary.service.d.ts.map

@@ -1,9 +1,9 @@
-import { Repository } from 'typeorm';
-import { Comment } from './comment.entity';
-import { Post } from '../posts/post.entity';
-import { CreateCommentDto } from './dto/create-comment-input.dto';
-import { UpdateCommentDto } from './dto/update-comment-input.dto';
-import { ListCommentsQueryDto } from './dto/list-comments-query-payload.dto';
+import { Repository } from "typeorm";
+import { Comment } from "./comment.entity";
+import { Post } from "../posts/post.entity";
+import { CreateCommentDto } from "./dto/create-comment-input.dto";
+import { UpdateCommentDto } from "./dto/update-comment-input.dto";
+import { ListCommentsQueryDto } from "./dto/list-comments-query-payload.dto";
 export declare class CommentsService {
     private commentRepository;
     private postRepository;

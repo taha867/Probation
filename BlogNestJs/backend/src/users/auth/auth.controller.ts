@@ -19,6 +19,8 @@ import { SUCCESS_MESSAGES, ERROR_MESSAGES } from '../../lib/constants';
 import { UsePipes } from '@nestjs/common';
 import { EmailOrPhonePipe } from './pipes/emailOrPhone.pipe';
 
+const{ RESET_TOKEN_SENT, PASSWORD_RESET,ACCOUNT_CREATED ,LOGGED_OUT} = SUCCESS_MESSAGES;
+
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
@@ -29,7 +31,7 @@ export class AuthController {
   async signUp(@Body() signUpDto: SignUpDto) {
     await this.authService.signUp(signUpDto);
     return {
-      data: { message: SUCCESS_MESSAGES.ACCOUNT_CREATED },
+      data: { message: ACCOUNT_CREATED },
     };
   }
 
@@ -47,7 +49,7 @@ export class AuthController {
   async signOut(@User('id') userId: number) {
     await this.authService.logout(userId);
     return {
-      data: { message: SUCCESS_MESSAGES.LOGGED_OUT },
+      data: { message: LOGGED_OUT },
     };
   }
 
@@ -64,7 +66,7 @@ export class AuthController {
   async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
     await this.authService.forgotPassword(forgotPasswordDto.email);
     return {
-      data: { message: SUCCESS_MESSAGES.RESET_TOKEN_SENT },
+      data: { message: RESET_TOKEN_SENT },
     };
   }
 
@@ -82,7 +84,7 @@ export class AuthController {
       resetPasswordDto.newPassword,
     );
     return {
-      data: { message: SUCCESS_MESSAGES.PASSWORD_RESET },
+      data: { message: PASSWORD_RESET },
     };
   }
 }

@@ -53,7 +53,7 @@ let PostsService = class PostsService {
         // Fetch post with author
         const postWithAuthor = await this.findPostWithAuthor(post.id);
         if (!postWithAuthor) {
-            throw new app_exception_1.AppException('POST_CREATION_FAILED', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new app_exception_1.AppException("POST_CREATION_FAILED", common_1.HttpStatus.INTERNAL_SERVER_ERROR);
         }
         return {
             data: postWithAuthor,
@@ -72,40 +72,40 @@ let PostsService = class PostsService {
             }
         }
         const qb = this.postRepository
-            .createQueryBuilder('post')
-            .leftJoinAndSelect('post.author', 'author')
+            .createQueryBuilder("post")
+            .leftJoinAndSelect("post.author", "author")
             .select([
-            'post.id',
-            'post.title',
-            'post.body',
-            'post.userId',
-            'post.status',
-            'post.image',
-            'post.imagePublicId',
-            'post.createdAt',
-            'post.updatedAt',
-            'author.id',
-            'author.name',
-            'author.email',
-            'author.image',
+            "post.id",
+            "post.title",
+            "post.body",
+            "post.userId",
+            "post.status",
+            "post.image",
+            "post.imagePublicId",
+            "post.createdAt",
+            "post.updatedAt",
+            "author.id",
+            "author.name",
+            "author.email",
+            "author.image",
         ]);
         if (userId) {
-            qb.andWhere('post.userId = :userId', { userId });
+            qb.andWhere("post.userId = :userId", { userId });
         }
         if (status) {
-            qb.andWhere('post.status = :status', { status });
+            qb.andWhere("post.status = :status", { status });
         }
         if (search) {
             qb.andWhere(new typeorm_2.Brackets((qb) => {
-                qb.where('post.title ILIKE :search', {
+                qb.where("post.title ILIKE :search", {
                     search: `%${search}%`,
-                }).orWhere('post.body ILIKE :search', { search: `%${search}%` });
+                }).orWhere("post.body ILIKE :search", { search: `%${search}%` });
             }));
         }
-        qb.orderBy('post.createdAt', 'DESC');
+        qb.orderBy("post.createdAt", "DESC");
         const paginatedResult = await this.paginationService.paginateQueryBuilder(qb, page, limit);
         const postRows = paginatedResult.data.items.map((post) => {
-            const { id, title, body, userId, status, image, imagePublicId, author } = post;
+            const { id, title, body, userId, status, image, imagePublicId, author: { id: authorId, name, email, image: authorImage }, } = post;
             return {
                 id,
                 title,
@@ -115,10 +115,10 @@ let PostsService = class PostsService {
                 image: image ?? null,
                 imagePublicId: imagePublicId ?? null,
                 author: {
-                    id: author.id,
-                    name: author.name,
-                    email: author.email,
-                    image: author.image ?? null,
+                    id: authorId,
+                    name,
+                    email,
+                    image: authorImage ?? null,
                 },
             };
         });
@@ -198,14 +198,14 @@ let PostsService = class PostsService {
         };
         // Get top-level comments with replies
         const qb = this.commentRepository
-            .createQueryBuilder('comment')
-            .leftJoinAndSelect('comment.author', 'author')
-            .leftJoinAndSelect('comment.replies', 'reply')
-            .leftJoinAndSelect('reply.author', 'replyAuthor')
-            .where('comment.postId = :postId', { postId })
-            .andWhere('comment.parentId IS NULL')
-            .orderBy('comment.createdAt', 'DESC')
-            .addOrderBy('reply.createdAt', 'ASC');
+            .createQueryBuilder("comment")
+            .leftJoinAndSelect("comment.author", "author")
+            .leftJoinAndSelect("comment.replies", "reply")
+            .leftJoinAndSelect("reply.author", "replyAuthor")
+            .where("comment.postId = :postId", { postId })
+            .andWhere("comment.parentId IS NULL")
+            .orderBy("comment.createdAt", "DESC")
+            .addOrderBy("reply.createdAt", "ASC");
         const paginatedResult = await this.paginationService.paginateQueryBuilder(qb, page, limit);
         return {
             data: {
@@ -243,7 +243,7 @@ let PostsService = class PostsService {
             updateData.image = uploadResult.secure_url;
             updateData.imagePublicId = uploadResult.public_id;
         }
-        else if (image === null || image === '') {
+        else if (image === null || image === "") {
             // Image explicitly removed
             if (post.imagePublicId) {
                 await this.cloudinaryService.deleteImage(post.imagePublicId);
@@ -257,7 +257,7 @@ let PostsService = class PostsService {
         // Fetch updated post with author
         const postWithAuthor = await this.findPostWithAuthor(post.id);
         if (!postWithAuthor) {
-            throw new app_exception_1.AppException('POST_UPDATE_FAILED', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new app_exception_1.AppException("POST_UPDATE_FAILED", common_1.HttpStatus.INTERNAL_SERVER_ERROR);
         }
         return {
             data: postWithAuthor,

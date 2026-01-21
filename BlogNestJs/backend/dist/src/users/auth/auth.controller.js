@@ -26,6 +26,7 @@ const user_decorator_1 = require("../../customDecorators/user.decorator");
 const constants_1 = require("../../lib/constants");
 const common_2 = require("@nestjs/common");
 const emailOrPhone_pipe_1 = require("./pipes/emailOrPhone.pipe");
+const { RESET_TOKEN_SENT, PASSWORD_RESET, ACCOUNT_CREATED, LOGGED_OUT } = constants_1.SUCCESS_MESSAGES;
 let AuthController = class AuthController {
     constructor(authService) {
         this.authService = authService;
@@ -33,7 +34,7 @@ let AuthController = class AuthController {
     async signUp(signUpDto) {
         await this.authService.signUp(signUpDto);
         return {
-            data: { message: constants_1.SUCCESS_MESSAGES.ACCOUNT_CREATED },
+            data: { message: ACCOUNT_CREATED },
         };
     }
     async signIn(signInDto) {
@@ -42,7 +43,7 @@ let AuthController = class AuthController {
     async signOut(userId) {
         await this.authService.logout(userId);
         return {
-            data: { message: constants_1.SUCCESS_MESSAGES.LOGGED_OUT },
+            data: { message: LOGGED_OUT },
         };
     }
     async refreshToken(refreshTokenDto) {
@@ -51,7 +52,7 @@ let AuthController = class AuthController {
     async forgotPassword(forgotPasswordDto) {
         await this.authService.forgotPassword(forgotPasswordDto.email);
         return {
-            data: { message: constants_1.SUCCESS_MESSAGES.RESET_TOKEN_SENT },
+            data: { message: RESET_TOKEN_SENT },
         };
     }
     async resetPassword(resetPasswordDto) {
@@ -61,7 +62,7 @@ let AuthController = class AuthController {
         }
         await this.authService.resetPassword(resetPasswordDto.token, resetPasswordDto.newPassword);
         return {
-            data: { message: constants_1.SUCCESS_MESSAGES.PASSWORD_RESET },
+            data: { message: PASSWORD_RESET },
         };
     }
 };

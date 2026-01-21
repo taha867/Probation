@@ -132,8 +132,10 @@ export class UsersService {
       page,
       limit,
     );
-    const{ id, name, email, image } = user;
-    const{ data: { items, meta } } = paginatedResult;
+    const { id, name, email, image } = user;
+    const {
+      data: { items, meta },
+    } = paginatedResult;
     return {
       data: {
         id,
@@ -258,17 +260,24 @@ export class UsersService {
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
-
+    const {
+      id,
+      name: updatedName,
+      email: updatedEmail,
+      phone: updatedPhone,
+      status,
+      image: updatedImage,
+    } = updatedUser;
     return {
       data: {
         message: SUCCESS_MESSAGES.USER_UPDATED,
         user: {
-          id: updatedUser.id,
-          name: updatedUser.name,
-          email: updatedUser.email,
-          phone: updatedUser.phone,
-          status: updatedUser.status,
-          image: updatedUser.image,
+          id,
+          name: updatedName,
+          email: updatedEmail,
+          phone: updatedPhone,
+          status,
+          image: updatedImage,
         },
       },
     };

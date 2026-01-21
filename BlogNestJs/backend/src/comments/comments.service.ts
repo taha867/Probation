@@ -4,18 +4,22 @@ import {
   ForbiddenException,
   HttpStatus,
   BadRequestException,
-} from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Comment } from './comment.entity';
-import { Post } from '../posts/post.entity';
-import { AppException } from '../common/exceptions/app.exception';
-import { CreateCommentDto } from './dto/create-comment-input.dto';
-import { UpdateCommentDto } from './dto/update-comment-input.dto';
-import { ListCommentsQueryDto } from './dto/list-comments-query-payload.dto';
-import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '../lib/constants';
-const { EITHER_POST_ID_OR_PARENT_ID_REQUIRED, POST_ID_REQUIRED } =
-  ERROR_MESSAGES;
+} from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { Comment } from "./comment.entity";
+import { Post } from "../posts/post.entity";
+import { AppException } from "../common/exceptions/app.exception";
+import { CreateCommentDto } from "./dto/create-comment-input.dto";
+import { UpdateCommentDto } from "./dto/update-comment-input.dto";
+import { ListCommentsQueryDto } from "./dto/list-comments-query-payload.dto";
+import { ERROR_MESSAGES, SUCCESS_MESSAGES } from "../lib/constants";
+const {
+  EITHER_POST_ID_OR_PARENT_ID_REQUIRED,
+  POST_ID_REQUIRED,
+  PARENT_COMMENT_NOT_FOUND,
+  POST_NOT_FOUND,
+} = ERROR_MESSAGES;
 const { COMMENT_CREATED, COMMENT_UPDATED } = SUCCESS_MESSAGES;
 @Injectable()
 export class CommentsService {
@@ -50,7 +54,7 @@ export class CommentsService {
       });
 
       if (!parentComment) {
-        throw new NotFoundException(ERROR_MESSAGES.PARENT_COMMENT_NOT_FOUND);
+        throw new NotFoundException(PARENT_COMMENT_NOT_FOUND);
       }
 
       finalPostId = parentComment.postId;
@@ -65,7 +69,7 @@ export class CommentsService {
       });
 
       if (!post) {
-        throw new NotFoundException(ERROR_MESSAGES.POST_NOT_FOUND);
+        throw new NotFoundException(POST_NOT_FOUND);
       }
 
       finalPostId = postId;
@@ -86,7 +90,7 @@ export class CommentsService {
 
     if (!createdComment) {
       throw new AppException(
-        'COMMENT_CREATION_FAILED',
+        "COMMENT_CREATION_FAILED",
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -108,7 +112,7 @@ export class CommentsService {
       });
 
       if (!post) {
-        throw new NotFoundException(ERROR_MESSAGES.POST_NOT_FOUND);
+        throw new NotFoundException(POST_NOT_FOUND);
       }
     }
 
@@ -139,7 +143,7 @@ export class CommentsService {
         },
       },
       order: {
-        createdAt: 'DESC',
+        createdAt: "DESC",
       },
     });
 
@@ -225,7 +229,7 @@ export class CommentsService {
         },
       },
       order: {
-        createdAt: 'ASC',
+        createdAt: "ASC",
       },
     });
 
@@ -238,7 +242,7 @@ export class CommentsService {
         parentId,
         createdAt,
         updatedAt,
-        author,
+        author: { id: authorId, name, email, image: authorImage },
       } = reply;
       return {
         id,
@@ -249,10 +253,10 @@ export class CommentsService {
         createdAt,
         updatedAt,
         author: {
-          id: author.id,
-          name: author.name,
-          email: author.email,
-          image: author.image ?? null,
+          id: authorId,
+          name,
+          email,
+          image: authorImage ?? null,
         },
       };
     });
@@ -317,7 +321,7 @@ export class CommentsService {
 
     if (!updated) {
       throw new AppException(
-        'COMMENT_UPDATE_FAILED',
+        "COMMENT_UPDATE_FAILED",
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }

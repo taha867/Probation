@@ -40,7 +40,7 @@ let AuthService = class AuthService {
         await this.userRepository.save({
             name,
             email,
-            password, // Plain password - will be hashed automatically by UserSubscriber
+            password,
             phone: phone || null,
             image: image || null,
             status: constants_1.USER_STATUS.LOGGED_OUT,

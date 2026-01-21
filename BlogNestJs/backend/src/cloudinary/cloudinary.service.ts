@@ -48,8 +48,8 @@ export class CloudinaryService {
 
   async uploadImage(
     fileBuffer: Buffer,
-    folder: string = DEFAULTS.CLOUDINARY_FOLDER,
-    originalName: string = DEFAULTS.CLOUDINARY_IMAGE_NAME,
+    folder: string = DEFAULTS.CLOUDINARY_FOLDER, // Default folder 
+    originalName: string = DEFAULTS.CLOUDINARY_IMAGE_NAME, // Default original name
   ): Promise<CloudinaryUploadResultDto> {
     // Create DTO for validation (folder and originalName are validated via DTO pattern)
     const uploadDto = new UploadImageDto();
@@ -76,7 +76,7 @@ export class CloudinaryService {
           {
             folder: sanitizedFolder,
             resource_type: 'image',
-            public_id: publicId.split('.')[0],
+            public_id: publicId.split('.')[0], //removes file extension
           },
           (
             error: UploadApiErrorResponse | undefined,

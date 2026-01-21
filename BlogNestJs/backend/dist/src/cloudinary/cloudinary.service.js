@@ -38,7 +38,8 @@ let CloudinaryService = class CloudinaryService {
             return null;
         }
     }
-    async uploadImage(fileBuffer, folder = constants_1.DEFAULTS.CLOUDINARY_FOLDER, originalName = constants_1.DEFAULTS.CLOUDINARY_IMAGE_NAME) {
+    async uploadImage(fileBuffer, folder = constants_1.DEFAULTS.CLOUDINARY_FOLDER, // Default folder 
+    originalName = constants_1.DEFAULTS.CLOUDINARY_IMAGE_NAME) {
         // Create DTO for validation (folder and originalName are validated via DTO pattern)
         const uploadDto = new upload_Image_input_dto_1.UploadImageDto();
         uploadDto.fileBuffer = fileBuffer;
@@ -54,7 +55,7 @@ let CloudinaryService = class CloudinaryService {
                 const uploadStream = cloudinary_1.v2.uploader.upload_stream({
                     folder: sanitizedFolder,
                     resource_type: 'image',
-                    public_id: publicId.split('.')[0],
+                    public_id: publicId.split('.')[0], //removes file extension
                 }, (error, result) => {
                     if (error) {
                         console.error(CLOUDINARY_UPLOAD_ERROR, error);
