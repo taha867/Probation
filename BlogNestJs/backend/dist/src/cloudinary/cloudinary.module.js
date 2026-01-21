@@ -8,12 +8,14 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CloudinaryModule = void 0;
 const common_1 = require("@nestjs/common");
+const config_1 = require("@nestjs/config");
 const cloudinary_service_1 = require("./cloudinary.service");
 let CloudinaryModule = class CloudinaryModule {
 };
 exports.CloudinaryModule = CloudinaryModule;
 exports.CloudinaryModule = CloudinaryModule = __decorate([
     (0, common_1.Module)({
+        imports: [config_1.ConfigModule],
         providers: [cloudinary_service_1.CloudinaryService],
         exports: [cloudinary_service_1.CloudinaryService],
     })

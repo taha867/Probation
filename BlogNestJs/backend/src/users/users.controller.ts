@@ -11,13 +11,13 @@ import {
   ParseIntPipe,
   BadRequestException,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor } from '@nestjs/platform-express'; // Interceptor built on Multer, Handles file uploads
 import { UsersService } from './users.service';
-import { ListUsersQueryDto } from './dto/listUsersQuery.dto';
-import { GetUserPostsQueryDto } from './dto/getUserPostsQuery.dto';
-import { UpdateUserDto } from './dto/updateUser.dto';
-import { User } from '../common/decorators/user.decorator';
-import { Public } from './auth/decorators/public.decorator';
+import { ListUsersQueryDto } from './dto/list-users-query-payload.dto';
+import { GetUserPostsQueryDto } from './dto/user-posts-query-input.dto';
+import { UpdateUserDto } from './dto/update-user-input.dto';
+import { User } from '../customDecorators/user.decorator';
+import { Public } from '../customDecorators/public.decorator';
 import { SUCCESS_MESSAGES, ERROR_MESSAGES } from '../lib/constants';
 
 @Controller('users')

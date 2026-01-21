@@ -8,7 +8,6 @@ export class User extends BaseEntity {
   @PrimaryGeneratedColumn() //Auto increment
   id: number;
 
- 
   @Column()
   name: string;
 
@@ -26,15 +25,13 @@ export class User extends BaseEntity {
   @Column({ select: false })
   password: string;
 
- 
   @Column({ type: 'varchar', nullable: true })
   status: string | null;
-
 
   @Column({ type: 'varchar', nullable: true })
   image: string | null;
 
-    @Column({ type: 'varchar', nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   imagePublicId: string | null;
 
   // Explicit type needed: TypeORM can't infer timestamp from Date
@@ -47,7 +44,6 @@ export class User extends BaseEntity {
   @Column({ type: 'integer', default: 0 })
   tokenVersion: number;
 
-
   @OneToMany('Post', (post: Post) => post.author, {
     cascade: true,
     onDelete: 'CASCADE',
@@ -59,7 +55,6 @@ export class User extends BaseEntity {
     onDelete: 'CASCADE',
   })
   comments: Comment[];
-
 
   // Custom method to exclude password from JSON, it never fails
   toJSON(): Omit<User, 'password' | 'toJSON'> {

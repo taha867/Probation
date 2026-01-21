@@ -12,9 +12,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Post = exports.PostStatus = void 0;
 const typeorm_1 = require("typeorm");
 const BaseEntity_1 = require("../common/entities/BaseEntity");
-/**
- * Post status enum, best for roles, status, updates, etc.
- */
 var PostStatus;
 (function (PostStatus) {
     PostStatus["DRAFT"] = "draft";

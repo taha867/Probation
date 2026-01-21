@@ -18,7 +18,7 @@ const dataSourceOptions = {
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
     entities: [user_entity_1.User, post_entity_1.Post, comment_entity_1.Comment],
-    migrations: ['src/migrations/*.ts'],
+    migrations: ['dist/migrations/*.js'],
     migrationsTableName: 'migrations',
     synchronize: false, // Never use synchronize in production
     logging: false, // Disable verbose logging to prevent hanging

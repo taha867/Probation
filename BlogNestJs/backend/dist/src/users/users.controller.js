@@ -14,13 +14,13 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UsersController = void 0;
 const common_1 = require("@nestjs/common");
-const platform_express_1 = require("@nestjs/platform-express");
+const platform_express_1 = require("@nestjs/platform-express"); // Interceptor built on Multer, Handles file uploads
 const users_service_1 = require("./users.service");
-const listUsersQuery_dto_1 = require("./dto/listUsersQuery.dto");
-const getUserPostsQuery_dto_1 = require("./dto/getUserPostsQuery.dto");
-const updateUser_dto_1 = require("./dto/updateUser.dto");
-const user_decorator_1 = require("../common/decorators/user.decorator");
-const public_decorator_1 = require("./auth/decorators/public.decorator");
+const list_users_query_payload_dto_1 = require("./dto/list-users-query-payload.dto");
+const user_posts_query_input_dto_1 = require("./dto/user-posts-query-input.dto");
+const update_user_input_dto_1 = require("./dto/update-user-input.dto");
+const user_decorator_1 = require("../customDecorators/user.decorator");
+const public_decorator_1 = require("../customDecorators/public.decorator");
 const constants_1 = require("../lib/constants");
 let UsersController = class UsersController {
     constructor(usersService) {
@@ -57,7 +57,7 @@ __decorate([
     (0, common_1.Get)(),
     __param(0, (0, common_1.Query)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [listUsersQuery_dto_1.ListUsersQueryDto]),
+    __metadata("design:paramtypes", [list_users_query_payload_dto_1.ListUsersQueryDto]),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "list", null);
 __decorate([
@@ -73,7 +73,7 @@ __decorate([
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __param(1, (0, common_1.Query)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, getUserPostsQuery_dto_1.GetUserPostsQueryDto]),
+    __metadata("design:paramtypes", [Number, user_posts_query_input_dto_1.GetUserPostsQueryDto]),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "getUserPosts", null);
 __decorate([
@@ -84,7 +84,7 @@ __decorate([
     __param(2, (0, user_decorator_1.User)('id')),
     __param(3, (0, common_1.UploadedFile)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, updateUser_dto_1.UpdateUserDto, Number, Object]),
+    __metadata("design:paramtypes", [Number, update_user_input_dto_1.UpdateUserDto, Number, Object]),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "update", null);
 __decorate([

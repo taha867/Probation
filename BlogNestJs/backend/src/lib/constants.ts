@@ -3,9 +3,6 @@ import { StatusCodes } from 'http-status-codes';
 // HTTP Status Codes
 export const HTTP_STATUS = StatusCodes;
 
-/**
- * Success messages for API responses
- */
 export const SUCCESS_MESSAGES = {
   ACCOUNT_CREATED: 'Account created successfully',
   SIGNED_IN: 'Signed in successfully',
@@ -23,9 +20,6 @@ export const SUCCESS_MESSAGES = {
   TOKEN_REFRESHED: 'Access token refreshed successfully',
 } as const;
 
-/**
- * Error messages for API responses
- */
 export const ERROR_MESSAGES = {
   // Authentication Errors
   INVALID_CREDENTIALS: 'Invalid credentials',
@@ -74,27 +68,45 @@ export const ERROR_MESSAGES = {
   INTERNAL_SERVER_ERROR: 'Internal server error',
 } as const;
 
-/**
- * Validation messages for DTOs
- */
 export const VALIDATION_MESSAGES = {
   // Common
-  IS_STRING: 'must be a string',
-  IS_REQUIRED: 'is required',
   IS_EMAIL: 'must be a valid email address',
-  IS_BOOLEAN: 'must be a boolean',
-  IS_URL: 'must be a valid URL with protocol',
 
   // User validation
+  NAME_REQUIRED: 'Name is required',
+  NAME_MIN_LENGTH: 'Name must be at least 2 characters long',
   NAME_INVALID_CHARS: 'Name must contain only letters and spaces',
-  PHONE_INVALID_FORMAT: 'Phone number must be 10 to 15 digits',
+  EMAIL_REQUIRED: 'Email is required',
+  EMAIL_INVALID: 'Please provide a valid email address',
+  PHONE_REQUIRED: 'Phone number is required',
+  PHONE_INVALID_FORMAT: 'Phone number must be 10 to 15 digits (e.g., +1234567890)',
+  PASSWORD_REQUIRED: 'Password is required',
+  PASSWORD_MIN_LENGTH: 'Password must be at least 8 characters long',
+  IMAGE_INVALID_URL: 'Image must be a valid URL',
 
   // Post validation
-  TITLE_INVALID_CHARS: 'Title contains invalid characters',
-  BODY_INVALID_CHARS: 'Body contains invalid characters',
+  TITLE_REQUIRED: 'Post title is required',
+  TITLE_MIN_LENGTH: 'Post title must be at least 1 character long',
+  TITLE_MAX_LENGTH: 'Post title must not exceed 200 characters',
+  TITLE_INVALID_CHARS: 'Title contains invalid characters (HTML tags are not allowed)',
+  BODY_REQUIRED: 'Post body is required',
+  BODY_MIN_LENGTH: 'Post body must be at least 1 character long',
+  BODY_INVALID_CHARS: 'Body contains invalid characters (HTML tags are not allowed)',
+  STATUS_INVALID: 'Post status must be either "draft" or "published"',
 
   // Comment validation
-  COMMENT_BODY_INVALID_CHARS: 'Comment body contains invalid characters',
+  COMMENT_BODY_REQUIRED: 'Comment body is required',
+  COMMENT_BODY_MIN_LENGTH: 'Comment body must be at least 1 character long',
+  COMMENT_BODY_MAX_LENGTH: 'Comment body must not exceed 2000 characters',
+  COMMENT_BODY_INVALID_CHARS: 'Comment body contains invalid characters (HTML tags are not allowed)',
+  POST_ID_REQUIRED: 'Post ID is required',
+  POST_ID_INVALID: 'Post ID must be a positive integer',
+  PARENT_ID_INVALID: 'Parent comment ID must be a positive integer',
+
+  // Pagination validation
+  PAGE_INVALID: 'Page number must be at least 1',
+  LIMIT_MIN_INVALID: 'Limit must be at least 1',
+  LIMIT_MAX_INVALID: 'Limit must not exceed 100',
 
   // Cloudinary validation
   FOLDER_INVALID_CHARS:
@@ -104,9 +116,6 @@ export const VALIDATION_MESSAGES = {
   RESULT_INVALID_VALUE: 'result must be either "ok" or "not found"',
 } as const;
 
-/**
- * Console/Log messages
- */
 export const LOG_MESSAGES = {
   // Application
   APP_RUNNING: 'Application is running on:',
@@ -131,9 +140,6 @@ export const LOG_MESSAGES = {
   UPLOAD_NO_RESULT: 'Upload completed but no result returned',
 } as const;
 
-/**
- * Email template content
- */
 export const EMAIL_TEMPLATES = {
   APP_NAME: 'Blog App',
   RESET_PASSWORD_SUBJECT: 'Reset Your Password - Blog App',
@@ -170,6 +176,27 @@ export const DEFAULTS = {
   CLOUDINARY_POST_IMAGE_NAME: 'post-image',
   CLOUDINARY_USERS_FOLDER: 'blog/users',
   CLOUDINARY_PROFILE_IMAGE_NAME: 'profile-image',
+  PAGINATION_PAGE: 1, // Default page number
+  PAGINATION_LIMIT: 10, // Default items per page
+  USERS_LIST_LIMIT: 20, // Default limit for users list
+} as const;
+
+/**
+ * Validation limits
+ */
+export const VALIDATION_LIMITS = {
+  NAME_MIN_LENGTH: 2, // Minimum name length
+  PASSWORD_MIN_LENGTH: 8, // Minimum password length
+  PAGE_MIN: 1, // Minimum page number
+  LIMIT_MIN: 1, // Minimum items per page
+  LIMIT_MAX: 100, // Maximum items per page
+} as const;
+
+/**
+ * Security/Encryption constants
+ */
+export const SECURITY = {
+  SALT_ROUNDS: 10, 
 } as const;
 
 /**
@@ -178,4 +205,25 @@ export const DEFAULTS = {
 export const USER_STATUS = {
   LOGGED_IN: 'logged in',
   LOGGED_OUT: 'logged out',
+} as const; // immutable
+
+/**
+ * Validation regex patterns
+ */
+export const VALIDATION_PATTERNS = {
+  FOLDER: /^[a-zA-Z0-9/_-]+$/, //blog/post
+  ORIGINAL_NAME: /^[a-zA-Z0-9._-]+$/, // profile.jpg
+  NO_HTML_TAGS: /^[^<>]*$/, // Prevents HTML tags (< and > characters)
+  NAME: /^[A-Za-z\s]+$/, // Name: letters and spaces only
+  PHONE: /^\+?[0-9]{10,15}$/, // Phone: 10-15 digits, optional +
+} as const;
+
+/**
+ * Sanitization regex patterns (for removing invalid characters)
+ */
+export const SANITIZATION_PATTERNS = {
+  FOLDER: /[^a-zA-Z0-9/_-]/g, // Remove invalid chars from folder path
+  ORIGINAL_NAME: /[^a-zA-Z0-9._-]/g, // Remove invalid chars from filename
+  PUBLIC_ID_EXTRACT: /\/upload\/(?:v\d+\/)?(.+?)(?:\.[^.]+)?$/, // Extract public_id from URL
+  BLOG_PREFIX_REMOVE: /^blog\//, // Remove blog/ prefix from public_id
 } as const;

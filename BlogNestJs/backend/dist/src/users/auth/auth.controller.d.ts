@@ -1,9 +1,9 @@
 import { AuthService } from './auth.service';
-import { SignInDto } from './dto/signIn.dto';
-import { SignUpDto } from './dto/signUp.dto';
-import { ForgotPasswordDto } from './dto/forgotPassword.dto';
-import { ResetPasswordDto } from './dto/resetPassword.dto';
-import { RefreshTokenDto } from './dto/refreshToken.dto';
+import { SignInDto } from './dto/signIn-input.dto';
+import { SignUpDto } from './dto/signUp-input.dto';
+import { ForgotPasswordDto } from './dto/forgot-password-input.dto';
+import { ResetPasswordDto } from './dto/reset-password-input.dto';
+import { RefreshTokenDto } from './dto/refresh-token-input.dto';
 export declare class AuthController {
     private authService;
     constructor(authService: AuthService);

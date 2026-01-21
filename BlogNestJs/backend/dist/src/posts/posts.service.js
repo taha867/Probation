@@ -18,16 +18,18 @@ const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const post_entity_1 = require("./post.entity");
 const comment_entity_1 = require("../comments/comment.entity");
+const user_entity_1 = require("../users/user.entity");
 const cloudinary_service_1 = require("../cloudinary/cloudinary.service");
-const pagination_1 = require("../lib/utils/pagination");
-const mappers_1 = require("../lib/utils/mappers");
+const pagination_service_1 = require("../pagination/pagination.service");
 const app_exception_1 = require("../common/exceptions/app.exception");
 const constants_1 = require("../lib/constants");
 let PostsService = class PostsService {
-    constructor(postRepository, commentRepository, cloudinaryService) {
+    constructor(postRepository, commentRepository, userRepository, cloudinaryService, paginationService) {
         this.postRepository = postRepository;
         this.commentRepository = commentRepository;
+        this.userRepository = userRepository;
         this.cloudinaryService = cloudinaryService;
+        this.paginationService = paginationService;
     }
     async createPost(createPostDto, userId, file) {
         const { title, body, status = post_entity_1.PostStatus.DRAFT } = createPostDto;
@@ -59,8 +61,16 @@ let PostsService = class PostsService {
         };
     }
     async listPosts(query) {
-        const { page = 1, limit = 10, search, userId, status } = query;
-        const offset = (page - 1) * limit;
+        const { page, limit, search, userId, status } = query;
+        // Validate userId exists if provided
+        if (userId) {
+            const userExists = await this.userRepository.exists({
+                where: { id: userId },
+            });
+            if (!userExists) {
+                throw new common_1.NotFoundException(constants_1.ERROR_MESSAGES.USER_NOT_FOUND);
+            }
+        }
         const qb = this.postRepository
             .createQueryBuilder('post')
             .leftJoinAndSelect('post.author', 'author')
@@ -92,12 +102,9 @@ let PostsService = class PostsService {
                 }).orWhere('post.body ILIKE :search', { search: `%${search}%` });
             }));
         }
-        const [posts, total] = await qb
-            .orderBy('post.createdAt', 'DESC')
-            .take(limit)
-            .skip(offset)
-            .getManyAndCount();
-        const postRows = posts.map((post) => {
+        qb.orderBy('post.createdAt', 'DESC');
+        const paginatedResult = await this.paginationService.paginateQueryBuilder(qb, page, limit);
+        const postRows = paginatedResult.data.items.map((post) => {
             const { id, title, body, userId, status, image, imagePublicId, author } = post;
             return {
                 id,
@@ -107,13 +114,18 @@ let PostsService = class PostsService {
                 status: status,
                 image: image ?? null,
                 imagePublicId: imagePublicId ?? null,
-                author: (0, mappers_1.mapAuthorData)(author),
+                author: {
+                    id: author.id,
+                    name: author.name,
+                    email: author.email,
+                    image: author.image ?? null,
+                },
             };
         });
         return {
             data: {
                 items: postRows,
-                meta: (0, pagination_1.buildPaginationMeta)({ total, page, limit }),
+                meta: paginatedResult.data.meta,
             },
         };
     }
@@ -149,12 +161,16 @@ let PostsService = class PostsService {
             status: status,
             image: image ?? null,
             imagePublicId: imagePublicId ?? null,
-            author: (0, mappers_1.mapAuthorData)(author),
+            author: {
+                id: author.id,
+                name: author.name,
+                email: author.email,
+                image: author.image ?? null,
+            },
         };
     }
     async getPostWithComments(postId, query) {
-        const { page = 1, limit = 10 } = query;
-        const offset = (page - 1) * limit;
+        const { page, limit } = query;
         const post = await this.postRepository.findOne({
             where: { id: postId },
             select: {
@@ -168,7 +184,7 @@ let PostsService = class PostsService {
             },
         });
         if (!post) {
-            throw new common_1.NotFoundException('POST_NOT_FOUND');
+            throw new common_1.NotFoundException(constants_1.ERROR_MESSAGES.POST_NOT_FOUND);
         }
         const { id, title, body, userId, status, image, imagePublicId } = post;
         const basePost = {
@@ -181,7 +197,7 @@ let PostsService = class PostsService {
             imagePublicId: imagePublicId ?? null,
         };
         // Get top-level comments with replies
-        const [comments, total] = await this.commentRepository
+        const qb = this.commentRepository
             .createQueryBuilder('comment')
             .leftJoinAndSelect('comment.author', 'author')
             .leftJoinAndSelect('comment.replies', 'reply')
@@ -189,15 +205,13 @@ let PostsService = class PostsService {
             .where('comment.postId = :postId', { postId })
             .andWhere('comment.parentId IS NULL')
             .orderBy('comment.createdAt', 'DESC')
-            .addOrderBy('reply.createdAt', 'ASC')
-            .take(limit)
-            .skip(offset)
-            .getManyAndCount();
+            .addOrderBy('reply.createdAt', 'ASC');
+        const paginatedResult = await this.paginationService.paginateQueryBuilder(qb, page, limit);
         return {
             data: {
                 post: basePost,
-                comments,
-                meta: (0, pagination_1.buildPaginationMeta)({ total, page, limit }),
+                comments: paginatedResult.data.items,
+                meta: paginatedResult.data.meta,
             },
         };
     }
@@ -206,10 +220,10 @@ let PostsService = class PostsService {
             where: { id: postId },
         });
         if (!post) {
-            throw new common_1.NotFoundException('POST_NOT_FOUND');
+            throw new common_1.NotFoundException(constants_1.ERROR_MESSAGES.POST_NOT_FOUND);
         }
         if (post.userId !== userId) {
-            throw new common_1.ForbiddenException('CANNOT_UPDATE_OTHER_POST');
+            throw new common_1.ForbiddenException(constants_1.ERROR_MESSAGES.CANNOT_UPDATE_OTHER_POST);
         }
         const { title, body, status, image } = updatePostDto;
         const updateData = {};
@@ -260,10 +274,10 @@ let PostsService = class PostsService {
             },
         });
         if (!post) {
-            throw new common_1.NotFoundException('POST_NOT_FOUND');
+            throw new common_1.NotFoundException(constants_1.ERROR_MESSAGES.POST_NOT_FOUND);
         }
         if (post.userId !== userId) {
-            throw new common_1.ForbiddenException('CANNOT_DELETE_OTHER_POST');
+            throw new common_1.ForbiddenException(constants_1.ERROR_MESSAGES.CANNOT_DELETE_OTHER_POST);
         }
         // Delete associated image from Cloudinary
         if (post.imagePublicId) {
@@ -278,8 +292,11 @@ exports.PostsService = PostsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(post_entity_1.Post)),
     __param(1, (0, typeorm_1.InjectRepository)(comment_entity_1.Comment)),
+    __param(2, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
         typeorm_2.Repository,
-        cloudinary_service_1.CloudinaryService])
+        typeorm_2.Repository,
+        cloudinary_service_1.CloudinaryService,
+        pagination_service_1.PaginationService])
 ], PostsService);
 //# sourceMappingURL=posts.service.js.map

@@ -3,18 +3,21 @@ import {
   NotFoundException,
   ForbiddenException,
   HttpStatus,
-} from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Brackets, Not } from 'typeorm';
-import { User } from './user.entity';
-import { Post } from '../posts/post.entity';
-import { CloudinaryService } from '../cloudinary/cloudinary.service';
-import { buildPaginationMeta } from '../lib/utils/pagination';
-import { AppException } from '../common/exceptions/app.exception';
-import { SUCCESS_MESSAGES, DEFAULTS } from '../lib/constants';
-import { ListUsersQueryDto } from './dto/listUsersQuery.dto';
-import { GetUserPostsQueryDto } from './dto/getUserPostsQuery.dto';
-import { UpdateUserDto } from './dto/updateUser.dto';
+} from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository, Brackets, Not } from "typeorm";
+import { User } from "./user.entity";
+import { Post } from "../posts/post.entity";
+import { CloudinaryService } from "../cloudinary/cloudinary.service";
+import { PaginationService } from "../pagination/pagination.service";
+import { AppException } from "../common/exceptions/app.exception";
+import { SUCCESS_MESSAGES, DEFAULTS, ERROR_MESSAGES } from "../lib/constants";
+import { ListUsersQueryDto } from "./dto/list-users-query-payload.dto";
+import { GetUserPostsQueryDto } from "./dto/user-posts-query-input.dto";
+import { UpdateUserDto } from "./dto/update-user-input.dto";
+
+const { USER_NOT_FOUND, CANNOT_UPDATE_OTHER_USER, CANNOT_DELETE_OTHER_USER } =
+  ERROR_MESSAGES;
 
 @Injectable()
 export class UsersService {
@@ -24,30 +27,35 @@ export class UsersService {
     @InjectRepository(Post)
     private postRepository: Repository<Post>,
     private cloudinaryService: CloudinaryService,
+    private paginationService: PaginationService,
   ) {}
 
   async listUsers(query: ListUsersQueryDto) {
-    const { page = 1, limit = 20 } = query;
-    const offset = (page - 1) * limit;
+    const { page, limit } = query;
 
-    const [users, total] = await this.userRepository.findAndCount({
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        phone: true,
-        status: true,
-        image: true,
+    const paginatedResult = await this.paginationService.paginateRepository(
+      this.userRepository,
+      {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+          status: true,
+          image: true,
+        },
+        order: { createdAt: "DESC" },
       },
-      order: { createdAt: 'DESC' },
-      take: limit,
-      skip: offset,
-    });
-
+      page,
+      limit,
+    );
+    const {
+      data: { items, meta },
+    } = paginatedResult;
     return {
       data: {
-        users,
-        meta: buildPaginationMeta({ total, page, limit }),
+        users: items,
+        meta,
       },
     };
   }
@@ -64,24 +72,23 @@ export class UsersService {
     });
 
     if (!user) {
-      throw new NotFoundException('USER_NOT_FOUND');
+      throw new NotFoundException(USER_NOT_FOUND);
     }
-
+    const { name, email, image } = user;
     return {
       data: {
         user: {
           id: user.id,
-          name: user.name,
-          email: user.email,
-          image: user.image,
+          name,
+          email,
+          image,
         },
       },
     };
   }
 
   async getUserPostsWithComments(userId: number, query: GetUserPostsQueryDto) {
-    const { page = 1, limit = 20, search } = query;
-    const offset = (page - 1) * limit;
+    const { page, limit, search } = query;
 
     const user = await this.userRepository.findOne({
       where: { id: userId },
@@ -94,46 +101,47 @@ export class UsersService {
     });
 
     if (!user) {
-      throw new NotFoundException('USER_NOT_FOUND');
+      throw new NotFoundException(USER_NOT_FOUND);
     }
 
     const qb = this.postRepository
-      .createQueryBuilder('post')
-      .leftJoinAndSelect('post.author', 'author')
-      .leftJoinAndSelect('post.comments', 'comment', 'comment.parentId IS NULL')
-      .leftJoinAndSelect('comment.author', 'commentAuthor')
-      .leftJoinAndSelect('comment.replies', 'reply')
-      .leftJoinAndSelect('reply.author', 'replyAuthor')
-      .where('post.userId = :userId', { userId });
+      .createQueryBuilder("post")
+      .leftJoinAndSelect("post.author", "author")
+      .leftJoinAndSelect("post.comments", "comment", "comment.parentId IS NULL")
+      .leftJoinAndSelect("comment.author", "commentAuthor")
+      .leftJoinAndSelect("comment.replies", "reply")
+      .leftJoinAndSelect("reply.author", "replyAuthor")
+      .where("post.userId = :userId", { userId });
 
     if (search) {
       qb.andWhere(
         new Brackets((qb) => {
-          qb.where('post.title ILIKE :search', {
+          qb.where("post.title ILIKE :search", {
             search: `%${search}%`,
-          }).orWhere('post.body ILIKE :search', { search: `%${search}%` });
+          }).orWhere("post.body ILIKE :search", { search: `%${search}%` });
         }),
       );
     }
 
-    const [posts, total] = await qb
-      .orderBy('post.createdAt', 'DESC')
-      .addOrderBy('comment.createdAt', 'DESC')
-      .addOrderBy('reply.createdAt', 'ASC')
-      .take(limit)
-      .skip(offset)
-      .getManyAndCount();
+    qb.orderBy("post.createdAt", "DESC")
+      .addOrderBy("comment.createdAt", "DESC")
+      .addOrderBy("reply.createdAt", "ASC");
 
+    const paginatedResult = await this.paginationService.paginateQueryBuilder(
+      qb,
+      page,
+      limit,
+    );
+    const{ id, name, email, image } = user;
+    const{ data: { items, meta } } = paginatedResult;
     return {
       data: {
-        user: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          image: user.image,
-        },
-        posts,
-        meta: buildPaginationMeta({ total, page, limit }),
+        id,
+        name,
+        email,
+        image,
+        posts: items,
+        meta,
       },
     };
   }
@@ -146,7 +154,7 @@ export class UsersService {
   ) {
     // Authorization check
     if (requestedUserId !== authUserId) {
-      throw new ForbiddenException('CANNOT_UPDATE_OTHER_USER');
+      throw new ForbiddenException(CANNOT_UPDATE_OTHER_USER);
     }
 
     const user = await this.userRepository.findOne({
@@ -163,7 +171,7 @@ export class UsersService {
     });
 
     if (!user) {
-      throw new NotFoundException('USER_NOT_FOUND');
+      throw new NotFoundException(USER_NOT_FOUND);
     }
 
     const { name, email, phone, password, image } = updateUserDto;
@@ -177,7 +185,7 @@ export class UsersService {
       });
       if (emailExists) {
         throw new AppException(
-          'EMAIL_ALREADY_EXISTS',
+          "EMAIL_ALREADY_EXISTS",
           HttpStatus.UNPROCESSABLE_ENTITY,
         );
       }
@@ -191,7 +199,7 @@ export class UsersService {
         });
         if (phoneExists) {
           throw new AppException(
-            'PHONE_ALREADY_EXISTS',
+            "PHONE_ALREADY_EXISTS",
             HttpStatus.UNPROCESSABLE_ENTITY,
           );
         }
@@ -218,7 +226,7 @@ export class UsersService {
       );
       updateData.image = uploadResult.secure_url;
       updateData.imagePublicId = uploadResult.public_id;
-    } else if (image === null || image === '') {
+    } else if (image === null || image === "") {
       // Image explicitly removed
       if (user.imagePublicId) {
         await this.cloudinaryService.deleteImage(user.imagePublicId);
@@ -246,7 +254,7 @@ export class UsersService {
 
     if (!updatedUser) {
       throw new AppException(
-        'USER_UPDATE_FAILED',
+        "USER_UPDATE_FAILED",
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -269,7 +277,7 @@ export class UsersService {
   async deleteUser(requestedUserId: number, authUserId: number) {
     // Authorization check
     if (requestedUserId !== authUserId) {
-      throw new ForbiddenException('CANNOT_DELETE_OTHER_USER');
+      throw new ForbiddenException(CANNOT_DELETE_OTHER_USER);
     }
 
     const user = await this.userRepository.findOne({
@@ -281,7 +289,7 @@ export class UsersService {
     });
 
     if (!user) {
-      throw new NotFoundException('USER_NOT_FOUND');
+      throw new NotFoundException(USER_NOT_FOUND);
     }
 
     // Delete associated image from Cloudinary

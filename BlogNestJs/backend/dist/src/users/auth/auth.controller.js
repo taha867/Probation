@@ -16,13 +16,13 @@ exports.AuthController = void 0;
 const common_1 = require("@nestjs/common");
 const throttler_1 = require("@nestjs/throttler");
 const auth_service_1 = require("./auth.service");
-const signIn_dto_1 = require("./dto/signIn.dto");
-const signUp_dto_1 = require("./dto/signUp.dto");
-const forgotPassword_dto_1 = require("./dto/forgotPassword.dto");
-const resetPassword_dto_1 = require("./dto/resetPassword.dto");
-const refreshToken_dto_1 = require("./dto/refreshToken.dto");
-const public_decorator_1 = require("./decorators/public.decorator");
-const user_decorator_1 = require("../../common/decorators/user.decorator");
+const signIn_input_dto_1 = require("./dto/signIn-input.dto");
+const signUp_input_dto_1 = require("./dto/signUp-input.dto");
+const forgot_password_input_dto_1 = require("./dto/forgot-password-input.dto");
+const reset_password_input_dto_1 = require("./dto/reset-password-input.dto");
+const refresh_token_input_dto_1 = require("./dto/refresh-token-input.dto");
+const public_decorator_1 = require("../../customDecorators/public.decorator");
+const user_decorator_1 = require("../../customDecorators/user.decorator");
 const constants_1 = require("../../lib/constants");
 const common_2 = require("@nestjs/common");
 const emailOrPhone_pipe_1 = require("./pipes/emailOrPhone.pipe");
@@ -72,7 +72,7 @@ __decorate([
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [signUp_dto_1.SignUpDto]),
+    __metadata("design:paramtypes", [signUp_input_dto_1.SignUpDto]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "signUp", null);
 __decorate([
@@ -83,7 +83,7 @@ __decorate([
     (0, common_2.UsePipes)(emailOrPhone_pipe_1.EmailOrPhonePipe),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [signIn_dto_1.SignInDto]),
+    __metadata("design:paramtypes", [signIn_input_dto_1.SignInDto]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "signIn", null);
 __decorate([
@@ -100,7 +100,7 @@ __decorate([
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [refreshToken_dto_1.RefreshTokenDto]),
+    __metadata("design:paramtypes", [refresh_token_input_dto_1.RefreshTokenDto]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "refreshToken", null);
 __decorate([
@@ -109,7 +109,7 @@ __decorate([
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [forgotPassword_dto_1.ForgotPasswordDto]),
+    __metadata("design:paramtypes", [forgot_password_input_dto_1.ForgotPasswordDto]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "forgotPassword", null);
 __decorate([
@@ -118,7 +118,7 @@ __decorate([
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [resetPassword_dto_1.ResetPasswordDto]),
+    __metadata("design:paramtypes", [reset_password_input_dto_1.ResetPasswordDto]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "resetPassword", null);
 exports.AuthController = AuthController = __decorate([

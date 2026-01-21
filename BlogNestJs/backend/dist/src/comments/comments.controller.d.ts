@@ -1,7 +1,7 @@
 import { CommentsService } from './comments.service';
-import { CreateCommentDto } from './dto/createComment.dto';
-import { UpdateCommentDto } from './dto/updateComment.dto';
-import { ListCommentsQueryDto } from './dto/listCommentsQuery.dto';
+import { CreateCommentDto } from './dto/create-comment-input.dto';
+import { UpdateCommentDto } from './dto/update-comment-input.dto';
+import { ListCommentsQueryDto } from './dto/list-comments-query-payload.dto';
 export declare class CommentsController {
     private commentsService;
     constructor(commentsService: CommentsService);

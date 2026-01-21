@@ -1,9 +1,6 @@
 import type { User } from '../users/user.entity';
 import type { Comment } from '../comments/comment.entity';
 import { BaseEntity } from '../common/entities/BaseEntity';
-/**
- * Post status enum, best for roles, status, updates, etc.
- */
 export declare enum PostStatus {
     DRAFT = "draft",
     PUBLISHED = "published"

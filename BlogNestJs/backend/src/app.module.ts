@@ -1,30 +1,29 @@
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { dataSourceOptions } from './config/data-source-options';
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { UsersModule } from './users/users.module';
 import { PostsModule } from './posts/posts.module';
 import { CommentsModule } from './comments/comments.module';
 import { AuthGuard } from './users/auth/guards/auth.guard';
-
-// Exclude migrations from runtime config (only needed for CLI)
-const { migrations, migrationsTableName, ...nestOptions } = dataSourceOptions;
+import { UserSubscriber } from './users/subscribers/user.subscriber';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true, // Makes ConfigService available globally
+      envFilePath: '.env',
+    }),
     TypeOrmModule.forRoot({
-      ...nestOptions,
+      ...dataSourceOptions,
       autoLoadEntities: true,
+      subscribers: [UserSubscriber], // Register TypeORM entity subscriber
     }),
     ThrottlerModule.forRoot([
       {
-        name: 'short', // Short-lived requests (e.g., login)
-        ttl: 1000,
-        limit: 3, // max 3 requests per second
-      },
-      {
-        name: 'default', // General API usage
+        name: 'default',
         ttl: 60000, // 1 minute
         limit: 20, // 20 requests per minute
       },
@@ -34,20 +33,19 @@ const { migrations, migrationsTableName, ...nestOptions } = dataSourceOptions;
         limit: 5, // 5 login attempts per minute
       },
     ]),
-    UsersModule, // ← User routes (/users/*) and Auth routes (/auth/*)
-    PostsModule, // ← Post routes (/posts/*)
-    CommentsModule, // ← Comment routes (/comments/*)
+    UsersModule,
+    PostsModule,
+    CommentsModule,
   ],
   controllers: [],
   providers: [
-    // providers are injectable classes
     {
       provide: APP_GUARD,
-      useClass: AuthGuard, // Global auth guard
+      useClass: AuthGuard,
     },
     {
       provide: APP_GUARD,
-      useClass: ThrottlerGuard, // Global rate limiting guard
+      useClass: ThrottlerGuard, // rate limiting guard, throws 429 if limit exceeds
     },
   ],
 })

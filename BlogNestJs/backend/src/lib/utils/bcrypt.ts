@@ -1,6 +1,5 @@
 import * as bcrypt from 'bcrypt';
-
-const SALT_ROUNDS: number = 10;
+import { SECURITY } from '../constants';
 
 /**
  * Hash a plain text password using bcrypt
@@ -8,7 +7,7 @@ const SALT_ROUNDS: number = 10;
  * @returns Promise that resolves to the hashed password string
  */
 export const hashPassword = async (plainPassword: string): Promise<string> => {
-  return bcrypt.hash(plainPassword, SALT_ROUNDS);
+  return bcrypt.hash(plainPassword, SECURITY.SALT_ROUNDS);
 };
 
 /**

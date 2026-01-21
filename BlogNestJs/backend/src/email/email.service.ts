@@ -1,20 +1,25 @@
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 import { Transporter, SendMailOptions } from 'nodemailer';
-import { EmailSendResultDto } from './dto/emailSendResult.dto';
-import { SendPasswordResetEmailDto } from './dto/sendPasswordResetEmail.dto';
+import { EmailSendResultDto } from './dto/email-send-payload.dto';
+import { SendPasswordResetEmailDto } from './dto/password-reset-emai-payloadl.dto';
 import {
   LOG_MESSAGES,
   EMAIL_TEMPLATES,
   DEFAULTS,
   ERROR_MESSAGES,
 } from '../lib/constants';
+import {
+  getPasswordResetHtmlTemplate,
+  getPasswordResetTextTemplate,
+} from './templates/password-reset.template';
 
 @Injectable()
 export class EmailService {
   private transporter: Transporter | null = null;
 
-  constructor() {
+  constructor(private readonly configService: ConfigService) {
     this.initializeTransporter();
   }
 
@@ -29,7 +34,7 @@ export class EmailService {
       ];
 
       const missingVars: string[] = requiredEnvVars.filter(
-        (varName: string) => !process.env[varName],
+        (varName: string) => !this.configService.get<string>(varName),
       );
 
       if (missingVars.length > 0) {
@@ -38,12 +43,12 @@ export class EmailService {
       }
 
       this.transporter = nodemailer.createTransport({
-        host: process.env.EMAIL_HOST as string,
-        port: parseInt(process.env.EMAIL_PORT as string, 10),
-        secure: process.env.EMAIL_SECURE === 'true',
+        host: this.configService.get<string>('EMAIL_HOST')!,
+        port: this.configService.get<number>('EMAIL_PORT')!,
+        secure: this.configService.get<string>('EMAIL_SECURE') === 'true',
         auth: {
-          user: process.env.EMAIL_USER as string,
-          pass: process.env.EMAIL_PASS as string,
+          user: this.configService.get<string>('EMAIL_USER')!,
+          pass: this.configService.get<string>('EMAIL_PASS')!,
         },
         debug: false,
         logger: false,
@@ -71,9 +76,15 @@ export class EmailService {
       throw new Error(ERROR_MESSAGES.EMAIL_SEND_FAILED);
     }
 
-    const resetLink: string = `${process.env.FRONTEND_URL}/reset-password?token=${emailDto.resetToken}`;
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL') || '';
+    const resetLink: string = `${frontendUrl}/reset-password?token=${emailDto.resetToken}`;
 
-    const htmlTemplate: string = this.getPasswordResetTemplate(
+    const htmlTemplate: string = getPasswordResetHtmlTemplate(
+      emailDto.userName,
+      resetLink,
+    );
+
+    const textTemplate: string = getPasswordResetTextTemplate(
       emailDto.userName,
       resetLink,
     );
@@ -81,12 +92,12 @@ export class EmailService {
     const mailOptions: SendMailOptions = {
       from: {
         name: EMAIL_TEMPLATES.APP_NAME,
-        address: process.env.EMAIL_FROM as string,
+        address: this.configService.get<string>('EMAIL_FROM')!,
       },
       to: emailDto.email,
       subject: EMAIL_TEMPLATES.RESET_PASSWORD_SUBJECT,
       html: htmlTemplate,
-      text: `${EMAIL_TEMPLATES.RESET_PASSWORD_GREETING} ${emailDto.userName},\n\n${EMAIL_TEMPLATES.RESET_PASSWORD_TEXT_INTRO}\n\n${resetLink}\n\n${EMAIL_TEMPLATES.RESET_PASSWORD_TEXT_EXPIRY}\n\n${EMAIL_TEMPLATES.RESET_PASSWORD_TEXT_IGNORE}\n\n${EMAIL_TEMPLATES.RESET_PASSWORD_CLOSING}\n${EMAIL_TEMPLATES.RESET_PASSWORD_TEAM}`,
+      text: textTemplate,
     };
 
     try {
@@ -108,62 +119,5 @@ export class EmailService {
       }
       throw new Error(ERROR_MESSAGES.EMAIL_SEND_FAILED);
     }
-  }
-
-  private getPasswordResetTemplate(
-    userName: string,
-    resetLink: string,
-  ): string {
-    return `
-    <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>${EMAIL_TEMPLATES.RESET_PASSWORD_TITLE}</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-</head>
-<body style="margin: 0; padding: 0; background-color: #f4f4f4; font-family: Arial, sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f4f4; padding: 20px;">
-    <tr>
-      <td align="center">
-        <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; padding: 30px;">
-          <tr>
-            <td align="center" style="padding-bottom: 20px;">
-              <div style="font-size: 24px; font-weight: bold; color: #2563eb;">📝 ${EMAIL_TEMPLATES.APP_NAME}</div>
-              <h1 style="margin: 10px 0 0; font-size: 22px; color: #1f2937;">${EMAIL_TEMPLATES.RESET_PASSWORD_TITLE}</h1>
-            </td>
-          </tr>
-          <tr>
-            <td style="font-size: 16px; color: #374151;">
-              <p>${EMAIL_TEMPLATES.RESET_PASSWORD_GREETING} <strong>${userName}</strong>,</p>
-              <p>${EMAIL_TEMPLATES.RESET_PASSWORD_INTRO}</p>
-              <table align="center" cellpadding="0" cellspacing="0" style="margin: 30px auto;">
-                <tr>
-                  <td bgcolor="#2563eb" style="border-radius: 6px; padding: 14px 32px;">
-                    <a href="${resetLink}" style="color: #ffffff !important; text-decoration: none; font-weight: bold; font-size: 16px; display: inline-block;">${EMAIL_TEMPLATES.RESET_PASSWORD_BUTTON}</a>
-                  </td>
-                </tr>
-              </table>
-              <div style="background-color: #fef3c7; border: 1px solid #f59e0b; padding: 15px; border-radius: 5px; margin: 20px 0; font-size: 14px;">
-                <strong>${EMAIL_TEMPLATES.RESET_PASSWORD_WARNING}</strong> ${EMAIL_TEMPLATES.RESET_PASSWORD_EXPIRY} <strong>${EMAIL_TEMPLATES.RESET_PASSWORD_EXPIRY_TIME}</strong>.
-              </div>
-              <p>${EMAIL_TEMPLATES.RESET_PASSWORD_FALLBACK}</p>
-              <p style="word-break: break-all; background-color: #f3f4f6; padding: 10px; border-radius: 5px; font-size: 14px;">${resetLink}</p>
-              <p>${EMAIL_TEMPLATES.RESET_PASSWORD_IGNORE}</p>
-            </td>
-          </tr>
-          <tr>
-            <td align="center" style="padding-top: 30px; border-top: 1px solid #e5e7eb; font-size: 14px; color: #6b7280;">
-              <p style="margin: 0;">${EMAIL_TEMPLATES.RESET_PASSWORD_CLOSING}<br /><strong>${EMAIL_TEMPLATES.RESET_PASSWORD_TEAM}</strong></p>
-              <p style="margin: 8px 0 0;">${EMAIL_TEMPLATES.RESET_PASSWORD_AUTO}</p>
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>
-    `;
   }
 }

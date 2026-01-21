@@ -44,12 +44,15 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EmailService = void 0;
 const common_1 = require("@nestjs/common");
+const config_1 = require("@nestjs/config");
 const nodemailer = __importStar(require("nodemailer"));
-const emailSendResult_dto_1 = require("./dto/emailSendResult.dto");
-const sendPasswordResetEmail_dto_1 = require("./dto/sendPasswordResetEmail.dto");
+const email_send_payload_dto_1 = require("./dto/email-send-payload.dto");
+const password_reset_emai_payloadl_dto_1 = require("./dto/password-reset-emai-payloadl.dto");
 const constants_1 = require("../lib/constants");
+const password_reset_template_1 = require("./templates/password-reset.template");
 let EmailService = class EmailService {
-    constructor() {
+    constructor(configService) {
+        this.configService = configService;
         this.transporter = null;
         this.initializeTransporter();
     }
@@ -62,18 +65,18 @@ let EmailService = class EmailService {
                 'EMAIL_PASS',
                 'EMAIL_FROM',
             ];
-            const missingVars = requiredEnvVars.filter((varName) => !process.env[varName]);
+            const missingVars = requiredEnvVars.filter((varName) => !this.configService.get(varName));
             if (missingVars.length > 0) {
                 console.error(constants_1.LOG_MESSAGES.EMAIL_ENV_VARS_MISSING, missingVars);
                 return;
             }
             this.transporter = nodemailer.createTransport({
-                host: process.env.EMAIL_HOST,
-                port: parseInt(process.env.EMAIL_PORT, 10),
-                secure: process.env.EMAIL_SECURE === 'true',
+                host: this.configService.get('EMAIL_HOST'),
+                port: this.configService.get('EMAIL_PORT'),
+                secure: this.configService.get('EMAIL_SECURE') === 'true',
                 auth: {
-                    user: process.env.EMAIL_USER,
-                    pass: process.env.EMAIL_PASS,
+                    user: this.configService.get('EMAIL_USER'),
+                    pass: this.configService.get('EMAIL_PASS'),
                 },
                 debug: false,
                 logger: false,
@@ -86,7 +89,7 @@ let EmailService = class EmailService {
     }
     async sendPasswordResetEmail(email, resetToken, userName = constants_1.DEFAULTS.USER_NAME) {
         // Create DTO for validation
-        const emailDto = new sendPasswordResetEmail_dto_1.SendPasswordResetEmailDto();
+        const emailDto = new password_reset_emai_payloadl_dto_1.SendPasswordResetEmailDto();
         emailDto.email = email;
         emailDto.resetToken = resetToken;
         emailDto.userName = userName || constants_1.DEFAULTS.USER_NAME;
@@ -94,22 +97,24 @@ let EmailService = class EmailService {
             console.error(constants_1.LOG_MESSAGES.EMAIL_TRANSPORTER_NOT_INIT);
             throw new Error(constants_1.ERROR_MESSAGES.EMAIL_SEND_FAILED);
         }
-        const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${emailDto.resetToken}`;
-        const htmlTemplate = this.getPasswordResetTemplate(emailDto.userName, resetLink);
+        const frontendUrl = this.configService.get('FRONTEND_URL') || '';
+        const resetLink = `${frontendUrl}/reset-password?token=${emailDto.resetToken}`;
+        const htmlTemplate = (0, password_reset_template_1.getPasswordResetHtmlTemplate)(emailDto.userName, resetLink);
+        const textTemplate = (0, password_reset_template_1.getPasswordResetTextTemplate)(emailDto.userName, resetLink);
         const mailOptions = {
             from: {
                 name: constants_1.EMAIL_TEMPLATES.APP_NAME,
-                address: process.env.EMAIL_FROM,
+                address: this.configService.get('EMAIL_FROM'),
             },
             to: emailDto.email,
             subject: constants_1.EMAIL_TEMPLATES.RESET_PASSWORD_SUBJECT,
             html: htmlTemplate,
-            text: `${constants_1.EMAIL_TEMPLATES.RESET_PASSWORD_GREETING} ${emailDto.userName},\n\n${constants_1.EMAIL_TEMPLATES.RESET_PASSWORD_TEXT_INTRO}\n\n${resetLink}\n\n${constants_1.EMAIL_TEMPLATES.RESET_PASSWORD_TEXT_EXPIRY}\n\n${constants_1.EMAIL_TEMPLATES.RESET_PASSWORD_TEXT_IGNORE}\n\n${constants_1.EMAIL_TEMPLATES.RESET_PASSWORD_CLOSING}\n${constants_1.EMAIL_TEMPLATES.RESET_PASSWORD_TEAM}`,
+            text: textTemplate,
         };
         try {
             const info = await this.transporter.sendMail(mailOptions);
             console.log(constants_1.LOG_MESSAGES.EMAIL_SENT_SUCCESS, info.messageId);
-            const result = new emailSendResult_dto_1.EmailSendResultDto();
+            const result = new email_send_payload_dto_1.EmailSendResultDto();
             result.success = true;
             result.messageId = info.messageId;
             return result;
@@ -125,63 +130,10 @@ let EmailService = class EmailService {
             throw new Error(constants_1.ERROR_MESSAGES.EMAIL_SEND_FAILED);
         }
     }
-    getPasswordResetTemplate(userName, resetLink) {
-        return `
-    <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>${constants_1.EMAIL_TEMPLATES.RESET_PASSWORD_TITLE}</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-</head>
-<body style="margin: 0; padding: 0; background-color: #f4f4f4; font-family: Arial, sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f4f4; padding: 20px;">
-    <tr>
-      <td align="center">
-        <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; padding: 30px;">
-          <tr>
-            <td align="center" style="padding-bottom: 20px;">
-              <div style="font-size: 24px; font-weight: bold; color: #2563eb;">📝 ${constants_1.EMAIL_TEMPLATES.APP_NAME}</div>
-              <h1 style="margin: 10px 0 0; font-size: 22px; color: #1f2937;">${constants_1.EMAIL_TEMPLATES.RESET_PASSWORD_TITLE}</h1>
-            </td>
-          </tr>
-          <tr>
-            <td style="font-size: 16px; color: #374151;">
-              <p>${constants_1.EMAIL_TEMPLATES.RESET_PASSWORD_GREETING} <strong>${userName}</strong>,</p>
-              <p>${constants_1.EMAIL_TEMPLATES.RESET_PASSWORD_INTRO}</p>
-              <table align="center" cellpadding="0" cellspacing="0" style="margin: 30px auto;">
-                <tr>
-                  <td bgcolor="#2563eb" style="border-radius: 6px; padding: 14px 32px;">
-                    <a href="${resetLink}" style="color: #ffffff !important; text-decoration: none; font-weight: bold; font-size: 16px; display: inline-block;">${constants_1.EMAIL_TEMPLATES.RESET_PASSWORD_BUTTON}</a>
-                  </td>
-                </tr>
-              </table>
-              <div style="background-color: #fef3c7; border: 1px solid #f59e0b; padding: 15px; border-radius: 5px; margin: 20px 0; font-size: 14px;">
-                <strong>${constants_1.EMAIL_TEMPLATES.RESET_PASSWORD_WARNING}</strong> ${constants_1.EMAIL_TEMPLATES.RESET_PASSWORD_EXPIRY} <strong>${constants_1.EMAIL_TEMPLATES.RESET_PASSWORD_EXPIRY_TIME}</strong>.
-              </div>
-              <p>${constants_1.EMAIL_TEMPLATES.RESET_PASSWORD_FALLBACK}</p>
-              <p style="word-break: break-all; background-color: #f3f4f6; padding: 10px; border-radius: 5px; font-size: 14px;">${resetLink}</p>
-              <p>${constants_1.EMAIL_TEMPLATES.RESET_PASSWORD_IGNORE}</p>
-            </td>
-          </tr>
-          <tr>
-            <td align="center" style="padding-top: 30px; border-top: 1px solid #e5e7eb; font-size: 14px; color: #6b7280;">
-              <p style="margin: 0;">${constants_1.EMAIL_TEMPLATES.RESET_PASSWORD_CLOSING}<br /><strong>${constants_1.EMAIL_TEMPLATES.RESET_PASSWORD_TEAM}</strong></p>
-              <p style="margin: 8px 0 0;">${constants_1.EMAIL_TEMPLATES.RESET_PASSWORD_AUTO}</p>
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>
-    `;
-    }
 };
 exports.EmailService = EmailService;
 exports.EmailService = EmailService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [])
+    __metadata("design:paramtypes", [config_1.ConfigService])
 ], EmailService);
 //# sourceMappingURL=email.service.js.map

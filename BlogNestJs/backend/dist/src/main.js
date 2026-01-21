@@ -38,12 +38,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const dotenv = __importStar(require("dotenv"));
 dotenv.config();
-const core_1 = require("@nestjs/core"); // A factory class that creates a NestJS application instance
-const app_module_1 = require("./app.module"); // The root module of the application
-const common_1 = require("@nestjs/common"); // A global validation pipe that validates all DTOs automatically
-const httpException_filter_1 = require("./common/filters/httpException.filter"); // A global exception filter that catches all errors
-const helmet_1 = __importDefault(require("helmet")); // A middleware that sets various HTTP headers for security
-const cookie_parser_1 = __importDefault(require("cookie-parser")); // A middleware that parses cookies from the request
+const core_1 = require("@nestjs/core");
+const app_module_1 = require("./app.module");
+const common_1 = require("@nestjs/common");
+const httpException_filter_1 = require("./common/filters/httpException.filter");
+const helmet_1 = __importDefault(require("helmet"));
+const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const constants_1 = require("./lib/constants");
 async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
@@ -63,7 +63,7 @@ async function bootstrap() {
         transform: true, // Automatically transform payloads to DTO instances
         validateCustomDecorators: true, // Validate custom decorators
         transformOptions: {
-            enableImplicitConversion: true, // Automatically converts string query/route parameters to their expected types.
+            enableImplicitConversion: true, // Automatically converts string query/body parameters to their expected types.
         },
     }));
     // Global exception filter(Error handling Layer)

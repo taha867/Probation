@@ -1,5 +1,5 @@
 import { PipeTransform } from '@nestjs/common';
-import { SignInDto } from '../dto/signIn.dto';
+import { SignInDto } from '../dto/signIn-input.dto';
 export declare class EmailOrPhonePipe implements PipeTransform {
     transform(value: SignInDto): SignInDto;
 }

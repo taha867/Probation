@@ -1,8 +1,5 @@
 import { StatusCodes } from 'http-status-codes';
 export declare const HTTP_STATUS: typeof StatusCodes;
-/**
- * Success messages for API responses
- */
 export declare const SUCCESS_MESSAGES: {
     readonly ACCOUNT_CREATED: "Account created successfully";
     readonly SIGNED_IN: "Signed in successfully";
@@ -19,9 +16,6 @@ export declare const SUCCESS_MESSAGES: {
     readonly PASSWORD_RESET: "Password has been reset successfully";
     readonly TOKEN_REFRESHED: "Access token refreshed successfully";
 };
-/**
- * Error messages for API responses
- */
 export declare const ERROR_MESSAGES: {
     readonly INVALID_CREDENTIALS: "Invalid credentials";
     readonly ACCESS_TOKEN_REQUIRED: "Access token is required";
@@ -59,27 +53,40 @@ export declare const ERROR_MESSAGES: {
     readonly EITHER_POST_ID_OR_PARENT_ID_REQUIRED: "Either postId or parentId is required";
     readonly INTERNAL_SERVER_ERROR: "Internal server error";
 };
-/**
- * Validation messages for DTOs
- */
 export declare const VALIDATION_MESSAGES: {
-    readonly IS_STRING: "must be a string";
-    readonly IS_REQUIRED: "is required";
     readonly IS_EMAIL: "must be a valid email address";
-    readonly IS_BOOLEAN: "must be a boolean";
-    readonly IS_URL: "must be a valid URL with protocol";
+    readonly NAME_REQUIRED: "Name is required";
+    readonly NAME_MIN_LENGTH: "Name must be at least 2 characters long";
     readonly NAME_INVALID_CHARS: "Name must contain only letters and spaces";
-    readonly PHONE_INVALID_FORMAT: "Phone number must be 10 to 15 digits";
-    readonly TITLE_INVALID_CHARS: "Title contains invalid characters";
-    readonly BODY_INVALID_CHARS: "Body contains invalid characters";
-    readonly COMMENT_BODY_INVALID_CHARS: "Comment body contains invalid characters";
+    readonly EMAIL_REQUIRED: "Email is required";
+    readonly EMAIL_INVALID: "Please provide a valid email address";
+    readonly PHONE_REQUIRED: "Phone number is required";
+    readonly PHONE_INVALID_FORMAT: "Phone number must be 10 to 15 digits (e.g., +1234567890)";
+    readonly PASSWORD_REQUIRED: "Password is required";
+    readonly PASSWORD_MIN_LENGTH: "Password must be at least 8 characters long";
+    readonly IMAGE_INVALID_URL: "Image must be a valid URL";
+    readonly TITLE_REQUIRED: "Post title is required";
+    readonly TITLE_MIN_LENGTH: "Post title must be at least 1 character long";
+    readonly TITLE_MAX_LENGTH: "Post title must not exceed 200 characters";
+    readonly TITLE_INVALID_CHARS: "Title contains invalid characters (HTML tags are not allowed)";
+    readonly BODY_REQUIRED: "Post body is required";
+    readonly BODY_MIN_LENGTH: "Post body must be at least 1 character long";
+    readonly BODY_INVALID_CHARS: "Body contains invalid characters (HTML tags are not allowed)";
+    readonly STATUS_INVALID: "Post status must be either \"draft\" or \"published\"";
+    readonly COMMENT_BODY_REQUIRED: "Comment body is required";
+    readonly COMMENT_BODY_MIN_LENGTH: "Comment body must be at least 1 character long";
+    readonly COMMENT_BODY_MAX_LENGTH: "Comment body must not exceed 2000 characters";
+    readonly COMMENT_BODY_INVALID_CHARS: "Comment body contains invalid characters (HTML tags are not allowed)";
+    readonly POST_ID_REQUIRED: "Post ID is required";
+    readonly POST_ID_INVALID: "Post ID must be a positive integer";
+    readonly PARENT_ID_INVALID: "Parent comment ID must be a positive integer";
+    readonly PAGE_INVALID: "Page number must be at least 1";
+    readonly LIMIT_MIN_INVALID: "Limit must be at least 1";
+    readonly LIMIT_MAX_INVALID: "Limit must not exceed 100";
     readonly FOLDER_INVALID_CHARS: "folder must contain only alphanumeric characters, slashes, underscores, and hyphens";
     readonly ORIGINAL_NAME_INVALID_CHARS: "originalName must contain only alphanumeric characters, dots, underscores, and hyphens";
     readonly RESULT_INVALID_VALUE: "result must be either \"ok\" or \"not found\"";
 };
-/**
- * Console/Log messages
- */
 export declare const LOG_MESSAGES: {
     readonly APP_RUNNING: "Application is running on:";
     readonly EMAIL_TRANSPORTER_INIT_SUCCESS: "Email transporter initialized successfully";
@@ -95,9 +102,6 @@ export declare const LOG_MESSAGES: {
     readonly UNHANDLED_ERROR: "Unhandled error:";
     readonly UPLOAD_NO_RESULT: "Upload completed but no result returned";
 };
-/**
- * Email template content
- */
 export declare const EMAIL_TEMPLATES: {
     readonly APP_NAME: "Blog App";
     readonly RESET_PASSWORD_SUBJECT: "Reset Your Password - Blog App";
@@ -128,6 +132,25 @@ export declare const DEFAULTS: {
     readonly CLOUDINARY_POST_IMAGE_NAME: "post-image";
     readonly CLOUDINARY_USERS_FOLDER: "blog/users";
     readonly CLOUDINARY_PROFILE_IMAGE_NAME: "profile-image";
+    readonly PAGINATION_PAGE: 1;
+    readonly PAGINATION_LIMIT: 10;
+    readonly USERS_LIST_LIMIT: 20;
+};
+/**
+ * Validation limits
+ */
+export declare const VALIDATION_LIMITS: {
+    readonly NAME_MIN_LENGTH: 2;
+    readonly PASSWORD_MIN_LENGTH: 8;
+    readonly PAGE_MIN: 1;
+    readonly LIMIT_MIN: 1;
+    readonly LIMIT_MAX: 100;
+};
+/**
+ * Security/Encryption constants
+ */
+export declare const SECURITY: {
+    readonly SALT_ROUNDS: 10;
 };
 /**
  * User status values
@@ -135,5 +158,24 @@ export declare const DEFAULTS: {
 export declare const USER_STATUS: {
     readonly LOGGED_IN: "logged in";
     readonly LOGGED_OUT: "logged out";
+};
+/**
+ * Validation regex patterns
+ */
+export declare const VALIDATION_PATTERNS: {
+    readonly FOLDER: RegExp;
+    readonly ORIGINAL_NAME: RegExp;
+    readonly NO_HTML_TAGS: RegExp;
+    readonly NAME: RegExp;
+    readonly PHONE: RegExp;
+};
+/**
+ * Sanitization regex patterns (for removing invalid characters)
+ */
+export declare const SANITIZATION_PATTERNS: {
+    readonly FOLDER: RegExp;
+    readonly ORIGINAL_NAME: RegExp;
+    readonly PUBLIC_ID_EXTRACT: RegExp;
+    readonly BLOG_PREFIX_REMOVE: RegExp;
 };
 //# sourceMappingURL=constants.d.ts.map

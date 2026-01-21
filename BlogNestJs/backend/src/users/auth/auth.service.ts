@@ -10,10 +10,15 @@ import { JwtService } from '@nestjs/jwt';
 import { User } from '../user.entity';
 import { EmailService } from '../../email/email.service';
 import { comparePassword } from '../../lib/utils/bcrypt';
-import { USER_STATUS, SUCCESS_MESSAGES, DEFAULTS } from '../../lib/constants';
+import {
+  USER_STATUS,
+  SUCCESS_MESSAGES,
+  DEFAULTS,
+  ERROR_MESSAGES,
+} from '../../lib/constants';
 import { AppException } from '../../common/exceptions/app.exception';
-import { SignUpDto } from './dto/signUp.dto';
-import { SignInDto } from './dto/signIn.dto';
+import { SignUpDto } from './dto/signUp-input.dto';
+import { SignInDto } from './dto/signIn-input.dto';
 
 @Injectable()
 export class AuthService {
@@ -67,13 +72,13 @@ export class AuthService {
     });
 
     if (!user || !user.password) {
-      throw new UnauthorizedException('INVALID_CREDENTIALS');
+      throw new UnauthorizedException(ERROR_MESSAGES.INVALID_CREDENTIALS);
     }
 
     const isPasswordValid = await comparePassword(password, user.password);
 
     if (!isPasswordValid) {
-      throw new UnauthorizedException('INVALID_CREDENTIALS');
+      throw new UnauthorizedException(ERROR_MESSAGES.INVALID_CREDENTIALS);
     }
 
     await this.userRepository.update(user.id, {
@@ -127,7 +132,7 @@ export class AuthService {
     const user = await this.userRepository.findOne({ where: { id: userId } });
 
     if (!user) {
-      throw new NotFoundException('USER_NOT_FOUND');
+      throw new NotFoundException(ERROR_MESSAGES.USER_NOT_FOUND);
     }
 
     const { tokenVersion = 0 } = user;
@@ -147,13 +152,13 @@ export class AuthService {
       });
     } catch (error: unknown) {
       if (error instanceof Error && error.name === 'TokenExpiredError') {
-        throw new UnauthorizedException('REFRESH_TOKEN_EXPIRED');
+        throw new UnauthorizedException(ERROR_MESSAGES.REFRESH_TOKEN_EXPIRED);
       }
-      throw new UnauthorizedException('INVALID_REFRESH_TOKEN');
+      throw new UnauthorizedException(ERROR_MESSAGES.INVALID_REFRESH_TOKEN);
     }
 
     if (decoded.type !== 'refresh') {
-      throw new UnauthorizedException('INVALID_REFRESH_TOKEN');
+      throw new UnauthorizedException(ERROR_MESSAGES.INVALID_REFRESH_TOKEN);
     }
 
     const user = await this.userRepository.findOne({
@@ -161,13 +166,13 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new NotFoundException('USER_NOT_FOUND');
+      throw new NotFoundException(ERROR_MESSAGES.USER_NOT_FOUND);
     }
 
     const { id, email, tokenVersion = 0 } = user;
 
     if (tokenVersion !== decoded.tokenVersion) {
-      throw new UnauthorizedException('INVALID_REFRESH_TOKEN');
+      throw new UnauthorizedException(ERROR_MESSAGES.INVALID_REFRESH_TOKEN);
     }
 
     const accessToken = await this.jwtService.signAsync(
@@ -216,13 +221,13 @@ export class AuthService {
       });
     } catch (error: unknown) {
       if (error instanceof Error && error.name === 'TokenExpiredError') {
-        throw new UnauthorizedException('RESET_TOKEN_EXPIRED');
+        throw new UnauthorizedException(ERROR_MESSAGES.RESET_TOKEN_EXPIRED);
       }
-      throw new UnauthorizedException('INVALID_RESET_TOKEN');
+      throw new UnauthorizedException(ERROR_MESSAGES.INVALID_RESET_TOKEN);
     }
 
     if (decoded.type !== 'password_reset') {
-      throw new UnauthorizedException('INVALID_RESET_TOKEN');
+      throw new UnauthorizedException(ERROR_MESSAGES.INVALID_RESET_TOKEN);
     }
 
     const user = await this.userRepository.findOne({
@@ -231,7 +236,7 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new NotFoundException('USER_NOT_FOUND');
+      throw new NotFoundException(ERROR_MESSAGES.USER_NOT_FOUND);
     }
 
     const oldPasswordHash = user.password;

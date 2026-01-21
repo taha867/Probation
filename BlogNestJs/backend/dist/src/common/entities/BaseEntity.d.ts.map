@@ -1,1 +1,1 @@
-{"version":3,"file":"BaseEntity.d.ts","sourceRoot":"","sources":["../../../../src/common/entities/BaseEntity.ts"],"names":[],"mappings":"AAEA;;;GAGG;AACH,8BAAsB,UAAU;IAC9B;;;;OAIG;IAEH,SAAS,EAAE,IAAI,CAAC;IAEhB;;;;OAIG;IAEH,SAAS,EAAE,IAAI,CAAC;CACjB"}
+{"version":3,"file":"BaseEntity.d.ts","sourceRoot":"","sources":["../../../../src/common/entities/BaseEntity.ts"],"names":[],"mappings":"AAEA,8BAAsB,UAAU;IAE9B,SAAS,EAAE,IAAI,CAAC;IAGhB,SAAS,EAAE,IAAI,CAAC;CACjB"}

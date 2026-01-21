@@ -16,11 +16,11 @@ exports.PostsController = void 0;
 const common_1 = require("@nestjs/common");
 const platform_express_1 = require("@nestjs/platform-express");
 const posts_service_1 = require("./posts.service");
-const createPost_dto_1 = require("./dto/createPost.dto");
-const updatePost_dto_1 = require("./dto/updatePost.dto");
-const listPostsQuery_dto_1 = require("./dto/listPostsQuery.dto");
-const paginationQuery_dto_1 = require("./dto/paginationQuery.dto");
-const user_decorator_1 = require("../common/decorators/user.decorator");
+const create_post_input_dto_1 = require("./dto/create-post-input.dto");
+const update_post_input_dto_1 = require("./dto/update-post-input.dto");
+const list_posts_query_payload_dto_1 = require("./dto/list-posts-query-payload.dto");
+const pagination_query_input_dto_1 = require("./dto/pagination-query-input.dto");
+const user_decorator_1 = require("../customDecorators/user.decorator");
 const constants_1 = require("../lib/constants");
 let PostsController = class PostsController {
     constructor(postsService) {
@@ -35,7 +35,7 @@ let PostsController = class PostsController {
     async getOne(id) {
         const post = await this.postsService.findPostWithAuthor(id);
         if (!post) {
-            throw new common_1.NotFoundException('POST_NOT_FOUND');
+            throw new common_1.NotFoundException(constants_1.ERROR_MESSAGES.POST_NOT_FOUND);
         }
         return {
             data: post,
@@ -69,14 +69,14 @@ __decorate([
     __param(1, (0, user_decorator_1.User)('id')),
     __param(2, (0, common_1.UploadedFile)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [createPost_dto_1.CreatePostDto, Number, Object]),
+    __metadata("design:paramtypes", [create_post_input_dto_1.CreatePostDto, Number, Object]),
     __metadata("design:returntype", Promise)
 ], PostsController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
     __param(0, (0, common_1.Query)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [listPostsQuery_dto_1.ListPostsQueryDto]),
+    __metadata("design:paramtypes", [list_posts_query_payload_dto_1.ListPostsQueryDto]),
     __metadata("design:returntype", Promise)
 ], PostsController.prototype, "list", null);
 __decorate([
@@ -91,7 +91,7 @@ __decorate([
     __param(0, (0, common_1.Param)('postId', common_1.ParseIntPipe)),
     __param(1, (0, common_1.Query)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, paginationQuery_dto_1.PaginationQueryDto]),
+    __metadata("design:paramtypes", [Number, pagination_query_input_dto_1.PaginationQueryDto]),
     __metadata("design:returntype", Promise)
 ], PostsController.prototype, "getPostComments", null);
 __decorate([
@@ -103,7 +103,7 @@ __decorate([
     __param(2, (0, user_decorator_1.User)('id')),
     __param(3, (0, common_1.UploadedFile)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, updatePost_dto_1.UpdatePostDto, Number, Object]),
+    __metadata("design:paramtypes", [Number, update_post_input_dto_1.UpdatePostDto, Number, Object]),
     __metadata("design:returntype", Promise)
 ], PostsController.prototype, "update", null);
 __decorate([

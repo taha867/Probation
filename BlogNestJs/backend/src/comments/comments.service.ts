@@ -9,13 +9,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Comment } from './comment.entity';
 import { Post } from '../posts/post.entity';
-import { mapAuthorData } from '../lib/utils/mappers';
 import { AppException } from '../common/exceptions/app.exception';
-import { CreateCommentDto } from './dto/createComment.dto';
-import { UpdateCommentDto } from './dto/updateComment.dto';
-import { ListCommentsQueryDto } from './dto/listCommentsQuery.dto';
+import { CreateCommentDto } from './dto/create-comment-input.dto';
+import { UpdateCommentDto } from './dto/update-comment-input.dto';
+import { ListCommentsQueryDto } from './dto/list-comments-query-payload.dto';
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '../lib/constants';
-
+const { EITHER_POST_ID_OR_PARENT_ID_REQUIRED, POST_ID_REQUIRED } =
+  ERROR_MESSAGES;
+const { COMMENT_CREATED, COMMENT_UPDATED } = SUCCESS_MESSAGES;
 @Injectable()
 export class CommentsService {
   constructor(
@@ -33,9 +34,7 @@ export class CommentsService {
 
     // Validate that either postId or parentId is provided
     if (!postId && !parentId) {
-      throw new BadRequestException(
-        ERROR_MESSAGES.EITHER_POST_ID_OR_PARENT_ID_REQUIRED,
-      );
+      throw new BadRequestException(EITHER_POST_ID_OR_PARENT_ID_REQUIRED);
     }
 
     let finalPostId: number;
@@ -51,14 +50,14 @@ export class CommentsService {
       });
 
       if (!parentComment) {
-        throw new NotFoundException('PARENT_COMMENT_NOT_FOUND');
+        throw new NotFoundException(ERROR_MESSAGES.PARENT_COMMENT_NOT_FOUND);
       }
 
       finalPostId = parentComment.postId;
     } else {
       // This is a top-level comment
       if (!postId) {
-        throw new BadRequestException(ERROR_MESSAGES.POST_ID_REQUIRED);
+        throw new BadRequestException(POST_ID_REQUIRED);
       }
 
       const post = await this.postRepository.findOne({
@@ -66,7 +65,7 @@ export class CommentsService {
       });
 
       if (!post) {
-        throw new NotFoundException('POST_NOT_FOUND');
+        throw new NotFoundException(ERROR_MESSAGES.POST_NOT_FOUND);
       }
 
       finalPostId = postId;
@@ -94,12 +93,24 @@ export class CommentsService {
 
     return {
       data: createdComment,
-      message: SUCCESS_MESSAGES.COMMENT_CREATED,
+      message: COMMENT_CREATED,
     };
   }
 
   async listTopLevelComments(query: ListCommentsQueryDto) {
     const { postId } = query;
+
+    // If postId is provided, validate that the post exists
+    if (postId) {
+      const post = await this.postRepository.findOne({
+        where: { id: postId },
+        select: { id: true },
+      });
+
+      if (!post) {
+        throw new NotFoundException(ERROR_MESSAGES.POST_NOT_FOUND);
+      }
+    }
 
     const whereCondition: any = {
       parentId: null, // Only top-level comments
@@ -151,7 +162,12 @@ export class CommentsService {
         parentId: parentId ?? null,
         createdAt,
         updatedAt,
-        author: mapAuthorData(author),
+        author: {
+          id: author.id,
+          name: author.name,
+          email: author.email,
+          image: author.image ?? null,
+        },
       };
     });
 
@@ -232,7 +248,12 @@ export class CommentsService {
         parentId: parentId ?? null,
         createdAt,
         updatedAt,
-        author: mapAuthorData(author),
+        author: {
+          id: author.id,
+          name: author.name,
+          email: author.email,
+          image: author.image ?? null,
+        },
       };
     });
 
@@ -256,7 +277,12 @@ export class CommentsService {
       parentId: parentId ?? null,
       createdAt,
       updatedAt,
-      author: mapAuthorData(author),
+      author: {
+        id: author.id,
+        name: author.name,
+        email: author.email,
+        image: author.image ?? null,
+      },
       post: {
         id: post.id,
         title: post.title,
@@ -275,11 +301,11 @@ export class CommentsService {
     });
 
     if (!comment) {
-      throw new NotFoundException('COMMENT_NOT_FOUND');
+      throw new NotFoundException(ERROR_MESSAGES.COMMENT_NOT_FOUND);
     }
 
     if (comment.userId !== userId) {
-      throw new ForbiddenException('CANNOT_UPDATE_OTHER_COMMENT');
+      throw new ForbiddenException(ERROR_MESSAGES.CANNOT_UPDATE_OTHER_COMMENT);
     }
 
     // Update comment
@@ -298,7 +324,7 @@ export class CommentsService {
 
     return {
       data: updated,
-      message: SUCCESS_MESSAGES.COMMENT_UPDATED,
+      message: COMMENT_UPDATED,
     };
   }
 
@@ -312,11 +338,11 @@ export class CommentsService {
     });
 
     if (!comment) {
-      throw new NotFoundException('COMMENT_NOT_FOUND');
+      throw new NotFoundException(ERROR_MESSAGES.COMMENT_NOT_FOUND);
     }
 
     if (comment.userId !== userId) {
-      throw new ForbiddenException('CANNOT_DELETE_OTHER_COMMENT');
+      throw new ForbiddenException(ERROR_MESSAGES.CANNOT_DELETE_OTHER_COMMENT);
     }
 
     // Delete comment (cascade will delete replies automatically)

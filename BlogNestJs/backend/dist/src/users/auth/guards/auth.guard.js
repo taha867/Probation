@@ -13,9 +13,9 @@ exports.AuthGuard = void 0;
 const common_1 = require("@nestjs/common");
 const jwt_1 = require("@nestjs/jwt");
 const core_1 = require("@nestjs/core");
-const public_decorator_1 = require("../decorators/public.decorator");
+const public_decorator_1 = require("../../../customDecorators/public.decorator");
 const constants_1 = require("../../../lib/constants");
-const { INVALID_TOKEN, ACCESS_TOKEN_REQUIRED, ACCESS_TOKEN_EXPIRED, AUTHENTICATION_FAILED } = constants_1.ERROR_MESSAGES;
+const { INVALID_TOKEN, ACCESS_TOKEN_REQUIRED, ACCESS_TOKEN_EXPIRED, AUTHENTICATION_FAILED, } = constants_1.ERROR_MESSAGES;
 let AuthGuard = class AuthGuard {
     constructor(jwtService, reflector) {
         this.jwtService = jwtService;
@@ -25,7 +25,7 @@ let AuthGuard = class AuthGuard {
         // Check if route is public
         const isPublic = this.reflector.getAllAndOverride(public_decorator_1.IS_PUBLIC_KEY, [
             context.getHandler(), // Get the handler (e.g: signIn method)
-            context.getClass(), // Get the class (e.g: AuthController) 
+            context.getClass(), // Get the class (e.g: AuthController)
         ]);
         if (isPublic) {
             return true;

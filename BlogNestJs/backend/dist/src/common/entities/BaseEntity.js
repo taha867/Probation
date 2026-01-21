@@ -11,10 +11,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BaseEntity = void 0;
 const typeorm_1 = require("typeorm");
-/**
- * Base Entity Class
- * Provides common timestamp fields and automatic timestamp management
- */
 class BaseEntity {
 }
 exports.BaseEntity = BaseEntity;

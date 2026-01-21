@@ -1,12 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.USER_STATUS = exports.DEFAULTS = exports.EMAIL_TEMPLATES = exports.LOG_MESSAGES = exports.VALIDATION_MESSAGES = exports.ERROR_MESSAGES = exports.SUCCESS_MESSAGES = exports.HTTP_STATUS = void 0;
+exports.SANITIZATION_PATTERNS = exports.VALIDATION_PATTERNS = exports.USER_STATUS = exports.SECURITY = exports.VALIDATION_LIMITS = exports.DEFAULTS = exports.EMAIL_TEMPLATES = exports.LOG_MESSAGES = exports.VALIDATION_MESSAGES = exports.ERROR_MESSAGES = exports.SUCCESS_MESSAGES = exports.HTTP_STATUS = void 0;
 const http_status_codes_1 = require("http-status-codes");
 // HTTP Status Codes
 exports.HTTP_STATUS = http_status_codes_1.StatusCodes;
-/**
- * Success messages for API responses
- */
 exports.SUCCESS_MESSAGES = {
     ACCOUNT_CREATED: 'Account created successfully',
     SIGNED_IN: 'Signed in successfully',
@@ -23,9 +20,6 @@ exports.SUCCESS_MESSAGES = {
     PASSWORD_RESET: 'Password has been reset successfully',
     TOKEN_REFRESHED: 'Access token refreshed successfully',
 };
-/**
- * Error messages for API responses
- */
 exports.ERROR_MESSAGES = {
     // Authentication Errors
     INVALID_CREDENTIALS: 'Invalid credentials',
@@ -68,32 +62,46 @@ exports.ERROR_MESSAGES = {
     // General Errors
     INTERNAL_SERVER_ERROR: 'Internal server error',
 };
-/**
- * Validation messages for DTOs
- */
 exports.VALIDATION_MESSAGES = {
     // Common
-    IS_STRING: 'must be a string',
-    IS_REQUIRED: 'is required',
     IS_EMAIL: 'must be a valid email address',
-    IS_BOOLEAN: 'must be a boolean',
-    IS_URL: 'must be a valid URL with protocol',
     // User validation
+    NAME_REQUIRED: 'Name is required',
+    NAME_MIN_LENGTH: 'Name must be at least 2 characters long',
     NAME_INVALID_CHARS: 'Name must contain only letters and spaces',
-    PHONE_INVALID_FORMAT: 'Phone number must be 10 to 15 digits',
+    EMAIL_REQUIRED: 'Email is required',
+    EMAIL_INVALID: 'Please provide a valid email address',
+    PHONE_REQUIRED: 'Phone number is required',
+    PHONE_INVALID_FORMAT: 'Phone number must be 10 to 15 digits (e.g., +1234567890)',
+    PASSWORD_REQUIRED: 'Password is required',
+    PASSWORD_MIN_LENGTH: 'Password must be at least 8 characters long',
+    IMAGE_INVALID_URL: 'Image must be a valid URL',
     // Post validation
-    TITLE_INVALID_CHARS: 'Title contains invalid characters',
-    BODY_INVALID_CHARS: 'Body contains invalid characters',
+    TITLE_REQUIRED: 'Post title is required',
+    TITLE_MIN_LENGTH: 'Post title must be at least 1 character long',
+    TITLE_MAX_LENGTH: 'Post title must not exceed 200 characters',
+    TITLE_INVALID_CHARS: 'Title contains invalid characters (HTML tags are not allowed)',
+    BODY_REQUIRED: 'Post body is required',
+    BODY_MIN_LENGTH: 'Post body must be at least 1 character long',
+    BODY_INVALID_CHARS: 'Body contains invalid characters (HTML tags are not allowed)',
+    STATUS_INVALID: 'Post status must be either "draft" or "published"',
     // Comment validation
-    COMMENT_BODY_INVALID_CHARS: 'Comment body contains invalid characters',
+    COMMENT_BODY_REQUIRED: 'Comment body is required',
+    COMMENT_BODY_MIN_LENGTH: 'Comment body must be at least 1 character long',
+    COMMENT_BODY_MAX_LENGTH: 'Comment body must not exceed 2000 characters',
+    COMMENT_BODY_INVALID_CHARS: 'Comment body contains invalid characters (HTML tags are not allowed)',
+    POST_ID_REQUIRED: 'Post ID is required',
+    POST_ID_INVALID: 'Post ID must be a positive integer',
+    PARENT_ID_INVALID: 'Parent comment ID must be a positive integer',
+    // Pagination validation
+    PAGE_INVALID: 'Page number must be at least 1',
+    LIMIT_MIN_INVALID: 'Limit must be at least 1',
+    LIMIT_MAX_INVALID: 'Limit must not exceed 100',
     // Cloudinary validation
     FOLDER_INVALID_CHARS: 'folder must contain only alphanumeric characters, slashes, underscores, and hyphens',
     ORIGINAL_NAME_INVALID_CHARS: 'originalName must contain only alphanumeric characters, dots, underscores, and hyphens',
     RESULT_INVALID_VALUE: 'result must be either "ok" or "not found"',
 };
-/**
- * Console/Log messages
- */
 exports.LOG_MESSAGES = {
     // Application
     APP_RUNNING: 'Application is running on:',
@@ -113,9 +121,6 @@ exports.LOG_MESSAGES = {
     UNHANDLED_ERROR: 'Unhandled error:',
     UPLOAD_NO_RESULT: 'Upload completed but no result returned',
 };
-/**
- * Email template content
- */
 exports.EMAIL_TEMPLATES = {
     APP_NAME: 'Blog App',
     RESET_PASSWORD_SUBJECT: 'Reset Your Password - Blog App',
@@ -146,6 +151,25 @@ exports.DEFAULTS = {
     CLOUDINARY_POST_IMAGE_NAME: 'post-image',
     CLOUDINARY_USERS_FOLDER: 'blog/users',
     CLOUDINARY_PROFILE_IMAGE_NAME: 'profile-image',
+    PAGINATION_PAGE: 1, // Default page number
+    PAGINATION_LIMIT: 10, // Default items per page
+    USERS_LIST_LIMIT: 20, // Default limit for users list
+};
+/**
+ * Validation limits
+ */
+exports.VALIDATION_LIMITS = {
+    NAME_MIN_LENGTH: 2, // Minimum name length
+    PASSWORD_MIN_LENGTH: 8, // Minimum password length
+    PAGE_MIN: 1, // Minimum page number
+    LIMIT_MIN: 1, // Minimum items per page
+    LIMIT_MAX: 100, // Maximum items per page
+};
+/**
+ * Security/Encryption constants
+ */
+exports.SECURITY = {
+    SALT_ROUNDS: 10,
 };
 /**
  * User status values
@@ -153,5 +177,24 @@ exports.DEFAULTS = {
 exports.USER_STATUS = {
     LOGGED_IN: 'logged in',
     LOGGED_OUT: 'logged out',
+}; // immutable
+/**
+ * Validation regex patterns
+ */
+exports.VALIDATION_PATTERNS = {
+    FOLDER: /^[a-zA-Z0-9/_-]+$/, //blog/post
+    ORIGINAL_NAME: /^[a-zA-Z0-9._-]+$/, // profile.jpg
+    NO_HTML_TAGS: /^[^<>]*$/, // Prevents HTML tags (< and > characters)
+    NAME: /^[A-Za-z\s]+$/, // Name: letters and spaces only
+    PHONE: /^\+?[0-9]{10,15}$/, // Phone: 10-15 digits, optional +
+};
+/**
+ * Sanitization regex patterns (for removing invalid characters)
+ */
+exports.SANITIZATION_PATTERNS = {
+    FOLDER: /[^a-zA-Z0-9/_-]/g, // Remove invalid chars from folder path
+    ORIGINAL_NAME: /[^a-zA-Z0-9._-]/g, // Remove invalid chars from filename
+    PUBLIC_ID_EXTRACT: /\/upload\/(?:v\d+\/)?(.+?)(?:\.[^.]+)?$/, // Extract public_id from URL
+    BLOG_PREFIX_REMOVE: /^blog\//, // Remove blog/ prefix from public_id
 };
 //# sourceMappingURL=constants.js.map

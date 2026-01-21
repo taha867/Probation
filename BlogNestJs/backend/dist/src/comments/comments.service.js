@@ -18,9 +18,10 @@ const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const comment_entity_1 = require("./comment.entity");
 const post_entity_1 = require("../posts/post.entity");
-const mappers_1 = require("../lib/utils/mappers");
 const app_exception_1 = require("../common/exceptions/app.exception");
 const constants_1 = require("../lib/constants");
+const { EITHER_POST_ID_OR_PARENT_ID_REQUIRED, POST_ID_REQUIRED } = constants_1.ERROR_MESSAGES;
+const { COMMENT_CREATED, COMMENT_UPDATED } = constants_1.SUCCESS_MESSAGES;
 let CommentsService = class CommentsService {
     constructor(commentRepository, postRepository) {
         this.commentRepository = commentRepository;
@@ -30,7 +31,7 @@ let CommentsService = class CommentsService {
         const { body, postId, parentId } = createCommentDto;
         // Validate that either postId or parentId is provided
         if (!postId && !parentId) {
-            throw new common_1.BadRequestException(constants_1.ERROR_MESSAGES.EITHER_POST_ID_OR_PARENT_ID_REQUIRED);
+            throw new common_1.BadRequestException(EITHER_POST_ID_OR_PARENT_ID_REQUIRED);
         }
         let finalPostId;
         if (parentId) {
@@ -43,20 +44,20 @@ let CommentsService = class CommentsService {
                 },
             });
             if (!parentComment) {
-                throw new common_1.NotFoundException('PARENT_COMMENT_NOT_FOUND');
+                throw new common_1.NotFoundException(constants_1.ERROR_MESSAGES.PARENT_COMMENT_NOT_FOUND);
             }
             finalPostId = parentComment.postId;
         }
         else {
             // This is a top-level comment
             if (!postId) {
-                throw new common_1.BadRequestException(constants_1.ERROR_MESSAGES.POST_ID_REQUIRED);
+                throw new common_1.BadRequestException(POST_ID_REQUIRED);
             }
             const post = await this.postRepository.findOne({
                 where: { id: postId },
             });
             if (!post) {
-                throw new common_1.NotFoundException('POST_NOT_FOUND');
+                throw new common_1.NotFoundException(constants_1.ERROR_MESSAGES.POST_NOT_FOUND);
             }
             finalPostId = postId;
         }
@@ -75,11 +76,21 @@ let CommentsService = class CommentsService {
         }
         return {
             data: createdComment,
-            message: constants_1.SUCCESS_MESSAGES.COMMENT_CREATED,
+            message: COMMENT_CREATED,
         };
     }
     async listTopLevelComments(query) {
         const { postId } = query;
+        // If postId is provided, validate that the post exists
+        if (postId) {
+            const post = await this.postRepository.findOne({
+                where: { id: postId },
+                select: { id: true },
+            });
+            if (!post) {
+                throw new common_1.NotFoundException(constants_1.ERROR_MESSAGES.POST_NOT_FOUND);
+            }
+        }
         const whereCondition = {
             parentId: null, // Only top-level comments
         };
@@ -118,7 +129,12 @@ let CommentsService = class CommentsService {
                 parentId: parentId ?? null,
                 createdAt,
                 updatedAt,
-                author: (0, mappers_1.mapAuthorData)(author),
+                author: {
+                    id: author.id,
+                    name: author.name,
+                    email: author.email,
+                    image: author.image ?? null,
+                },
             };
         });
         return {
@@ -185,7 +201,12 @@ let CommentsService = class CommentsService {
                 parentId: parentId ?? null,
                 createdAt,
                 updatedAt,
-                author: (0, mappers_1.mapAuthorData)(author),
+                author: {
+                    id: author.id,
+                    name: author.name,
+                    email: author.email,
+                    image: author.image ?? null,
+                },
             };
         });
         const { id: commentId, body, postId, userId, parentId, createdAt, updatedAt, author, post, } = comment;
@@ -197,7 +218,12 @@ let CommentsService = class CommentsService {
             parentId: parentId ?? null,
             createdAt,
             updatedAt,
-            author: (0, mappers_1.mapAuthorData)(author),
+            author: {
+                id: author.id,
+                name: author.name,
+                email: author.email,
+                image: author.image ?? null,
+            },
             post: {
                 id: post.id,
                 title: post.title,
@@ -210,10 +236,10 @@ let CommentsService = class CommentsService {
             where: { id: commentId },
         });
         if (!comment) {
-            throw new common_1.NotFoundException('COMMENT_NOT_FOUND');
+            throw new common_1.NotFoundException(constants_1.ERROR_MESSAGES.COMMENT_NOT_FOUND);
         }
         if (comment.userId !== userId) {
-            throw new common_1.ForbiddenException('CANNOT_UPDATE_OTHER_COMMENT');
+            throw new common_1.ForbiddenException(constants_1.ERROR_MESSAGES.CANNOT_UPDATE_OTHER_COMMENT);
         }
         // Update comment
         comment.body = updateCommentDto.body;
@@ -225,7 +251,7 @@ let CommentsService = class CommentsService {
         }
         return {
             data: updated,
-            message: constants_1.SUCCESS_MESSAGES.COMMENT_UPDATED,
+            message: COMMENT_UPDATED,
         };
     }
     async deleteComment(commentId, userId) {
@@ -237,10 +263,10 @@ let CommentsService = class CommentsService {
             },
         });
         if (!comment) {
-            throw new common_1.NotFoundException('COMMENT_NOT_FOUND');
+            throw new common_1.NotFoundException(constants_1.ERROR_MESSAGES.COMMENT_NOT_FOUND);
         }
         if (comment.userId !== userId) {
-            throw new common_1.ForbiddenException('CANNOT_DELETE_OTHER_COMMENT');
+            throw new common_1.ForbiddenException(constants_1.ERROR_MESSAGES.CANNOT_DELETE_OTHER_COMMENT);
         }
         // Delete comment (cascade will delete replies automatically)
         await this.commentRepository.delete(commentId);

@@ -7,16 +7,13 @@ import {
 import { User } from '../user.entity';
 import { hashPassword } from '../../lib/utils/bcrypt';
 
-
 @EventSubscriber()
 export class UserSubscriber implements EntitySubscriberInterface<User> {
- 
   listenTo() {
     return User;
   }
 
   /**
-   * Hash password before inserting a new user
    * @param event - Insert event containing the user entity
    */
   async beforeInsert(event: InsertEvent<User>): Promise<void> {
@@ -29,8 +26,6 @@ export class UserSubscriber implements EntitySubscriberInterface<User> {
   }
 
   /**
-   * Hash password before updating a user
-   * Only hashes if password field was actually changed
    * @param event - Update event containing the user entity
    */
   async beforeUpdate(event: UpdateEvent<User>): Promise<void> {
@@ -48,4 +43,3 @@ export class UserSubscriber implements EntitySubscriberInterface<User> {
     }
   }
 }
-

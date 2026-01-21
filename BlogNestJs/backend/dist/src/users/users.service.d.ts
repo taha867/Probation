@@ -1,19 +1,21 @@
-import { Repository } from 'typeorm';
-import { User } from './user.entity';
-import { Post } from '../posts/post.entity';
-import { CloudinaryService } from '../cloudinary/cloudinary.service';
-import { ListUsersQueryDto } from './dto/listUsersQuery.dto';
-import { GetUserPostsQueryDto } from './dto/getUserPostsQuery.dto';
-import { UpdateUserDto } from './dto/updateUser.dto';
+import { Repository } from "typeorm";
+import { User } from "./user.entity";
+import { Post } from "../posts/post.entity";
+import { CloudinaryService } from "../cloudinary/cloudinary.service";
+import { PaginationService } from "../pagination/pagination.service";
+import { ListUsersQueryDto } from "./dto/list-users-query-payload.dto";
+import { GetUserPostsQueryDto } from "./dto/user-posts-query-input.dto";
+import { UpdateUserDto } from "./dto/update-user-input.dto";
 export declare class UsersService {
     private userRepository;
     private postRepository;
     private cloudinaryService;
-    constructor(userRepository: Repository<User>, postRepository: Repository<Post>, cloudinaryService: CloudinaryService);
+    private paginationService;
+    constructor(userRepository: Repository<User>, postRepository: Repository<Post>, cloudinaryService: CloudinaryService, paginationService: PaginationService);
     listUsers(query: ListUsersQueryDto): Promise<{
         data: {
             users: User[];
-            meta: import("../lib/utils/pagination").PaginationMeta;
+            meta: import("../pagination/dto/pagination-meta.dto").PaginationMetaDto;
         };
     }>;
     findUserById(id: number): Promise<{
@@ -28,14 +30,12 @@ export declare class UsersService {
     }>;
     getUserPostsWithComments(userId: number, query: GetUserPostsQueryDto): Promise<{
         data: {
-            user: {
-                id: number;
-                name: string;
-                email: string;
-                image: string | null;
-            };
+            id: number;
+            name: string;
+            email: string;
+            image: string | null;
             posts: Post[];
-            meta: import("../lib/utils/pagination").PaginationMeta;
+            meta: import("../pagination/dto/pagination-meta.dto").PaginationMetaDto;
         };
     }>;
     updateUser(requestedUserId: number, authUserId: number, updateUserDto: UpdateUserDto, file?: Express.Multer.File): Promise<{

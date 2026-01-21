@@ -1,8 +1,8 @@
 import { PostsService } from './posts.service';
-import { CreatePostDto } from './dto/createPost.dto';
-import { UpdatePostDto } from './dto/updatePost.dto';
-import { ListPostsQueryDto } from './dto/listPostsQuery.dto';
-import { PaginationQueryDto } from './dto/paginationQuery.dto';
+import { CreatePostDto } from './dto/create-post-input.dto';
+import { UpdatePostDto } from './dto/update-post-input.dto';
+import { ListPostsQueryDto } from './dto/list-posts-query-payload.dto';
+import { PaginationQueryDto } from './dto/pagination-query-input.dto';
 export declare class PostsController {
     private postsService;
     constructor(postsService: PostsService);
@@ -41,7 +41,7 @@ export declare class PostsController {
                     image: string | null;
                 };
             }[];
-            meta: import("../lib/utils/pagination").PaginationMeta;
+            meta: import("../pagination/dto/pagination-meta.dto").PaginationMetaDto;
         };
     }>;
     getOne(id: number): Promise<{
@@ -73,7 +73,7 @@ export declare class PostsController {
                 imagePublicId: string | null;
             };
             comments: import("../comments/comment.entity").Comment[];
-            meta: import("../lib/utils/pagination").PaginationMeta;
+            meta: import("../pagination/dto/pagination-meta.dto").PaginationMetaDto;
         };
     }>;
     update(id: number, updatePostDto: UpdatePostDto, userId: number, file?: Express.Multer.File): Promise<{

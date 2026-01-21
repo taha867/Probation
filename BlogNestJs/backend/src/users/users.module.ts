@@ -9,7 +9,7 @@ import { User } from './user.entity';
 import { Post } from '../posts/post.entity';
 import { CloudinaryModule } from '../cloudinary/cloudinary.module';
 import { EmailModule } from '../email/email.module';
-import { UserSubscriber } from './subscribers/user.subscriber';
+import { PaginationModule } from '../pagination/pagination.module';
 
 @Module({
   imports: [
@@ -21,9 +21,10 @@ import { UserSubscriber } from './subscribers/user.subscriber';
     }),
     CloudinaryModule,
     EmailModule,
+    PaginationModule,
   ],
   controllers: [UsersController, AuthController],
-  providers: [UsersService, AuthService, UserSubscriber],
+  providers: [UsersService, AuthService],
   exports: [UsersService, AuthService],
 })
 export class UsersModule {}

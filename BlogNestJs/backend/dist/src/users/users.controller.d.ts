@@ -1,14 +1,14 @@
 import { UsersService } from './users.service';
-import { ListUsersQueryDto } from './dto/listUsersQuery.dto';
-import { GetUserPostsQueryDto } from './dto/getUserPostsQuery.dto';
-import { UpdateUserDto } from './dto/updateUser.dto';
+import { ListUsersQueryDto } from './dto/list-users-query-payload.dto';
+import { GetUserPostsQueryDto } from './dto/user-posts-query-input.dto';
+import { UpdateUserDto } from './dto/update-user-input.dto';
 export declare class UsersController {
     private usersService;
     constructor(usersService: UsersService);
     list(query: ListUsersQueryDto): Promise<{
         data: {
             users: import("./user.entity").User[];
-            meta: import("../lib/utils/pagination").PaginationMeta;
+            meta: import("../pagination/dto/pagination-meta.dto").PaginationMetaDto;
         };
     }>;
     getCurrentUser(userId: number): Promise<{
@@ -23,14 +23,12 @@ export declare class UsersController {
     }>;
     getUserPosts(id: number, query: GetUserPostsQueryDto): Promise<{
         data: {
-            user: {
-                id: number;
-                name: string;
-                email: string;
-                image: string | null;
-            };
+            id: number;
+            name: string;
+            email: string;
+            image: string | null;
             posts: import("../posts/post.entity").Post[];
-            meta: import("../lib/utils/pagination").PaginationMeta;
+            meta: import("../pagination/dto/pagination-meta.dto").PaginationMetaDto;
         };
     }>;
     update(id: number, updateUserDto: UpdateUserDto, userId: number, file?: Express.Multer.File): Promise<{

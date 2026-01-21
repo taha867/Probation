@@ -13,11 +13,11 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { CommentsService } from './comments.service';
-import { CreateCommentDto } from './dto/createComment.dto';
-import { UpdateCommentDto } from './dto/updateComment.dto';
-import { ListCommentsQueryDto } from './dto/listCommentsQuery.dto';
-import { User } from '../common/decorators/user.decorator';
-import { SUCCESS_MESSAGES } from '../lib/constants';
+import { CreateCommentDto } from './dto/create-comment-input.dto';
+import { UpdateCommentDto } from './dto/update-comment-input.dto';
+import { ListCommentsQueryDto } from './dto/list-comments-query-payload.dto';
+import { User } from '../customDecorators/user.decorator';
+import { SUCCESS_MESSAGES, ERROR_MESSAGES } from '../lib/constants';
 
 @Controller('comments')
 export class CommentsController {
@@ -41,7 +41,7 @@ export class CommentsController {
   async getOne(@Param('id', ParseIntPipe) id: number) {
     const comment = await this.commentsService.findCommentWithRelations(id);
     if (!comment) {
-      throw new NotFoundException('COMMENT_NOT_FOUND');
+      throw new NotFoundException(ERROR_MESSAGES.COMMENT_NOT_FOUND);
     }
     return {
       data: comment,

@@ -15,7 +15,6 @@ let UserSubscriber = class UserSubscriber {
         return user_entity_1.User;
     }
     /**
-     * Hash password before inserting a new user
      * @param event - Insert event containing the user entity
      */
     async beforeInsert(event) {
@@ -27,8 +26,6 @@ let UserSubscriber = class UserSubscriber {
         }
     }
     /**
-     * Hash password before updating a user
-     * Only hashes if password field was actually changed
      * @param event - Update event containing the user entity
      */
     async beforeUpdate(event) {

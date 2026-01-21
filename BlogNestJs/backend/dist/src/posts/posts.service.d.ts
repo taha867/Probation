@@ -1,16 +1,20 @@
 import { Repository } from 'typeorm';
 import { Post, PostStatus } from './post.entity';
 import { Comment } from '../comments/comment.entity';
+import { User } from '../users/user.entity';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
-import { CreatePostDto } from './dto/createPost.dto';
-import { UpdatePostDto } from './dto/updatePost.dto';
-import { ListPostsQueryDto } from './dto/listPostsQuery.dto';
-import { PaginationQueryDto } from './dto/paginationQuery.dto';
+import { PaginationService } from '../pagination/pagination.service';
+import { CreatePostDto } from './dto/create-post-input.dto';
+import { UpdatePostDto } from './dto/update-post-input.dto';
+import { ListPostsQueryDto } from './dto/list-posts-query-payload.dto';
+import { PaginationQueryDto } from './dto/pagination-query-input.dto';
 export declare class PostsService {
     private postRepository;
     private commentRepository;
+    private userRepository;
     private cloudinaryService;
-    constructor(postRepository: Repository<Post>, commentRepository: Repository<Comment>, cloudinaryService: CloudinaryService);
+    private paginationService;
+    constructor(postRepository: Repository<Post>, commentRepository: Repository<Comment>, userRepository: Repository<User>, cloudinaryService: CloudinaryService, paginationService: PaginationService);
     createPost(createPostDto: CreatePostDto, userId: number, file?: Express.Multer.File): Promise<{
         data: {
             id: number;
@@ -46,7 +50,7 @@ export declare class PostsService {
                     image: string | null;
                 };
             }[];
-            meta: import("../lib/utils/pagination").PaginationMeta;
+            meta: import("../pagination/dto/pagination-meta.dto").PaginationMetaDto;
         };
     }>;
     findPostWithAuthor(id: number): Promise<{
@@ -76,7 +80,7 @@ export declare class PostsService {
                 imagePublicId: string | null;
             };
             comments: Comment[];
-            meta: import("../lib/utils/pagination").PaginationMeta;
+            meta: import("../pagination/dto/pagination-meta.dto").PaginationMetaDto;
         };
     }>;
     updatePost(postId: number, userId: number, updatePostDto: UpdatePostDto, file?: Express.Multer.File): Promise<{

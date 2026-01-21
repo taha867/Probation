@@ -10,7 +10,6 @@ import type { User } from '../users/user.entity';
 import type { Post } from '../posts/post.entity';
 import { BaseEntity } from '../common/entities/BaseEntity';
 
-
 @Entity('Comments')
 export class Comment extends BaseEntity {
   @PrimaryGeneratedColumn()
@@ -41,7 +40,6 @@ export class Comment extends BaseEntity {
   @JoinColumn({ name: 'userId' })
   author: User;
 
-  // Self-referential relations for nested comments
   @ManyToOne('Comment', (comment: Comment) => comment.replies, {
     nullable: true,
     onDelete: 'CASCADE',

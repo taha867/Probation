@@ -1,35 +1,34 @@
 import { Injectable } from '@nestjs/common';
-import { v2 as cloudinary } from 'cloudinary';
-import { CloudinaryUploadResultDto } from './dto/cloudinaryUploadResult.dto';
-import { CloudinaryDeletionResultDto } from './dto/cloudinaryDeletionResult.dto';
-import { UploadImageDto } from './dto/uploadImage.dto';
-import { LOG_MESSAGES, DEFAULTS } from '../lib/constants';
+import { ConfigService } from '@nestjs/config';
+import {
+  v2 as cloudinary,
+  UploadApiResponse,
+  UploadApiErrorResponse,
+} from 'cloudinary';
+import { CloudinaryUploadResultDto } from './dto/cloudinary-upload-payload.dto';
+import { CloudinaryDeletionResultDto } from './dto/cloudinary-deletion-payload.dto';
+import { UploadImageDto } from './dto/upload-Image-input.dto';
+import {
+  LOG_MESSAGES,
+  DEFAULTS,
+  SANITIZATION_PATTERNS,
+} from '../lib/constants';
 
-// Internal SDK types (not part of our API contract)
-type CloudinaryUploadApiResponse = {
-  secure_url: string;
-  public_id: string;
-  url?: string;
-  width?: number;
-  height?: number;
-  format?: string;
-  resource_type?: string;
-  [key: string]: unknown;
-};
-
-type CloudinaryUploadApiError = Error & {
-  http_code?: number;
-  message: string;
-  name: string;
-};
+const {
+  CLOUDINARY_DELETE_ERROR,
+  CLOUDINARY_UPLOAD_ERROR,
+  CLOUDINARY_UPLOAD_FAILED,
+  CLOUDINARY_EXTRACT_ERROR,
+  UPLOAD_NO_RESULT,
+} = LOG_MESSAGES;
 
 @Injectable()
 export class CloudinaryService {
-  constructor() {
+  constructor(private readonly configService: ConfigService) {
     cloudinary.config({
-      cloud_name: process.env.CLOUDINARY_CLOUD_NAME as string,
-      api_key: process.env.CLOUDINARY_API_KEY as string,
-      api_secret: process.env.CLOUDINARY_API_SECRET as string,
+      cloud_name: this.configService.get<string>('CLOUDINARY_CLOUD_NAME'),
+      api_key: this.configService.get<string>('CLOUDINARY_API_KEY'),
+      api_secret: this.configService.get<string>('CLOUDINARY_API_SECRET'),
     });
   }
 
@@ -42,7 +41,7 @@ export class CloudinaryService {
       const result = await cloudinary.uploader.destroy(publicId);
       return result as CloudinaryDeletionResultDto;
     } catch (error: unknown) {
-      console.error(LOG_MESSAGES.CLOUDINARY_DELETE_ERROR, error);
+      console.error(CLOUDINARY_DELETE_ERROR, error);
       return null;
     }
   }
@@ -60,11 +59,14 @@ export class CloudinaryService {
 
     try {
       // Sanitization is security logic, not validation - keep it
-      const sanitizedFolder = uploadDto.folder.replace(/[^a-zA-Z0-9/_-]/g, '');
+      const sanitizedFolder = uploadDto.folder.replace(
+        SANITIZATION_PATTERNS.FOLDER,
+        '',
+      );
 
       const timestamp = Date.now();
       const sanitizedName = uploadDto.originalName.replace(
-        /[^a-zA-Z0-9._-]/g,
+        SANITIZATION_PATTERNS.ORIGINAL_NAME,
         '',
       );
       const publicId = `${sanitizedFolder}/${timestamp}_${sanitizedName}`;
@@ -77,11 +79,11 @@ export class CloudinaryService {
             public_id: publicId.split('.')[0],
           },
           (
-            error: CloudinaryUploadApiError | undefined,
-            result: CloudinaryUploadApiResponse | undefined,
+            error: UploadApiErrorResponse | undefined,
+            result: UploadApiResponse | undefined,
           ) => {
             if (error) {
-              console.error(LOG_MESSAGES.CLOUDINARY_UPLOAD_ERROR, error);
+              console.error(CLOUDINARY_UPLOAD_ERROR, error);
               reject(error);
             } else if (result) {
               const uploadResult = new CloudinaryUploadResultDto();
@@ -89,7 +91,7 @@ export class CloudinaryService {
               uploadResult.public_id = result.public_id;
               resolve(uploadResult);
             } else {
-              reject(new Error(LOG_MESSAGES.UPLOAD_NO_RESULT));
+              reject(new Error(UPLOAD_NO_RESULT));
             }
           },
         );
@@ -97,7 +99,7 @@ export class CloudinaryService {
         uploadStream.end(uploadDto.fileBuffer);
       });
     } catch (error: unknown) {
-      console.error(LOG_MESSAGES.CLOUDINARY_UPLOAD_FAILED, error);
+      console.error(CLOUDINARY_UPLOAD_FAILED, error);
       throw error;
     }
   }
@@ -106,13 +108,13 @@ export class CloudinaryService {
     if (!url) return null;
 
     try {
-      const matches = url.match(/\/upload\/(?:v\d+\/)?(.+?)(?:\.[^.]+)?$/);
+      const matches = url.match(SANITIZATION_PATTERNS.PUBLIC_ID_EXTRACT);
       if (matches && matches[1]) {
-        return matches[1].replace(/^blog\//, '');
+        return matches[1].replace(SANITIZATION_PATTERNS.BLOG_PREFIX_REMOVE, '');
       }
       return null;
     } catch (error: unknown) {
-      console.error(LOG_MESSAGES.CLOUDINARY_EXTRACT_ERROR, error);
+      console.error(CLOUDINARY_EXTRACT_ERROR, error);
       return null;
     }
   }

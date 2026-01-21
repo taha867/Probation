@@ -1,5 +1,5 @@
 import { PipeTransform, Injectable, BadRequestException } from '@nestjs/common';
-import { SignInDto } from '../dto/signIn.dto';
+import { SignInDto } from '../dto/signIn-input.dto';
 import { ERROR_MESSAGES } from '../../../lib/constants';
 
 @Injectable()

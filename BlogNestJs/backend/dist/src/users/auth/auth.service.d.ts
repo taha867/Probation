@@ -2,8 +2,8 @@ import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '../user.entity';
 import { EmailService } from '../../email/email.service';
-import { SignUpDto } from './dto/signUp.dto';
-import { SignInDto } from './dto/signIn.dto';
+import { SignUpDto } from './dto/signUp-input.dto';
+import { SignInDto } from './dto/signIn-input.dto';
 export declare class AuthService {
     private userRepository;
     private jwtService;

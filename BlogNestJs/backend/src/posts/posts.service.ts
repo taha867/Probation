@@ -8,15 +8,15 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Brackets } from 'typeorm';
 import { Post, PostStatus } from './post.entity';
 import { Comment } from '../comments/comment.entity';
+import { User } from '../users/user.entity';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
-import { buildPaginationMeta } from '../lib/utils/pagination';
-import { mapAuthorData } from '../lib/utils/mappers';
+import { PaginationService } from '../pagination/pagination.service';
 import { AppException } from '../common/exceptions/app.exception';
-import { SUCCESS_MESSAGES, DEFAULTS } from '../lib/constants';
-import { CreatePostDto } from './dto/createPost.dto';
-import { UpdatePostDto } from './dto/updatePost.dto';
-import { ListPostsQueryDto } from './dto/listPostsQuery.dto';
-import { PaginationQueryDto } from './dto/paginationQuery.dto';
+import { SUCCESS_MESSAGES, DEFAULTS, ERROR_MESSAGES } from '../lib/constants';
+import { CreatePostDto } from './dto/create-post-input.dto';
+import { UpdatePostDto } from './dto/update-post-input.dto';
+import { ListPostsQueryDto } from './dto/list-posts-query-payload.dto';
+import { PaginationQueryDto } from './dto/pagination-query-input.dto';
 
 @Injectable()
 export class PostsService {
@@ -25,7 +25,10 @@ export class PostsService {
     private postRepository: Repository<Post>,
     @InjectRepository(Comment)
     private commentRepository: Repository<Comment>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
     private cloudinaryService: CloudinaryService,
+    private paginationService: PaginationService,
   ) {}
 
   async createPost(
@@ -76,8 +79,17 @@ export class PostsService {
   }
 
   async listPosts(query: ListPostsQueryDto) {
-    const { page = 1, limit = 10, search, userId, status } = query;
-    const offset = (page - 1) * limit;
+    const { page, limit, search, userId, status } = query;
+
+    // Validate userId exists if provided
+    if (userId) {
+      const userExists = await this.userRepository.exists({
+        where: { id: userId },
+      });
+      if (!userExists) {
+        throw new NotFoundException(ERROR_MESSAGES.USER_NOT_FOUND);
+      }
+    }
 
     const qb = this.postRepository
       .createQueryBuilder('post')
@@ -116,13 +128,15 @@ export class PostsService {
       );
     }
 
-    const [posts, total] = await qb
-      .orderBy('post.createdAt', 'DESC')
-      .take(limit)
-      .skip(offset)
-      .getManyAndCount();
+    qb.orderBy('post.createdAt', 'DESC');
 
-    const postRows = posts.map((post) => {
+    const paginatedResult = await this.paginationService.paginateQueryBuilder(
+      qb,
+      page,
+      limit,
+    );
+
+    const postRows = paginatedResult.data.items.map((post) => {
       const { id, title, body, userId, status, image, imagePublicId, author } =
         post;
       return {
@@ -133,14 +147,19 @@ export class PostsService {
         status: status as PostStatus,
         image: image ?? null,
         imagePublicId: imagePublicId ?? null,
-        author: mapAuthorData(author),
+        author: {
+          id: author.id,
+          name: author.name,
+          email: author.email,
+          image: author.image ?? null,
+        },
       };
     });
 
     return {
       data: {
         items: postRows,
-        meta: buildPaginationMeta({ total, page, limit }),
+        meta: paginatedResult.data.meta,
       },
     };
   }
@@ -188,13 +207,17 @@ export class PostsService {
       status: status as PostStatus,
       image: image ?? null,
       imagePublicId: imagePublicId ?? null,
-      author: mapAuthorData(author),
+      author: {
+        id: author.id,
+        name: author.name,
+        email: author.email,
+        image: author.image ?? null,
+      },
     };
   }
 
   async getPostWithComments(postId: number, query: PaginationQueryDto) {
-    const { page = 1, limit = 10 } = query;
-    const offset = (page - 1) * limit;
+    const { page, limit } = query;
 
     const post = await this.postRepository.findOne({
       where: { id: postId },
@@ -210,7 +233,7 @@ export class PostsService {
     });
 
     if (!post) {
-      throw new NotFoundException('POST_NOT_FOUND');
+      throw new NotFoundException(ERROR_MESSAGES.POST_NOT_FOUND);
     }
 
     const { id, title, body, userId, status, image, imagePublicId } = post;
@@ -225,7 +248,7 @@ export class PostsService {
     };
 
     // Get top-level comments with replies
-    const [comments, total] = await this.commentRepository
+    const qb = this.commentRepository
       .createQueryBuilder('comment')
       .leftJoinAndSelect('comment.author', 'author')
       .leftJoinAndSelect('comment.replies', 'reply')
@@ -233,16 +256,19 @@ export class PostsService {
       .where('comment.postId = :postId', { postId })
       .andWhere('comment.parentId IS NULL')
       .orderBy('comment.createdAt', 'DESC')
-      .addOrderBy('reply.createdAt', 'ASC')
-      .take(limit)
-      .skip(offset)
-      .getManyAndCount();
+      .addOrderBy('reply.createdAt', 'ASC');
+
+    const paginatedResult = await this.paginationService.paginateQueryBuilder(
+      qb,
+      page,
+      limit,
+    );
 
     return {
       data: {
         post: basePost,
-        comments,
-        meta: buildPaginationMeta({ total, page, limit }),
+        comments: paginatedResult.data.items,
+        meta: paginatedResult.data.meta,
       },
     };
   }
@@ -258,11 +284,11 @@ export class PostsService {
     });
 
     if (!post) {
-      throw new NotFoundException('POST_NOT_FOUND');
+      throw new NotFoundException(ERROR_MESSAGES.POST_NOT_FOUND);
     }
 
     if (post.userId !== userId) {
-      throw new ForbiddenException('CANNOT_UPDATE_OTHER_POST');
+      throw new ForbiddenException(ERROR_MESSAGES.CANNOT_UPDATE_OTHER_POST);
     }
 
     const { title, body, status, image } = updatePostDto;
@@ -325,11 +351,11 @@ export class PostsService {
     });
 
     if (!post) {
-      throw new NotFoundException('POST_NOT_FOUND');
+      throw new NotFoundException(ERROR_MESSAGES.POST_NOT_FOUND);
     }
 
     if (post.userId !== userId) {
-      throw new ForbiddenException('CANNOT_DELETE_OTHER_POST');
+      throw new ForbiddenException(ERROR_MESSAGES.CANNOT_DELETE_OTHER_POST);
     }
 
     // Delete associated image from Cloudinary

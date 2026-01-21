@@ -66,93 +66,100 @@ backend/
 ├── src/
 │   ├── main.ts                      # Application entry point
 │   ├── app.module.ts                # Root module
-│   ├── app.controller.ts            # Root controller
-│   ├── app.service.ts               # Root service
 │   │
 │   ├── config/                      # Configuration modules
-│   │   ├── database.config.ts       # Database configuration
-│   │   ├── database.module.ts      # Database module
+│   │   ├── data-source-options.ts   # TypeORM DataSource options
 │   │   └── dataSource.ts            # TypeORM DataSource for migrations
 │   │
-│   ├── entities/                   # TypeORM entities (database schema)
-│   │   ├── BaseEntity.ts           # Base entity with timestamps
-│   │   ├── User.ts                 # User entity
-│   │   ├── Post.ts                 # Post entity
-│   │   └── Comment.ts              # Comment entity
+│   ├── common/                      # Shared/common utilities
+│   │   ├── entities/
+│   │   │   └── BaseEntity.ts       # Base entity with timestamps
+│   │   ├── exceptions/
+│   │   │   └── app.exception.ts    # Custom exception class
+│   │   └── filters/
+│   │       └── httpException.filter.ts # Global exception filter
 │   │
-│   ├── auth/                        # Authentication module
-│   │   ├── auth.module.ts          # Auth module definition
-│   │   ├── auth.controller.ts      # Auth endpoints
-│   │   ├── auth.service.ts         # Auth business logic
-│   │   ├── guards/
-│   │   │   └── auth.guard.ts       # JWT authentication guard
-│   │   ├── decorators/
-│   │   │   └── public.decorator.ts # Public route decorator
-│   │   ├── pipes/
-│   │   │   └── email-or-phone.pipe.ts # Custom validation pipe
-│   │   └── dto/                    # Data Transfer Objects
-│   │       ├── sign-up.dto.ts
-│   │       ├── sign-in.dto.ts
-│   │       ├── refresh-token.dto.ts
-│   │       ├── forgot-password.dto.ts
-│   │       └── reset-password.dto.ts
+│   ├── customDecorators/            # Custom decorators
+│   │   ├── user.decorator.ts        # @User() decorator for extracting user
+│   │   └── public.decorator.ts     # @Public() decorator for public routes
+│   │
+│   ├── lib/                         # Shared libraries
+│   │   ├── constants.ts             # Application constants (messages, patterns, defaults)
+│   │   └── utils/
+│   │       └── bcrypt.ts            # Password hashing utilities
+│   │
+│   ├── pagination/                  # Pagination feature module
+│   │   ├── pagination.module.ts     # Pagination module
+│   │   ├── pagination.service.ts    # Pagination service
+│   │   └── dto/
+│   │       ├── pagination-meta.dto.ts
+│   │       └── paginated-result.dto.ts
+│   │
+│   ├── cloudinary/                  # Cloudinary module
+│   │   ├── cloudinary.module.ts     # Cloudinary module
+│   │   ├── cloudinary.service.ts    # Cloudinary operations
+│   │   └── dto/
+│   │       ├── upload-Image-input.dto.ts
+│   │       ├── cloudinary-upload-payload.dto.ts
+│   │       └── cloudinary-deletion-payload.dto.ts
+│   │
+│   ├── email/                       # Email module
+│   │   ├── email.module.ts         # Email module
+│   │   ├── email.service.ts        # Email sending service
+│   │   ├── templates/
+│   │   │   └── password-reset.template.ts # Email templates
+│   │   └── dto/
+│   │       ├── email-send-payload.dto.ts
+│   │       └── password-reset-emai-payloadl.dto.ts
 │   │
 │   ├── users/                       # Users module
+│   │   ├── user.entity.ts          # User entity
 │   │   ├── users.module.ts         # Users module definition
 │   │   ├── users.controller.ts     # User endpoints
 │   │   ├── users.service.ts        # User business logic
-│   │   └── dto/                    # User DTOs
-│   │       ├── list-users-query.dto.ts
-│   │       ├── update-user.dto.ts
-│   │       └── get-user-posts-query.dto.ts
+│   │   ├── subscribers/
+│   │   │   └── user.subscriber.ts  # TypeORM entity subscriber (password hashing)
+│   │   ├── auth/                    # Authentication sub-module
+│   │   │   ├── auth.controller.ts  # Auth endpoints
+│   │   │   ├── auth.service.ts     # Auth business logic
+│   │   │   ├── guards/
+│   │   │   │   └── auth.guard.ts   # JWT authentication guard
+│   │   │   ├── pipes/
+│   │   │   │   └── emailOrPhone.pipe.ts # Custom validation pipe
+│   │   │   └── dto/
+│   │   │       ├── signUp-input.dto.ts
+│   │   │       ├── signIn-input.dto.ts
+│   │   │       ├── refresh-token-input.dto.ts
+│   │   │       ├── forgot-password-input.dto.ts
+│   │   │       └── reset-password-input.dto.ts
+│   │   └── dto/                     # User DTOs
+│   │       ├── list-users-query-payload.dto.ts
+│   │       ├── update-user-input.dto.ts
+│   │       └── user-posts-query-input.dto.ts
 │   │
 │   ├── posts/                       # Posts module
+│   │   ├── post.entity.ts          # Post entity
 │   │   ├── posts.module.ts         # Posts module definition
 │   │   ├── posts.controller.ts     # Post endpoints
 │   │   ├── posts.service.ts        # Post business logic
 │   │   └── dto/                    # Post DTOs
-│   │       ├── create-post.dto.ts
-│   │       ├── update-post.dto.ts
-│   │       ├── list-posts-query.dto.ts
-│   │       └── pagination-query.dto.ts
+│   │       ├── create-post-input.dto.ts
+│   │       ├── update-post-input.dto.ts
+│   │       ├── list-posts-query-payload.dto.ts
+│   │       └── pagination-query-input.dto.ts
 │   │
 │   ├── comments/                    # Comments module
+│   │   ├── comment.entity.ts       # Comment entity
 │   │   ├── comments.module.ts      # Comments module definition
-│   │   ├── comments.controller.ts   # Comment endpoints
+│   │   ├── comments.controller.ts  # Comment endpoints
 │   │   ├── comments.service.ts     # Comment business logic
 │   │   └── dto/                    # Comment DTOs
-│   │       ├── create-comment.dto.ts
-│   │       ├── update-comment.dto.ts
-│   │       └── list-comments-query.dto.ts
+│   │       ├── create-comment-input.dto.ts
+│   │       ├── update-comment-input.dto.ts
+│   │       └── list-comments-query-payload.dto.ts
 │   │
-│   ├── common/                      # Shared/common module
-│   │   ├── common.module.ts        # Common module definition
-│   │   ├── decorators/
-│   │   │   └── user.decorator.ts   # @User() decorator for extracting user
-│   │   ├── exceptions/
-│   │   │   └── app.exception.ts    # Custom exception class
-│   │   └── filters/
-│   │       └── http-exception.filter.ts # Global exception filter
-│   │
-│   ├── shared/                      # Shared utilities and services
-│   │   ├── constants/
-│   │   │   └── constants.ts        # Application constants
-│   │   ├── services/
-│   │   │   ├── cloudinary.service.ts # Cloudinary operations
-│   │   │   └── email.service.ts     # Email sending service
-│   │   └── utils/
-│   │       ├── bcrypt.ts            # Password hashing utilities
-│   │       ├── mappers.ts           # Data mapping utilities
-│   │       └── pagination.ts        # Pagination helpers
-│   │
-│   ├── interfaces/                  # TypeScript interfaces
-│   │   ├── index.ts                # Barrel export
-│   │   ├── commonInterface.ts      # Common interfaces
-│   │   ├── authInterface.ts        # Auth interfaces
-│   │   ├── userInterface.ts        # User interfaces
-│   │   ├── postInterface.ts        # Post interfaces
-│   │   ├── commentInterface.ts     # Comment interfaces
-│   │   └── cloudinaryInterface.ts  # Cloudinary interfaces
+│   ├── types/                       # TypeScript type definitions
+│   │   └── express.d.ts            # Express Request type extensions
 │   │
 │   └── migrations/                  # TypeORM migrations
 │       ├── 1735123456789-InitialSchema.ts
@@ -160,6 +167,7 @@ backend/
 │
 ├── package.json                     # Dependencies and scripts
 ├── tsconfig.json                    # TypeScript configuration
+├── tsconfig.build.json              # TypeScript build configuration
 ├── nest-cli.json                   # NestJS CLI configuration
 └── .env                            # Environment variables
 ```
@@ -189,10 +197,12 @@ The backend follows NestJS's **modular architecture** with clear separation of c
                ▼
 ┌─────────────────────────────────────────┐
 │  Module Layer                           │
-│  - AuthModule                           │
-│  - UsersModule                          │
+│  - UsersModule (includes Auth)          │
 │  - PostsModule                          │
 │  - CommentsModule                       │
+│  - PaginationModule                     │
+│  - CloudinaryModule                     │
+│  - EmailModule                          │
 └──────────────┬──────────────────────────┘
                │
                ▼
@@ -458,8 +468,13 @@ export class PostsController {
 ```typescript
 @Injectable()
 export class EmailOrPhonePipe implements PipeTransform {
-  transform(value: any) {
-    // Custom transformation logic
+  transform(value: SignInDto) {
+    // Validates that at least one of email or phone is provided
+    if (!value.email && !value.phone) {
+      throw new BadRequestException(
+        ERROR_MESSAGES.PASSWORD_EMAIL_OR_PHONE_REQUIRED,
+      );
+    }
     return value;
   }
 }
@@ -778,10 +793,12 @@ export class CreatePostDto {
 ```typescript
 @Injectable()
 export class EmailOrPhonePipe implements PipeTransform {
-  transform(value: any) {
-    // Custom validation logic
+  transform(value: SignInDto) {
+    // Validates that at least one of email or phone is provided
     if (!value.email && !value.phone) {
-      throw new BadRequestException('Email or phone is required');
+      throw new BadRequestException(
+        ERROR_MESSAGES.PASSWORD_EMAIL_OR_PHONE_REQUIRED,
+      );
     }
     return value;
   }
@@ -803,8 +820,8 @@ export class EmailOrPhonePipe implements PipeTransform {
 
 **Components**:
 1. **AppException Class** (`common/exceptions/app.exception.ts`): Custom exception with code and status
-2. **AppExceptionFilter** (`common/filters/http-exception.filter.ts`): Global exception filter
-3. **Constants** (`shared/constants/constants.ts`): Centralized error messages
+2. **AppExceptionFilter** (`common/filters/httpException.filter.ts`): Global exception filter
+3. **Constants** (`lib/constants.ts`): Centralized error messages, validation patterns, and defaults
 
 ### Error Types
 
@@ -1393,45 +1410,48 @@ export class PostsService {
 
 ### Controllers
 
-- `src/auth/auth.controller.ts` - Authentication endpoints
+- `src/users/auth/auth.controller.ts` - Authentication endpoints
 - `src/users/users.controller.ts` - User management endpoints
 - `src/posts/posts.controller.ts` - Post CRUD endpoints
 - `src/comments/comments.controller.ts` - Comment CRUD endpoints
 
 ### Services
 
-- `src/auth/auth.service.ts` - Authentication business logic
+- `src/users/auth/auth.service.ts` - Authentication business logic
 - `src/users/users.service.ts` - User business logic
 - `src/posts/posts.service.ts` - Post business logic
 - `src/comments/comments.service.ts` - Comment business logic
-- `src/shared/services/cloudinary.service.ts` - Cloudinary operations
-- `src/shared/services/email.service.ts` - Email sending
+- `src/cloudinary/cloudinary.service.ts` - Cloudinary operations
+- `src/email/email.service.ts` - Email sending
+- `src/pagination/pagination.service.ts` - Pagination service
 
 ### Entities
 
-- `src/entities/BaseEntity.ts` - Base entity with timestamps
-- `src/entities/User.ts` - User entity
-- `src/entities/Post.ts` - Post entity
-- `src/entities/Comment.ts` - Comment entity
+- `src/common/entities/BaseEntity.ts` - Base entity with timestamps
+- `src/users/user.entity.ts` - User entity
+- `src/posts/post.entity.ts` - Post entity
+- `src/comments/comment.entity.ts` - Comment entity
 
 ### Guards & Filters
 
-- `src/auth/guards/auth.guard.ts` - JWT authentication guard
-- `src/common/filters/http-exception.filter.ts` - Global exception filter
+- `src/users/auth/guards/auth.guard.ts` - JWT authentication guard
+- `src/common/filters/httpException.filter.ts` - Global exception filter
 
 ### DTOs
 
-- `src/auth/dto/*.ts` - Authentication DTOs
+- `src/users/auth/dto/*.ts` - Authentication DTOs
 - `src/users/dto/*.ts` - User DTOs
 - `src/posts/dto/*.ts` - Post DTOs
 - `src/comments/dto/*.ts` - Comment DTOs
+- `src/pagination/dto/*.ts` - Pagination DTOs
 
-### Utilities
+### Utilities & Modules
 
-- `src/shared/constants/constants.ts` - Application constants
-- `src/shared/utils/bcrypt.ts` - Password hashing
-- `src/shared/utils/mappers.ts` - Data mapping utilities
-- `src/shared/utils/pagination.ts` - Pagination helpers
+- `src/lib/constants.ts` - Application constants (messages, patterns, defaults)
+- `src/lib/utils/bcrypt.ts` - Password hashing utilities
+- `src/pagination/` - Pagination feature module
+- `src/cloudinary/` - Cloudinary feature module
+- `src/email/` - Email feature module
 
 ---
 

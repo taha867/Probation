@@ -1,13 +1,13 @@
 import * as dotenv from 'dotenv';
 dotenv.config();
 
-import { NestFactory } from '@nestjs/core'; // A factory class that creates a NestJS application instance
-import { AppModule } from './app.module'; // The root module of the application
-import { ValidationPipe } from '@nestjs/common'; // A global validation pipe that validates all DTOs automatically
-import { AppExceptionFilter } from './common/filters/httpException.filter'; // A global exception filter that catches all errors
-import { NestExpressApplication } from '@nestjs/platform-express'; // A class that extends the Express application class
-import helmet from 'helmet'; // A middleware that sets various HTTP headers for security
-import cookieParser from 'cookie-parser'; // A middleware that parses cookies from the request
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
+import { ValidationPipe } from '@nestjs/common';
+import { AppExceptionFilter } from './common/filters/httpException.filter';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
 import { LOG_MESSAGES } from './lib/constants';
 
 async function bootstrap() {
@@ -32,7 +32,7 @@ async function bootstrap() {
       transform: true, // Automatically transform payloads to DTO instances
       validateCustomDecorators: true, // Validate custom decorators
       transformOptions: {
-        enableImplicitConversion: true, // Automatically converts string query/route parameters to their expected types.
+        enableImplicitConversion: true, // Automatically converts string query/body parameters to their expected types.
       },
     }),
   );

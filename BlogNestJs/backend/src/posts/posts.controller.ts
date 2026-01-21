@@ -17,11 +17,11 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { PostsService } from './posts.service';
-import { CreatePostDto } from './dto/createPost.dto';
-import { UpdatePostDto } from './dto/updatePost.dto';
-import { ListPostsQueryDto } from './dto/listPostsQuery.dto';
-import { PaginationQueryDto } from './dto/paginationQuery.dto';
-import { User } from '../common/decorators/user.decorator';
+import { CreatePostDto } from './dto/create-post-input.dto';
+import { UpdatePostDto } from './dto/update-post-input.dto';
+import { ListPostsQueryDto } from './dto/list-posts-query-payload.dto';
+import { PaginationQueryDto } from './dto/pagination-query-input.dto';
+import { User } from '../customDecorators/user.decorator';
 import { SUCCESS_MESSAGES, ERROR_MESSAGES } from '../lib/constants';
 
 @Controller('posts')
@@ -48,7 +48,7 @@ export class PostsController {
   async getOne(@Param('id', ParseIntPipe) id: number) {
     const post = await this.postsService.findPostWithAuthor(id);
     if (!post) {
-      throw new NotFoundException('POST_NOT_FOUND');
+      throw new NotFoundException(ERROR_MESSAGES.POST_NOT_FOUND);
     }
     return {
       data: post,

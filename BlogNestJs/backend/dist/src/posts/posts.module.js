@@ -13,13 +13,19 @@ const posts_controller_1 = require("./posts.controller");
 const posts_service_1 = require("./posts.service");
 const post_entity_1 = require("./post.entity");
 const comment_entity_1 = require("../comments/comment.entity");
+const user_entity_1 = require("../users/user.entity");
 const cloudinary_module_1 = require("../cloudinary/cloudinary.module");
+const pagination_module_1 = require("../pagination/pagination.module");
 let PostsModule = class PostsModule {
 };
 exports.PostsModule = PostsModule;
 exports.PostsModule = PostsModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([post_entity_1.Post, comment_entity_1.Comment]), cloudinary_module_1.CloudinaryModule],
+        imports: [
+            typeorm_1.TypeOrmModule.forFeature([post_entity_1.Post, comment_entity_1.Comment, user_entity_1.User]),
+            cloudinary_module_1.CloudinaryModule,
+            pagination_module_1.PaginationModule,
+        ],
         controllers: [posts_controller_1.PostsController],
         providers: [posts_service_1.PostsService],
         exports: [posts_service_1.PostsService],

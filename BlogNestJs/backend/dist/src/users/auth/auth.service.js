@@ -62,11 +62,11 @@ let AuthService = class AuthService {
             ],
         });
         if (!user || !user.password) {
-            throw new common_1.UnauthorizedException('INVALID_CREDENTIALS');
+            throw new common_1.UnauthorizedException(constants_1.ERROR_MESSAGES.INVALID_CREDENTIALS);
         }
         const isPasswordValid = await (0, bcrypt_1.comparePassword)(password, user.password);
         if (!isPasswordValid) {
-            throw new common_1.UnauthorizedException('INVALID_CREDENTIALS');
+            throw new common_1.UnauthorizedException(constants_1.ERROR_MESSAGES.INVALID_CREDENTIALS);
         }
         await this.userRepository.update(user.id, {
             status: constants_1.USER_STATUS.LOGGED_IN,
@@ -99,7 +99,7 @@ let AuthService = class AuthService {
     async logout(userId) {
         const user = await this.userRepository.findOne({ where: { id: userId } });
         if (!user) {
-            throw new common_1.NotFoundException('USER_NOT_FOUND');
+            throw new common_1.NotFoundException(constants_1.ERROR_MESSAGES.USER_NOT_FOUND);
         }
         const { tokenVersion = 0 } = user;
         await this.userRepository.save({
@@ -117,22 +117,22 @@ let AuthService = class AuthService {
         }
         catch (error) {
             if (error instanceof Error && error.name === 'TokenExpiredError') {
-                throw new common_1.UnauthorizedException('REFRESH_TOKEN_EXPIRED');
+                throw new common_1.UnauthorizedException(constants_1.ERROR_MESSAGES.REFRESH_TOKEN_EXPIRED);
             }
-            throw new common_1.UnauthorizedException('INVALID_REFRESH_TOKEN');
+            throw new common_1.UnauthorizedException(constants_1.ERROR_MESSAGES.INVALID_REFRESH_TOKEN);
         }
         if (decoded.type !== 'refresh') {
-            throw new common_1.UnauthorizedException('INVALID_REFRESH_TOKEN');
+            throw new common_1.UnauthorizedException(constants_1.ERROR_MESSAGES.INVALID_REFRESH_TOKEN);
         }
         const user = await this.userRepository.findOne({
             where: { id: decoded.userId },
         });
         if (!user) {
-            throw new common_1.NotFoundException('USER_NOT_FOUND');
+            throw new common_1.NotFoundException(constants_1.ERROR_MESSAGES.USER_NOT_FOUND);
         }
         const { id, email, tokenVersion = 0 } = user;
         if (tokenVersion !== decoded.tokenVersion) {
-            throw new common_1.UnauthorizedException('INVALID_REFRESH_TOKEN');
+            throw new common_1.UnauthorizedException(constants_1.ERROR_MESSAGES.INVALID_REFRESH_TOKEN);
         }
         const accessToken = await this.jwtService.signAsync({
             userId: id,
@@ -165,19 +165,19 @@ let AuthService = class AuthService {
         }
         catch (error) {
             if (error instanceof Error && error.name === 'TokenExpiredError') {
-                throw new common_1.UnauthorizedException('RESET_TOKEN_EXPIRED');
+                throw new common_1.UnauthorizedException(constants_1.ERROR_MESSAGES.RESET_TOKEN_EXPIRED);
             }
-            throw new common_1.UnauthorizedException('INVALID_RESET_TOKEN');
+            throw new common_1.UnauthorizedException(constants_1.ERROR_MESSAGES.INVALID_RESET_TOKEN);
         }
         if (decoded.type !== 'password_reset') {
-            throw new common_1.UnauthorizedException('INVALID_RESET_TOKEN');
+            throw new common_1.UnauthorizedException(constants_1.ERROR_MESSAGES.INVALID_RESET_TOKEN);
         }
         const user = await this.userRepository.findOne({
             where: { id: decoded.userId },
             select: ['id', 'password'],
         });
         if (!user) {
-            throw new common_1.NotFoundException('USER_NOT_FOUND');
+            throw new common_1.NotFoundException(constants_1.ERROR_MESSAGES.USER_NOT_FOUND);
         }
         const oldPasswordHash = user.password;
         // Password will be automatically hashed by UserSubscriber before update

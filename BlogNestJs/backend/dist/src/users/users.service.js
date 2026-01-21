@@ -19,19 +19,20 @@ const typeorm_2 = require("typeorm");
 const user_entity_1 = require("./user.entity");
 const post_entity_1 = require("../posts/post.entity");
 const cloudinary_service_1 = require("../cloudinary/cloudinary.service");
-const pagination_1 = require("../lib/utils/pagination");
+const pagination_service_1 = require("../pagination/pagination.service");
 const app_exception_1 = require("../common/exceptions/app.exception");
 const constants_1 = require("../lib/constants");
+const { USER_NOT_FOUND, CANNOT_UPDATE_OTHER_USER, CANNOT_DELETE_OTHER_USER } = constants_1.ERROR_MESSAGES;
 let UsersService = class UsersService {
-    constructor(userRepository, postRepository, cloudinaryService) {
+    constructor(userRepository, postRepository, cloudinaryService, paginationService) {
         this.userRepository = userRepository;
         this.postRepository = postRepository;
         this.cloudinaryService = cloudinaryService;
+        this.paginationService = paginationService;
     }
     async listUsers(query) {
-        const { page = 1, limit = 20 } = query;
-        const offset = (page - 1) * limit;
-        const [users, total] = await this.userRepository.findAndCount({
+        const { page, limit } = query;
+        const paginatedResult = await this.paginationService.paginateRepository(this.userRepository, {
             select: {
                 id: true,
                 name: true,
@@ -40,14 +41,13 @@ let UsersService = class UsersService {
                 status: true,
                 image: true,
             },
-            order: { createdAt: 'DESC' },
-            take: limit,
-            skip: offset,
-        });
+            order: { createdAt: "DESC" },
+        }, page, limit);
+        const { data: { items, meta }, } = paginatedResult;
         return {
             data: {
-                users,
-                meta: (0, pagination_1.buildPaginationMeta)({ total, page, limit }),
+                users: items,
+                meta,
             },
         };
     }
@@ -62,22 +62,22 @@ let UsersService = class UsersService {
             },
         });
         if (!user) {
-            throw new common_1.NotFoundException('USER_NOT_FOUND');
+            throw new common_1.NotFoundException(USER_NOT_FOUND);
         }
+        const { name, email, image } = user;
         return {
             data: {
                 user: {
                     id: user.id,
-                    name: user.name,
-                    email: user.email,
-                    image: user.image,
+                    name,
+                    email,
+                    image,
                 },
             },
         };
     }
     async getUserPostsWithComments(userId, query) {
-        const { page = 1, limit = 20, search } = query;
-        const offset = (page - 1) * limit;
+        const { page, limit, search } = query;
         const user = await this.userRepository.findOne({
             where: { id: userId },
             select: {
@@ -88,47 +88,44 @@ let UsersService = class UsersService {
             },
         });
         if (!user) {
-            throw new common_1.NotFoundException('USER_NOT_FOUND');
+            throw new common_1.NotFoundException(USER_NOT_FOUND);
         }
         const qb = this.postRepository
-            .createQueryBuilder('post')
-            .leftJoinAndSelect('post.author', 'author')
-            .leftJoinAndSelect('post.comments', 'comment', 'comment.parentId IS NULL')
-            .leftJoinAndSelect('comment.author', 'commentAuthor')
-            .leftJoinAndSelect('comment.replies', 'reply')
-            .leftJoinAndSelect('reply.author', 'replyAuthor')
-            .where('post.userId = :userId', { userId });
+            .createQueryBuilder("post")
+            .leftJoinAndSelect("post.author", "author")
+            .leftJoinAndSelect("post.comments", "comment", "comment.parentId IS NULL")
+            .leftJoinAndSelect("comment.author", "commentAuthor")
+            .leftJoinAndSelect("comment.replies", "reply")
+            .leftJoinAndSelect("reply.author", "replyAuthor")
+            .where("post.userId = :userId", { userId });
         if (search) {
             qb.andWhere(new typeorm_2.Brackets((qb) => {
-                qb.where('post.title ILIKE :search', {
+                qb.where("post.title ILIKE :search", {
                     search: `%${search}%`,
-                }).orWhere('post.body ILIKE :search', { search: `%${search}%` });
+                }).orWhere("post.body ILIKE :search", { search: `%${search}%` });
             }));
         }
-        const [posts, total] = await qb
-            .orderBy('post.createdAt', 'DESC')
-            .addOrderBy('comment.createdAt', 'DESC')
-            .addOrderBy('reply.createdAt', 'ASC')
-            .take(limit)
-            .skip(offset)
-            .getManyAndCount();
+        qb.orderBy("post.createdAt", "DESC")
+            .addOrderBy("comment.createdAt", "DESC")
+            .addOrderBy("reply.createdAt", "ASC");
+        const paginatedResult = await this.paginationService.paginateQueryBuilder(qb, page, limit);
+        const { id, name, email, image } = user;
+        const { data: { items, meta } } = paginatedResult;
         return {
             data: {
-                user: {
-                    id: user.id,
-                    name: user.name,
-                    email: user.email,
-                    image: user.image,
-                },
-                posts,
-                meta: (0, pagination_1.buildPaginationMeta)({ total, page, limit }),
+                id,
+                name,
+                email,
+                image,
+                posts: items,
+                meta,
             },
         };
     }
     async updateUser(requestedUserId, authUserId, updateUserDto, file) {
         // Authorization check
         if (requestedUserId !== authUserId) {
-            throw new common_1.ForbiddenException('CANNOT_UPDATE_OTHER_USER');
+            throw new common_1.ForbiddenException(CANNOT_UPDATE_OTHER_USER);
         }
         const user = await this.userRepository.findOne({
             where: { id: requestedUserId },
@@ -143,7 +140,7 @@ let UsersService = class UsersService {
             },
         });
         if (!user) {
-            throw new common_1.NotFoundException('USER_NOT_FOUND');
+            throw new common_1.NotFoundException(USER_NOT_FOUND);
         }
         const { name, email, phone, password, image } = updateUserDto;
         const updateData = {};
@@ -154,7 +151,7 @@ let UsersService = class UsersService {
                 where: { email, id: (0, typeorm_2.Not)(requestedUserId) },
             });
             if (emailExists) {
-                throw new app_exception_1.AppException('EMAIL_ALREADY_EXISTS', common_1.HttpStatus.UNPROCESSABLE_ENTITY);
+                throw new app_exception_1.AppException("EMAIL_ALREADY_EXISTS", common_1.HttpStatus.UNPROCESSABLE_ENTITY);
             }
             updateData.email = email;
         }
@@ -164,7 +161,7 @@ let UsersService = class UsersService {
                     where: { phone, id: (0, typeorm_2.Not)(requestedUserId) },
                 });
                 if (phoneExists) {
-                    throw new app_exception_1.AppException('PHONE_ALREADY_EXISTS', common_1.HttpStatus.UNPROCESSABLE_ENTITY);
+                    throw new app_exception_1.AppException("PHONE_ALREADY_EXISTS", common_1.HttpStatus.UNPROCESSABLE_ENTITY);
                 }
             }
             updateData.phone = phone;
@@ -183,7 +180,7 @@ let UsersService = class UsersService {
             updateData.image = uploadResult.secure_url;
             updateData.imagePublicId = uploadResult.public_id;
         }
-        else if (image === null || image === '') {
+        else if (image === null || image === "") {
             // Image explicitly removed
             if (user.imagePublicId) {
                 await this.cloudinaryService.deleteImage(user.imagePublicId);
@@ -207,7 +204,7 @@ let UsersService = class UsersService {
             },
         });
         if (!updatedUser) {
-            throw new app_exception_1.AppException('USER_UPDATE_FAILED', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new app_exception_1.AppException("USER_UPDATE_FAILED", common_1.HttpStatus.INTERNAL_SERVER_ERROR);
         }
         return {
             data: {
@@ -226,7 +223,7 @@ let UsersService = class UsersService {
     async deleteUser(requestedUserId, authUserId) {
         // Authorization check
         if (requestedUserId !== authUserId) {
-            throw new common_1.ForbiddenException('CANNOT_DELETE_OTHER_USER');
+            throw new common_1.ForbiddenException(CANNOT_DELETE_OTHER_USER);
         }
         const user = await this.userRepository.findOne({
             where: { id: requestedUserId },
@@ -236,7 +233,7 @@ let UsersService = class UsersService {
             },
         });
         if (!user) {
-            throw new common_1.NotFoundException('USER_NOT_FOUND');
+            throw new common_1.NotFoundException(USER_NOT_FOUND);
         }
         // Delete associated image from Cloudinary
         if (user.imagePublicId) {
@@ -253,6 +250,7 @@ exports.UsersService = UsersService = __decorate([
     __param(1, (0, typeorm_1.InjectRepository)(post_entity_1.Post)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
         typeorm_2.Repository,
-        cloudinary_service_1.CloudinaryService])
+        cloudinary_service_1.CloudinaryService,
+        pagination_service_1.PaginationService])
 ], UsersService);
 //# sourceMappingURL=users.service.js.map

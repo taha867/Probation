@@ -35,14 +35,14 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.comparePassword = exports.hashPassword = void 0;
 const bcrypt = __importStar(require("bcrypt"));
-const SALT_ROUNDS = 10;
+const constants_1 = require("../constants");
 /**
  * Hash a plain text password using bcrypt
  * @param plainPassword - The plain text password to hash
  * @returns Promise that resolves to the hashed password string
  */
 const hashPassword = async (plainPassword) => {
-    return bcrypt.hash(plainPassword, SALT_ROUNDS);
+    return bcrypt.hash(plainPassword, constants_1.SECURITY.SALT_ROUNDS);
 };
 exports.hashPassword = hashPassword;
 /**

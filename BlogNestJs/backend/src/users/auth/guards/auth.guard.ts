@@ -7,10 +7,15 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
-import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
+import { IS_PUBLIC_KEY } from '../../../customDecorators/public.decorator';
 import { ERROR_MESSAGES } from '../../../lib/constants';
 
-const{INVALID_TOKEN, ACCESS_TOKEN_REQUIRED, ACCESS_TOKEN_EXPIRED, AUTHENTICATION_FAILED}=ERROR_MESSAGES;
+const {
+  INVALID_TOKEN,
+  ACCESS_TOKEN_REQUIRED,
+  ACCESS_TOKEN_EXPIRED,
+  AUTHENTICATION_FAILED,
+} = ERROR_MESSAGES;
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -23,7 +28,7 @@ export class AuthGuard implements CanActivate {
     // Check if route is public
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(), // Get the handler (e.g: signIn method)
-      context.getClass(), // Get the class (e.g: AuthController) 
+      context.getClass(), // Get the class (e.g: AuthController)
     ]);
 
     if (isPublic) {

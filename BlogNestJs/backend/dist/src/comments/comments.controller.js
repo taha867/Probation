@@ -15,10 +15,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.CommentsController = void 0;
 const common_1 = require("@nestjs/common");
 const comments_service_1 = require("./comments.service");
-const createComment_dto_1 = require("./dto/createComment.dto");
-const updateComment_dto_1 = require("./dto/updateComment.dto");
-const listCommentsQuery_dto_1 = require("./dto/listCommentsQuery.dto");
-const user_decorator_1 = require("../common/decorators/user.decorator");
+const create_comment_input_dto_1 = require("./dto/create-comment-input.dto");
+const update_comment_input_dto_1 = require("./dto/update-comment-input.dto");
+const list_comments_query_payload_dto_1 = require("./dto/list-comments-query-payload.dto");
+const user_decorator_1 = require("../customDecorators/user.decorator");
 const constants_1 = require("../lib/constants");
 let CommentsController = class CommentsController {
     constructor(commentsService) {
@@ -33,7 +33,7 @@ let CommentsController = class CommentsController {
     async getOne(id) {
         const comment = await this.commentsService.findCommentWithRelations(id);
         if (!comment) {
-            throw new common_1.NotFoundException('COMMENT_NOT_FOUND');
+            throw new common_1.NotFoundException(constants_1.ERROR_MESSAGES.COMMENT_NOT_FOUND);
         }
         return {
             data: comment,
@@ -56,14 +56,14 @@ __decorate([
     __param(0, (0, common_1.Body)()),
     __param(1, (0, user_decorator_1.User)('id')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [createComment_dto_1.CreateCommentDto, Number]),
+    __metadata("design:paramtypes", [create_comment_input_dto_1.CreateCommentDto, Number]),
     __metadata("design:returntype", Promise)
 ], CommentsController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
     __param(0, (0, common_1.Query)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [listCommentsQuery_dto_1.ListCommentsQueryDto]),
+    __metadata("design:paramtypes", [list_comments_query_payload_dto_1.ListCommentsQueryDto]),
     __metadata("design:returntype", Promise)
 ], CommentsController.prototype, "list", null);
 __decorate([
@@ -80,7 +80,7 @@ __decorate([
     __param(1, (0, common_1.Body)()),
     __param(2, (0, user_decorator_1.User)('id')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, updateComment_dto_1.UpdateCommentDto, Number]),
+    __metadata("design:paramtypes", [Number, update_comment_input_dto_1.UpdateCommentDto, Number]),
     __metadata("design:returntype", Promise)
 ], CommentsController.prototype, "update", null);
 __decorate([
