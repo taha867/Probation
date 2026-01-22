@@ -11,18 +11,7 @@ export declare class CommentsService {
     createCommentOrReply(createCommentDto: CreateCommentDto, userId: number): Promise<{
         data: {
             id: number;
-            body: string;
             postId: number;
-            userId: number;
-            parentId: number | null;
-            createdAt: Date;
-            updatedAt: Date;
-            author: {
-                id: number;
-                name: string;
-                email: string;
-                image: string | null;
-            };
         };
         message: "Comment created successfully";
     }>;
@@ -43,36 +32,10 @@ export declare class CommentsService {
             };
         }[];
     }>;
-    findCommentWithAuthor(id: number): Promise<{
-        id: number;
-        body: string;
-        postId: number;
-        userId: number;
-        parentId: number | null;
-        createdAt: Date;
-        updatedAt: Date;
-        author: {
-            id: number;
-            name: string;
-            email: string;
-            image: string | null;
-        };
-    } | null>;
     updateComment(commentId: number, userId: number, updateCommentDto: UpdateCommentDto): Promise<{
         data: {
             id: number;
-            body: string;
             postId: number;
-            userId: number;
-            parentId: number | null;
-            createdAt: Date;
-            updatedAt: Date;
-            author: {
-                id: number;
-                name: string;
-                email: string;
-                image: string | null;
-            };
         };
         message: "Comment updated successfully";
     }>;

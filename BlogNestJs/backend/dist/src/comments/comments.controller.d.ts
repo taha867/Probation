@@ -8,18 +8,7 @@ export declare class CommentsController {
     create(createCommentDto: CreateCommentDto, userId: number): Promise<{
         data: {
             id: number;
-            body: string;
             postId: number;
-            userId: number;
-            parentId: number | null;
-            createdAt: Date;
-            updatedAt: Date;
-            author: {
-                id: number;
-                name: string;
-                email: string;
-                image: string | null;
-            };
         };
         message: "Comment created successfully";
     }>;
@@ -43,18 +32,7 @@ export declare class CommentsController {
     update(id: number, updateCommentDto: UpdateCommentDto, userId: number): Promise<{
         data: {
             id: number;
-            body: string;
             postId: number;
-            userId: number;
-            parentId: number | null;
-            createdAt: Date;
-            updatedAt: Date;
-            author: {
-                id: number;
-                name: string;
-                email: string;
-                image: string | null;
-            };
         };
         message: "Comment updated successfully";
     }>;

@@ -2,14 +2,12 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
-  HttpStatus,
   BadRequestException,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { Comment } from "./comment.entity";
 import { Post } from "../posts/post.entity";
-import { AppException } from "../common/exceptions/app.exception";
 import { CreateCommentDto } from "./dto/create-comment-input.dto";
 import { UpdateCommentDto } from "./dto/update-comment-input.dto";
 import { ListCommentsQueryDto } from "./dto/list-comments-query-payload.dto";
@@ -86,18 +84,12 @@ export class CommentsService {
 
     await this.commentRepository.save(comment);
 
-    // Fetch created comment with author
-    const createdComment = await this.findCommentWithAuthor(comment.id);
-
-    if (!createdComment) {
-      throw new AppException(
-        "COMMENT_CREATION_FAILED",
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
-
+    // Return minimal data - frontend invalidates and refetches anyway
     return {
-      data: createdComment,
+      data: {
+        id: comment.id,
+        postId: comment.postId,
+      },
       message: COMMENT_CREATED,
     };
   }
@@ -181,59 +173,6 @@ export class CommentsService {
     };
   }
 
-  async findCommentWithAuthor(id: number) {
-    const comment = await this.commentRepository.findOne({
-      where: { id },
-      relations: { author: true },
-      select: {
-        id: true,
-        body: true,
-        postId: true,
-        userId: true,
-        parentId: true,
-        createdAt: true,
-        updatedAt: true,
-        author: {
-          id: true,
-          name: true,
-          email: true,
-          image: true,
-        },
-      },
-    });
-
-    if (!comment) {
-      return null;
-    }
-
-    const {
-      id: commentId,
-      body,
-      postId,
-      userId,
-      parentId,
-      createdAt,
-      updatedAt,
-      author,
-    } = comment;
-
-    return {
-      id: commentId,
-      body,
-      postId,
-      userId,
-      parentId: parentId ?? null,
-      createdAt,
-      updatedAt,
-      author: {
-        id: author.id,
-        name: author.name,
-        email: author.email,
-        image: author.image ?? null,
-      },
-    };
-  }
-
   async updateComment(
     commentId: number,
     userId: number,
@@ -255,18 +194,12 @@ export class CommentsService {
     comment.body = updateCommentDto.body;
     await this.commentRepository.save(comment);
 
-    // Fetch updated comment with author
-    const updated = await this.findCommentWithAuthor(commentId);
-
-    if (!updated) {
-      throw new AppException(
-        "COMMENT_UPDATE_FAILED",
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
-
+    // Return minimal data - frontend invalidates and refetches anyway
     return {
-      data: updated,
+      data: {
+        id: comment.id,
+        postId: comment.postId,
+      },
       message: COMMENT_UPDATED,
     };
   }

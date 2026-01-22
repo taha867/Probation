@@ -18,7 +18,6 @@ const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const comment_entity_1 = require("./comment.entity");
 const post_entity_1 = require("../posts/post.entity");
-const app_exception_1 = require("../common/exceptions/app.exception");
 const constants_1 = require("../lib/constants");
 const { EITHER_POST_ID_OR_PARENT_ID_REQUIRED, POST_ID_REQUIRED, PARENT_COMMENT_NOT_FOUND, POST_NOT_FOUND, } = constants_1.ERROR_MESSAGES;
 const { COMMENT_CREATED, COMMENT_UPDATED } = constants_1.SUCCESS_MESSAGES;
@@ -69,13 +68,12 @@ let CommentsService = class CommentsService {
             parentId: parentId || null,
         });
         await this.commentRepository.save(comment);
-        // Fetch created comment with author
-        const createdComment = await this.findCommentWithAuthor(comment.id);
-        if (!createdComment) {
-            throw new app_exception_1.AppException("COMMENT_CREATION_FAILED", common_1.HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        // Return minimal data - frontend invalidates and refetches anyway
         return {
-            data: createdComment,
+            data: {
+                id: comment.id,
+                postId: comment.postId,
+            },
             message: COMMENT_CREATED,
         };
     }
@@ -141,46 +139,6 @@ let CommentsService = class CommentsService {
             data: commentRows,
         };
     }
-    async findCommentWithAuthor(id) {
-        const comment = await this.commentRepository.findOne({
-            where: { id },
-            relations: { author: true },
-            select: {
-                id: true,
-                body: true,
-                postId: true,
-                userId: true,
-                parentId: true,
-                createdAt: true,
-                updatedAt: true,
-                author: {
-                    id: true,
-                    name: true,
-                    email: true,
-                    image: true,
-                },
-            },
-        });
-        if (!comment) {
-            return null;
-        }
-        const { id: commentId, body, postId, userId, parentId, createdAt, updatedAt, author, } = comment;
-        return {
-            id: commentId,
-            body,
-            postId,
-            userId,
-            parentId: parentId ?? null,
-            createdAt,
-            updatedAt,
-            author: {
-                id: author.id,
-                name: author.name,
-                email: author.email,
-                image: author.image ?? null,
-            },
-        };
-    }
     async updateComment(commentId, userId, updateCommentDto) {
         const comment = await this.commentRepository.findOne({
             where: { id: commentId },
@@ -194,13 +152,12 @@ let CommentsService = class CommentsService {
         // Update comment
         comment.body = updateCommentDto.body;
         await this.commentRepository.save(comment);
-        // Fetch updated comment with author
-        const updated = await this.findCommentWithAuthor(commentId);
-        if (!updated) {
-            throw new app_exception_1.AppException("COMMENT_UPDATE_FAILED", common_1.HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        // Return minimal data - frontend invalidates and refetches anyway
         return {
-            data: updated,
+            data: {
+                id: comment.id,
+                postId: comment.postId,
+            },
             message: COMMENT_UPDATED,
         };
     }
