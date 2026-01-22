@@ -1013,7 +1013,6 @@ export class PostsModule {}
 | Endpoint        | Method | Description                        | Auth             |
 | --------------- | ------ | ---------------------------------- | ---------------- |
 | `/comments`     | GET    | List comments (filtered by postId) | Yes              |
-| `/comments/:id` | GET    | Get comment by ID with replies     | Yes              |
 | `/comments`     | POST   | Create comment or reply            | Yes              |
 | `/comments/:id` | PUT    | Update comment                     | Yes (owner only) |
 | `/comments/:id` | DELETE | Delete comment                     | Yes (owner only) |

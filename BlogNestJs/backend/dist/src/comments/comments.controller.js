@@ -30,15 +30,6 @@ let CommentsController = class CommentsController {
     async list(query) {
         return this.commentsService.listTopLevelComments(query);
     }
-    async getOne(id) {
-        const comment = await this.commentsService.findCommentWithRelations(id);
-        if (!comment) {
-            throw new common_1.NotFoundException(constants_1.ERROR_MESSAGES.COMMENT_NOT_FOUND);
-        }
-        return {
-            data: comment,
-        };
-    }
     async update(id, updateCommentDto, userId) {
         return this.commentsService.updateComment(id, userId, updateCommentDto);
     }
@@ -66,13 +57,6 @@ __decorate([
     __metadata("design:paramtypes", [list_comments_query_payload_dto_1.ListCommentsQueryDto]),
     __metadata("design:returntype", Promise)
 ], CommentsController.prototype, "list", null);
-__decorate([
-    (0, common_1.Get)(':id'),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
-    __metadata("design:returntype", Promise)
-], CommentsController.prototype, "getOne", null);
 __decorate([
     (0, common_1.Put)(':id'),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),

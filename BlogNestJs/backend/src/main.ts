@@ -13,7 +13,7 @@ import { LOG_MESSAGES } from './lib/constants';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-  app.use(helmet()); //Protects against: XSS, Clickjacking, MIME sniffing
+  app.use(helmet()); //Protects against: XSS(Cross-Site Scripting), Clickjacking(UI Redress Attack), MIME sniffing
   app.use(cookieParser());
 
   // CORS configuration

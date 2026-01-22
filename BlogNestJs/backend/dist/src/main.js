@@ -47,7 +47,7 @@ const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const constants_1 = require("./lib/constants");
 async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
-    app.use((0, helmet_1.default)()); //Protects against: XSS, Clickjacking, MIME sniffing
+    app.use((0, helmet_1.default)()); //Protects against: XSS(Cross-Site Scripting), Clickjacking(UI Redress Attack), MIME sniffing
     app.use((0, cookie_parser_1.default)());
     // CORS configuration
     app.enableCors({

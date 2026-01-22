@@ -69,8 +69,8 @@ let CommentsService = class CommentsService {
             parentId: parentId || null,
         });
         await this.commentRepository.save(comment);
-        // Fetch created comment with relations
-        const createdComment = await this.findCommentWithRelations(comment.id);
+        // Fetch created comment with author
+        const createdComment = await this.findCommentWithAuthor(comment.id);
         if (!createdComment) {
             throw new app_exception_1.AppException("COMMENT_CREATION_FAILED", common_1.HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -141,36 +141,9 @@ let CommentsService = class CommentsService {
             data: commentRows,
         };
     }
-    async findCommentWithRelations(id) {
+    async findCommentWithAuthor(id) {
         const comment = await this.commentRepository.findOne({
             where: { id },
-            relations: { author: true, post: true },
-            select: {
-                id: true,
-                body: true,
-                postId: true,
-                userId: true,
-                parentId: true,
-                createdAt: true,
-                updatedAt: true,
-                author: {
-                    id: true,
-                    name: true,
-                    email: true,
-                    image: true,
-                },
-                post: {
-                    id: true,
-                    title: true,
-                },
-            },
-        });
-        if (!comment) {
-            return null;
-        }
-        // Load replies for this comment
-        const replies = await this.commentRepository.find({
-            where: { parentId: id },
             relations: { author: true },
             select: {
                 id: true,
@@ -187,29 +160,11 @@ let CommentsService = class CommentsService {
                     image: true,
                 },
             },
-            order: {
-                createdAt: "ASC",
-            },
         });
-        const replyRows = replies.map((reply) => {
-            const { id, body, postId, userId, parentId, createdAt, updatedAt, author: { id: authorId, name, email, image: authorImage }, } = reply;
-            return {
-                id,
-                body,
-                postId,
-                userId,
-                parentId: parentId ?? null,
-                createdAt,
-                updatedAt,
-                author: {
-                    id: authorId,
-                    name,
-                    email,
-                    image: authorImage ?? null,
-                },
-            };
-        });
-        const { id: commentId, body, postId, userId, parentId, createdAt, updatedAt, author, post, } = comment;
+        if (!comment) {
+            return null;
+        }
+        const { id: commentId, body, postId, userId, parentId, createdAt, updatedAt, author, } = comment;
         return {
             id: commentId,
             body,
@@ -224,11 +179,6 @@ let CommentsService = class CommentsService {
                 email: author.email,
                 image: author.image ?? null,
             },
-            post: {
-                id: post.id,
-                title: post.title,
-            },
-            replies: replyRows,
         };
     }
     async updateComment(commentId, userId, updateCommentDto) {
@@ -244,8 +194,8 @@ let CommentsService = class CommentsService {
         // Update comment
         comment.body = updateCommentDto.body;
         await this.commentRepository.save(comment);
-        // Fetch updated comment with relations
-        const updated = await this.findCommentWithRelations(commentId);
+        // Fetch updated comment with author
+        const updated = await this.findCommentWithAuthor(commentId);
         if (!updated) {
             throw new app_exception_1.AppException("COMMENT_UPDATE_FAILED", common_1.HttpStatus.INTERNAL_SERVER_ERROR);
         }

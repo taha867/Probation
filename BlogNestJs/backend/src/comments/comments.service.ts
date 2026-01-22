@@ -21,6 +21,7 @@ const {
   POST_NOT_FOUND,
 } = ERROR_MESSAGES;
 const { COMMENT_CREATED, COMMENT_UPDATED } = SUCCESS_MESSAGES;
+
 @Injectable()
 export class CommentsService {
   constructor(
@@ -85,8 +86,8 @@ export class CommentsService {
 
     await this.commentRepository.save(comment);
 
-    // Fetch created comment with relations
-    const createdComment = await this.findCommentWithRelations(comment.id);
+    // Fetch created comment with author
+    const createdComment = await this.findCommentWithAuthor(comment.id);
 
     if (!createdComment) {
       throw new AppException(
@@ -180,38 +181,9 @@ export class CommentsService {
     };
   }
 
-  async findCommentWithRelations(id: number) {
+  async findCommentWithAuthor(id: number) {
     const comment = await this.commentRepository.findOne({
       where: { id },
-      relations: { author: true, post: true },
-      select: {
-        id: true,
-        body: true,
-        postId: true,
-        userId: true,
-        parentId: true,
-        createdAt: true,
-        updatedAt: true,
-        author: {
-          id: true,
-          name: true,
-          email: true,
-          image: true,
-        },
-        post: {
-          id: true,
-          title: true,
-        },
-      },
-    });
-
-    if (!comment) {
-      return null;
-    }
-
-    // Load replies for this comment
-    const replies = await this.commentRepository.find({
-      where: { parentId: id },
       relations: { author: true },
       select: {
         id: true,
@@ -228,38 +200,11 @@ export class CommentsService {
           image: true,
         },
       },
-      order: {
-        createdAt: "ASC",
-      },
     });
 
-    const replyRows = replies.map((reply) => {
-      const {
-        id,
-        body,
-        postId,
-        userId,
-        parentId,
-        createdAt,
-        updatedAt,
-        author: { id: authorId, name, email, image: authorImage },
-      } = reply;
-      return {
-        id,
-        body,
-        postId,
-        userId,
-        parentId: parentId ?? null,
-        createdAt,
-        updatedAt,
-        author: {
-          id: authorId,
-          name,
-          email,
-          image: authorImage ?? null,
-        },
-      };
-    });
+    if (!comment) {
+      return null;
+    }
 
     const {
       id: commentId,
@@ -270,7 +215,6 @@ export class CommentsService {
       createdAt,
       updatedAt,
       author,
-      post,
     } = comment;
 
     return {
@@ -287,11 +231,6 @@ export class CommentsService {
         email: author.email,
         image: author.image ?? null,
       },
-      post: {
-        id: post.id,
-        title: post.title,
-      },
-      replies: replyRows,
     };
   }
 
@@ -316,8 +255,8 @@ export class CommentsService {
     comment.body = updateCommentDto.body;
     await this.commentRepository.save(comment);
 
-    // Fetch updated comment with relations
-    const updated = await this.findCommentWithRelations(commentId);
+    // Fetch updated comment with author
+    const updated = await this.findCommentWithAuthor(commentId);
 
     if (!updated) {
       throw new AppException(

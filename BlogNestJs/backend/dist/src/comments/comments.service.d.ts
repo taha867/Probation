@@ -23,25 +23,6 @@ export declare class CommentsService {
                 email: string;
                 image: string | null;
             };
-            post: {
-                id: number;
-                title: string;
-            };
-            replies: {
-                id: number;
-                body: string;
-                postId: number;
-                userId: number;
-                parentId: number | null;
-                createdAt: Date;
-                updatedAt: Date;
-                author: {
-                    id: number;
-                    name: string;
-                    email: string;
-                    image: string | null;
-                };
-            }[];
         };
         message: "Comment created successfully";
     }>;
@@ -62,7 +43,7 @@ export declare class CommentsService {
             };
         }[];
     }>;
-    findCommentWithRelations(id: number): Promise<{
+    findCommentWithAuthor(id: number): Promise<{
         id: number;
         body: string;
         postId: number;
@@ -76,25 +57,6 @@ export declare class CommentsService {
             email: string;
             image: string | null;
         };
-        post: {
-            id: number;
-            title: string;
-        };
-        replies: {
-            id: number;
-            body: string;
-            postId: number;
-            userId: number;
-            parentId: number | null;
-            createdAt: Date;
-            updatedAt: Date;
-            author: {
-                id: number;
-                name: string;
-                email: string;
-                image: string | null;
-            };
-        }[];
     } | null>;
     updateComment(commentId: number, userId: number, updateCommentDto: UpdateCommentDto): Promise<{
         data: {
@@ -111,25 +73,6 @@ export declare class CommentsService {
                 email: string;
                 image: string | null;
             };
-            post: {
-                id: number;
-                title: string;
-            };
-            replies: {
-                id: number;
-                body: string;
-                postId: number;
-                userId: number;
-                parentId: number | null;
-                createdAt: Date;
-                updatedAt: Date;
-                author: {
-                    id: number;
-                    name: string;
-                    email: string;
-                    image: string | null;
-                };
-            }[];
         };
         message: "Comment updated successfully";
     }>;
