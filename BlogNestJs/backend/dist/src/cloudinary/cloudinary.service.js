@@ -8,22 +8,25 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CloudinaryService = void 0;
 const common_1 = require("@nestjs/common");
-const config_1 = require("@nestjs/config");
 const cloudinary_1 = require("cloudinary");
 const cloudinary_upload_payload_dto_1 = require("./dto/cloudinary-upload-payload.dto");
 const upload_Image_input_dto_1 = require("./dto/upload-Image-input.dto");
 const constants_1 = require("../lib/constants");
+const config_1 = __importDefault(require("../config/config"));
 const { CLOUDINARY_DELETE_ERROR, CLOUDINARY_UPLOAD_ERROR, CLOUDINARY_UPLOAD_FAILED, CLOUDINARY_EXTRACT_ERROR, UPLOAD_NO_RESULT, } = constants_1.LOG_MESSAGES;
 let CloudinaryService = class CloudinaryService {
-    constructor(configService) {
-        this.configService = configService;
+    constructor() {
+        this.config = (0, config_1.default)();
         cloudinary_1.v2.config({
-            cloud_name: this.configService.get('CLOUDINARY_CLOUD_NAME'),
-            api_key: this.configService.get('CLOUDINARY_API_KEY'),
-            api_secret: this.configService.get('CLOUDINARY_API_SECRET'),
+            cloud_name: this.config.cloudinary.cloudName,
+            api_key: this.config.cloudinary.apiKey,
+            api_secret: this.config.cloudinary.apiSecret,
         });
     }
     async deleteImage(publicId) {
@@ -38,7 +41,7 @@ let CloudinaryService = class CloudinaryService {
             return null;
         }
     }
-    async uploadImage(fileBuffer, folder = constants_1.DEFAULTS.CLOUDINARY_FOLDER, // Default folder 
+    async uploadImage(fileBuffer, folder = constants_1.DEFAULTS.CLOUDINARY_FOLDER, // Default folder
     originalName = constants_1.DEFAULTS.CLOUDINARY_IMAGE_NAME) {
         // Create DTO for validation (folder and originalName are validated via DTO pattern)
         const uploadDto = new upload_Image_input_dto_1.UploadImageDto();
@@ -46,16 +49,15 @@ let CloudinaryService = class CloudinaryService {
         uploadDto.folder = folder || constants_1.DEFAULTS.CLOUDINARY_FOLDER;
         uploadDto.originalName = originalName || constants_1.DEFAULTS.CLOUDINARY_IMAGE_NAME;
         try {
-            // Sanitization is security logic, not validation - keep it
-            const sanitizedFolder = uploadDto.folder.replace(constants_1.SANITIZATION_PATTERNS.FOLDER, '');
+            const sanitizedFolder = uploadDto.folder.replace(constants_1.SANITIZATION_PATTERNS.FOLDER, "");
             const timestamp = Date.now();
-            const sanitizedName = uploadDto.originalName.replace(constants_1.SANITIZATION_PATTERNS.ORIGINAL_NAME, '');
+            const sanitizedName = uploadDto.originalName.replace(constants_1.SANITIZATION_PATTERNS.ORIGINAL_NAME, "");
             const publicId = `${sanitizedFolder}/${timestamp}_${sanitizedName}`;
             return new Promise((resolve, reject) => {
                 const uploadStream = cloudinary_1.v2.uploader.upload_stream({
                     folder: sanitizedFolder,
-                    resource_type: 'image',
-                    public_id: publicId.split('.')[0], //removes file extension
+                    resource_type: "image",
+                    public_id: publicId.split(".")[0], //removes file extension
                 }, (error, result) => {
                     if (error) {
                         console.error(CLOUDINARY_UPLOAD_ERROR, error);
@@ -85,7 +87,7 @@ let CloudinaryService = class CloudinaryService {
         try {
             const matches = url.match(constants_1.SANITIZATION_PATTERNS.PUBLIC_ID_EXTRACT);
             if (matches && matches[1]) {
-                return matches[1].replace(constants_1.SANITIZATION_PATTERNS.BLOG_PREFIX_REMOVE, '');
+                return matches[1].replace(constants_1.SANITIZATION_PATTERNS.BLOG_PREFIX_REMOVE, "");
             }
             return null;
         }
@@ -98,6 +100,6 @@ let CloudinaryService = class CloudinaryService {
 exports.CloudinaryService = CloudinaryService;
 exports.CloudinaryService = CloudinaryService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [config_1.ConfigService])
+    __metadata("design:paramtypes", [])
 ], CloudinaryService);
 //# sourceMappingURL=cloudinary.service.js.map

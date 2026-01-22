@@ -2,7 +2,7 @@ import { PaginationMetaDto } from './pagination-meta.dto';
 export declare class PaginatedResultDto<T> {
     data: {
         items: T[];
-        meta: PaginationMetaDto;
+        paginationOptions: PaginationMetaDto;
     };
 }
 //# sourceMappingURL=paginated-result.dto.d.ts.map

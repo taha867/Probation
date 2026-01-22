@@ -1,5 +1,5 @@
 import { EntitySubscriberInterface, InsertEvent, UpdateEvent } from 'typeorm';
-import { User } from '../user.entity';
+import { User } from '../user-entity/user.entity';
 export declare class UserSubscriber implements EntitySubscriberInterface<User> {
     listenTo(): typeof User;
     /**

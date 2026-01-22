@@ -16,8 +16,8 @@ import { UsersService } from './users.service';
 import { ListUsersQueryDto } from './dto/list-users-query-payload.dto';
 import { GetUserPostsQueryDto } from './dto/user-posts-query-input.dto';
 import { UpdateUserDto } from './dto/update-user-input.dto';
-import { User } from '../customDecorators/user.decorator';
-import { Public } from '../customDecorators/public.decorator';
+import { User } from '../custom-decorators/user.decorator';
+import { Public } from '../custom-decorators/public.decorator';
 import { SUCCESS_MESSAGES, ERROR_MESSAGES } from '../lib/constants';
 
 @Controller('users')

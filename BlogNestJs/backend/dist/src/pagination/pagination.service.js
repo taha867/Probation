@@ -34,11 +34,11 @@ let PaginationService = class PaginationService {
             .skip(skip)
             .take(limit)
             .getManyAndCount();
-        const meta = this.buildMeta(total, page, limit);
+        const paginationOptions = this.buildMeta(total, page, limit);
         return {
             data: {
                 items,
-                meta,
+                paginationOptions,
             },
         };
     }
@@ -57,11 +57,11 @@ let PaginationService = class PaginationService {
             skip,
             take: limit,
         });
-        const meta = this.buildMeta(total, page, limit);
+        const paginationOptions = this.buildMeta(total, page, limit);
         return {
             data: {
                 items,
-                meta,
+                paginationOptions,
             },
         };
     }

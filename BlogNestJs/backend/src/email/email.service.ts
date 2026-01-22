@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 import { Transporter, SendMailOptions } from 'nodemailer';
 import { EmailSendResultDto } from './dto/email-send-payload.dto';
@@ -14,41 +13,39 @@ import {
   getPasswordResetHtmlTemplate,
   getPasswordResetTextTemplate,
 } from './templates/password-reset.template';
+import appConfig from '../config/config';
 
 @Injectable()
 export class EmailService {
   private transporter: Transporter | null = null;
+  private readonly config = appConfig();
 
-  constructor(private readonly configService: ConfigService) {
+  constructor() {
     this.initializeTransporter();
   }
 
   private initializeTransporter(): void {
     try {
-      const requiredEnvVars: string[] = [
-        'EMAIL_HOST',
-        'EMAIL_PORT',
-        'EMAIL_USER',
-        'EMAIL_PASS',
-        'EMAIL_FROM',
-      ];
+      const emailConfig = this.config.email;
 
-      const missingVars: string[] = requiredEnvVars.filter(
-        (varName: string) => !this.configService.get<string>(varName),
-      );
-
-      if (missingVars.length > 0) {
-        console.error(LOG_MESSAGES.EMAIL_ENV_VARS_MISSING, missingVars);
+      if (!emailConfig.host || !emailConfig.port || !emailConfig.user || !emailConfig.pass || !emailConfig.from) {
+        console.error(LOG_MESSAGES.EMAIL_ENV_VARS_MISSING, [
+          !emailConfig.host && 'EMAIL_HOST',
+          !emailConfig.port && 'EMAIL_PORT',
+          !emailConfig.user && 'EMAIL_USER',
+          !emailConfig.pass && 'EMAIL_PASS',
+          !emailConfig.from && 'EMAIL_FROM',
+        ].filter(Boolean));
         return;
       }
 
       this.transporter = nodemailer.createTransport({
-        host: this.configService.get<string>('EMAIL_HOST')!,
-        port: this.configService.get<number>('EMAIL_PORT')!,
-        secure: this.configService.get<string>('EMAIL_SECURE') === 'true',
+        host: emailConfig.host,
+        port: emailConfig.port,
+        secure: emailConfig.secure,
         auth: {
-          user: this.configService.get<string>('EMAIL_USER')!,
-          pass: this.configService.get<string>('EMAIL_PASS')!,
+          user: emailConfig.user,
+          pass: emailConfig.pass,
         },
         debug: false,
         logger: false,
@@ -76,7 +73,7 @@ export class EmailService {
       throw new Error(ERROR_MESSAGES.EMAIL_SEND_FAILED);
     }
 
-    const frontendUrl = this.configService.get<string>('FRONTEND_URL') || '';
+    const frontendUrl = this.config.frontendUrl;
     const resetLink: string = `${frontendUrl}/reset-password?token=${emailDto.resetToken}`;
 
     const htmlTemplate: string = getPasswordResetHtmlTemplate(
@@ -92,7 +89,7 @@ export class EmailService {
     const mailOptions: SendMailOptions = {
       from: {
         name: EMAIL_TEMPLATES.APP_NAME,
-        address: this.configService.get<string>('EMAIL_FROM')!,
+        address: this.config.email.from,
       },
       to: emailDto.email,
       subject: EMAIL_TEMPLATES.RESET_PASSWORD_SUBJECT,

@@ -9,16 +9,18 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import { LOG_MESSAGES } from './lib/constants';
+import appConfig from './config/config';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const config = appConfig();
 
   app.use(helmet()); //Protects against: XSS(Cross-Site Scripting), Clickjacking(UI Redress Attack), MIME sniffing
   app.use(cookieParser());
 
   // CORS configuration
   app.enableCors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: config.frontendUrl,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
@@ -43,7 +45,7 @@ async function bootstrap() {
   // Trust proxy (if behind load balancer/reverse proxy)
   //app.set('trust proxy', true);
 
-  const port = process.env.PORT || 3000;
+  const port = config.port;
   await app.listen(port);
   console.log(`${LOG_MESSAGES.APP_RUNNING} ${await app.getUrl()}`);
 }

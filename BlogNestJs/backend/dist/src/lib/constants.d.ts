@@ -1,4 +1,4 @@
-import { StatusCodes } from 'http-status-codes';
+import { StatusCodes } from "http-status-codes";
 export declare const HTTP_STATUS: typeof StatusCodes;
 export declare const SUCCESS_MESSAGES: {
     readonly ACCOUNT_CREATED: "Account created successfully";
@@ -146,15 +146,9 @@ export declare const VALIDATION_LIMITS: {
     readonly LIMIT_MIN: 1;
     readonly LIMIT_MAX: 100;
 };
-/**
- * Security/Encryption constants
- */
 export declare const SECURITY: {
     readonly SALT_ROUNDS: 10;
 };
-/**
- * User status values
- */
 export declare const USER_STATUS: {
     readonly LOGGED_IN: "logged in";
     readonly LOGGED_OUT: "logged out";

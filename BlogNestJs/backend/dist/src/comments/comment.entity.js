@@ -43,7 +43,7 @@ __decorate([
 __decorate([
     (0, typeorm_1.ManyToOne)("User", (user) => user.comments, { onDelete: "CASCADE" }),
     (0, typeorm_1.JoinColumn)({ name: "userId" }),
-    __metadata("design:type", Function)
+    __metadata("design:type", Object)
 ], Comment.prototype, "author", void 0);
 __decorate([
     (0, typeorm_1.ManyToOne)("Comment", (comment) => comment.replies, {

@@ -12,7 +12,7 @@ export declare class PostsController {
             title: string;
             body: string;
             userId: number;
-            status: import("./post.entity").PostStatus;
+            status: import("./post-entity/post.entity").PostStatus;
             image: string | null;
             imagePublicId: string | null;
             author: {
@@ -31,7 +31,7 @@ export declare class PostsController {
                 title: string;
                 body: string;
                 userId: number;
-                status: import("./post.entity").PostStatus;
+                status: import("./post-entity/post.entity").PostStatus;
                 image: string | null;
                 imagePublicId: string | null;
                 author: {
@@ -41,7 +41,7 @@ export declare class PostsController {
                     image: string | null;
                 };
             }[];
-            meta: import("../pagination/dto/pagination-meta.dto").PaginationMetaDto;
+            paginationOptions: import("../pagination/dto/pagination-meta.dto").PaginationMetaDto;
         };
     }>;
     getOne(id: number): Promise<{
@@ -50,7 +50,7 @@ export declare class PostsController {
             title: string;
             body: string;
             userId: number;
-            status: import("./post.entity").PostStatus;
+            status: import("./post-entity/post.entity").PostStatus;
             image: string | null;
             imagePublicId: string | null;
             author: {
@@ -68,12 +68,12 @@ export declare class PostsController {
                 title: string;
                 body: string;
                 userId: number;
-                status: import("./post.entity").PostStatus;
+                status: import("./post-entity/post.entity").PostStatus;
                 image: string | null;
                 imagePublicId: string | null;
             };
-            comments: import("../comments/comment.entity").Comment[];
-            meta: import("../pagination/dto/pagination-meta.dto").PaginationMetaDto;
+            comments: import("../comments/comment-entity/comment.entity").Comment[];
+            paginationOptions: import("../pagination/dto/pagination-meta.dto").PaginationMetaDto;
         };
     }>;
     update(id: number, updatePostDto: UpdatePostDto, userId: number, file?: Express.Multer.File): Promise<{
@@ -82,7 +82,7 @@ export declare class PostsController {
             title: string;
             body: string;
             userId: number;
-            status: import("./post.entity").PostStatus;
+            status: import("./post-entity/post.entity").PostStatus;
             image: string | null;
             imagePublicId: string | null;
             author: {

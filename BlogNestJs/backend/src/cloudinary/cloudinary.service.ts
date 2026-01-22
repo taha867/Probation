@@ -1,18 +1,18 @@
-import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { Injectable } from "@nestjs/common";
 import {
   v2 as cloudinary,
   UploadApiResponse,
   UploadApiErrorResponse,
-} from 'cloudinary';
-import { CloudinaryUploadResultDto } from './dto/cloudinary-upload-payload.dto';
-import { CloudinaryDeletionResultDto } from './dto/cloudinary-deletion-payload.dto';
-import { UploadImageDto } from './dto/upload-Image-input.dto';
+} from "cloudinary";
+import { CloudinaryUploadResultDto } from "./dto/cloudinary-upload-payload.dto";
+import { CloudinaryDeletionResultDto } from "./dto/cloudinary-deletion-payload.dto";
+import { UploadImageDto } from "./dto/upload-Image-input.dto";
 import {
   LOG_MESSAGES,
   DEFAULTS,
   SANITIZATION_PATTERNS,
-} from '../lib/constants';
+} from "../lib/constants";
+import appConfig from "../config/config";
 
 const {
   CLOUDINARY_DELETE_ERROR,
@@ -24,11 +24,13 @@ const {
 
 @Injectable()
 export class CloudinaryService {
-  constructor(private readonly configService: ConfigService) {
+  private readonly config = appConfig();
+
+  constructor() {
     cloudinary.config({
-      cloud_name: this.configService.get<string>('CLOUDINARY_CLOUD_NAME'),
-      api_key: this.configService.get<string>('CLOUDINARY_API_KEY'),
-      api_secret: this.configService.get<string>('CLOUDINARY_API_SECRET'),
+      cloud_name: this.config.cloudinary.cloudName,
+      api_key: this.config.cloudinary.apiKey,
+      api_secret: this.config.cloudinary.apiSecret,
     });
   }
 
@@ -48,8 +50,8 @@ export class CloudinaryService {
 
   async uploadImage(
     fileBuffer: Buffer,
-    folder: string = DEFAULTS.CLOUDINARY_FOLDER, // Default folder 
-    originalName: string = DEFAULTS.CLOUDINARY_IMAGE_NAME, // Default original name
+    folder: string = DEFAULTS.CLOUDINARY_FOLDER, // Default folder
+    originalName: string = DEFAULTS.CLOUDINARY_IMAGE_NAME, // Default original name picture
   ): Promise<CloudinaryUploadResultDto> {
     // Create DTO for validation (folder and originalName are validated via DTO pattern)
     const uploadDto = new UploadImageDto();
@@ -58,16 +60,15 @@ export class CloudinaryService {
     uploadDto.originalName = originalName || DEFAULTS.CLOUDINARY_IMAGE_NAME;
 
     try {
-      // Sanitization is security logic, not validation - keep it
       const sanitizedFolder = uploadDto.folder.replace(
         SANITIZATION_PATTERNS.FOLDER,
-        '',
+        "",
       );
 
       const timestamp = Date.now();
       const sanitizedName = uploadDto.originalName.replace(
         SANITIZATION_PATTERNS.ORIGINAL_NAME,
-        '',
+        "",
       );
       const publicId = `${sanitizedFolder}/${timestamp}_${sanitizedName}`;
 
@@ -75,8 +76,8 @@ export class CloudinaryService {
         const uploadStream = cloudinary.uploader.upload_stream(
           {
             folder: sanitizedFolder,
-            resource_type: 'image',
-            public_id: publicId.split('.')[0], //removes file extension
+            resource_type: "image",
+            public_id: publicId.split(".")[0], //removes file extension
           },
           (
             error: UploadApiErrorResponse | undefined,
@@ -110,7 +111,7 @@ export class CloudinaryService {
     try {
       const matches = url.match(SANITIZATION_PATTERNS.PUBLIC_ID_EXTRACT);
       if (matches && matches[1]) {
-        return matches[1].replace(SANITIZATION_PATTERNS.BLOG_PREFIX_REMOVE, '');
+        return matches[1].replace(SANITIZATION_PATTERNS.BLOG_PREFIX_REMOVE, "");
       }
       return null;
     } catch (error: unknown) {

@@ -18,7 +18,7 @@ const comments_service_1 = require("./comments.service");
 const create_comment_input_dto_1 = require("./dto/create-comment-input.dto");
 const update_comment_input_dto_1 = require("./dto/update-comment-input.dto");
 const list_comments_query_payload_dto_1 = require("./dto/list-comments-query-payload.dto");
-const user_decorator_1 = require("../customDecorators/user.decorator");
+const user_decorator_1 = require("../custom-decorators/user.decorator");
 const constants_1 = require("../lib/constants");
 let CommentsController = class CommentsController {
     constructor(commentsService) {

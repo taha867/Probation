@@ -1,11 +1,10 @@
-import { ConfigService } from '@nestjs/config';
-import { CloudinaryUploadResultDto } from './dto/cloudinary-upload-payload.dto';
-import { CloudinaryDeletionResultDto } from './dto/cloudinary-deletion-payload.dto';
+import { CloudinaryUploadResultDto } from "./dto/cloudinary-upload-payload.dto";
+import { CloudinaryDeletionResultDto } from "./dto/cloudinary-deletion-payload.dto";
 export declare class CloudinaryService {
-    private readonly configService;
-    constructor(configService: ConfigService);
+    private readonly config;
+    constructor();
     deleteImage(publicId: string | null | undefined): Promise<CloudinaryDeletionResultDto | null>;
-    uploadImage(fileBuffer: Buffer, folder?: string, // Default folder 
+    uploadImage(fileBuffer: Buffer, folder?: string, // Default folder
     originalName?: string): Promise<CloudinaryUploadResultDto>;
     extractPublicIdFromUrl(url: string | null | undefined): string | null;
 }

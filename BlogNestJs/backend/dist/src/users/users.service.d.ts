@@ -1,6 +1,6 @@
 import { Repository } from "typeorm";
-import { User } from "./user.entity";
-import { Post } from "../posts/post.entity";
+import { User } from "./user-entity/user.entity";
+import { Post } from "../posts/post-entity/post.entity";
 import { CloudinaryService } from "../cloudinary/cloudinary.service";
 import { PaginationService } from "../pagination/pagination.service";
 import { ListUsersQueryDto } from "./dto/list-users-query-payload.dto";
@@ -15,7 +15,7 @@ export declare class UsersService {
     listUsers(query: ListUsersQueryDto): Promise<{
         data: {
             users: User[];
-            meta: import("../pagination/dto/pagination-meta.dto").PaginationMetaDto;
+            paginationOptions: import("../pagination/dto/pagination-meta.dto").PaginationMetaDto;
         };
     }>;
     findUserById(id: number): Promise<{
@@ -35,7 +35,7 @@ export declare class UsersService {
             email: string;
             image: string | null;
             posts: Post[];
-            meta: import("../pagination/dto/pagination-meta.dto").PaginationMetaDto;
+            paginationOptions: import("../pagination/dto/pagination-meta.dto").PaginationMetaDto;
         };
     }>;
     updateUser(requestedUserId: number, authUserId: number, updateUserDto: UpdateUserDto, file?: Express.Multer.File): Promise<{

@@ -41,42 +41,44 @@ var __importStar = (this && this.__importStar) || (function () {
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EmailService = void 0;
 const common_1 = require("@nestjs/common");
-const config_1 = require("@nestjs/config");
 const nodemailer = __importStar(require("nodemailer"));
 const email_send_payload_dto_1 = require("./dto/email-send-payload.dto");
 const password_reset_emai_payloadl_dto_1 = require("./dto/password-reset-emai-payloadl.dto");
 const constants_1 = require("../lib/constants");
 const password_reset_template_1 = require("./templates/password-reset.template");
+const config_1 = __importDefault(require("../config/config"));
 let EmailService = class EmailService {
-    constructor(configService) {
-        this.configService = configService;
+    constructor() {
         this.transporter = null;
+        this.config = (0, config_1.default)();
         this.initializeTransporter();
     }
     initializeTransporter() {
         try {
-            const requiredEnvVars = [
-                'EMAIL_HOST',
-                'EMAIL_PORT',
-                'EMAIL_USER',
-                'EMAIL_PASS',
-                'EMAIL_FROM',
-            ];
-            const missingVars = requiredEnvVars.filter((varName) => !this.configService.get(varName));
-            if (missingVars.length > 0) {
-                console.error(constants_1.LOG_MESSAGES.EMAIL_ENV_VARS_MISSING, missingVars);
+            const emailConfig = this.config.email;
+            if (!emailConfig.host || !emailConfig.port || !emailConfig.user || !emailConfig.pass || !emailConfig.from) {
+                console.error(constants_1.LOG_MESSAGES.EMAIL_ENV_VARS_MISSING, [
+                    !emailConfig.host && 'EMAIL_HOST',
+                    !emailConfig.port && 'EMAIL_PORT',
+                    !emailConfig.user && 'EMAIL_USER',
+                    !emailConfig.pass && 'EMAIL_PASS',
+                    !emailConfig.from && 'EMAIL_FROM',
+                ].filter(Boolean));
                 return;
             }
             this.transporter = nodemailer.createTransport({
-                host: this.configService.get('EMAIL_HOST'),
-                port: this.configService.get('EMAIL_PORT'),
-                secure: this.configService.get('EMAIL_SECURE') === 'true',
+                host: emailConfig.host,
+                port: emailConfig.port,
+                secure: emailConfig.secure,
                 auth: {
-                    user: this.configService.get('EMAIL_USER'),
-                    pass: this.configService.get('EMAIL_PASS'),
+                    user: emailConfig.user,
+                    pass: emailConfig.pass,
                 },
                 debug: false,
                 logger: false,
@@ -97,14 +99,14 @@ let EmailService = class EmailService {
             console.error(constants_1.LOG_MESSAGES.EMAIL_TRANSPORTER_NOT_INIT);
             throw new Error(constants_1.ERROR_MESSAGES.EMAIL_SEND_FAILED);
         }
-        const frontendUrl = this.configService.get('FRONTEND_URL') || '';
+        const frontendUrl = this.config.frontendUrl;
         const resetLink = `${frontendUrl}/reset-password?token=${emailDto.resetToken}`;
         const htmlTemplate = (0, password_reset_template_1.getPasswordResetHtmlTemplate)(emailDto.userName, resetLink);
         const textTemplate = (0, password_reset_template_1.getPasswordResetTextTemplate)(emailDto.userName, resetLink);
         const mailOptions = {
             from: {
                 name: constants_1.EMAIL_TEMPLATES.APP_NAME,
-                address: this.configService.get('EMAIL_FROM'),
+                address: this.config.email.from,
             },
             to: emailDto.email,
             subject: constants_1.EMAIL_TEMPLATES.RESET_PASSWORD_SUBJECT,
@@ -134,6 +136,6 @@ let EmailService = class EmailService {
 exports.EmailService = EmailService;
 exports.EmailService = EmailService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [config_1.ConfigService])
+    __metadata("design:paramtypes", [])
 ], EmailService);
 //# sourceMappingURL=email.service.js.map

@@ -21,7 +21,7 @@ import { CreatePostDto } from './dto/create-post-input.dto';
 import { UpdatePostDto } from './dto/update-post-input.dto';
 import { ListPostsQueryDto } from './dto/list-posts-query-payload.dto';
 import { PaginationQueryDto } from './dto/pagination-query-input.dto';
-import { User } from '../customDecorators/user.decorator';
+import { User } from '../custom-decorators/user.decorator';
 import { SUCCESS_MESSAGES, ERROR_MESSAGES } from '../lib/constants';
 
 @Controller('posts')

@@ -1,7 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
-import type { Post } from '../posts/post.entity';
-import type { Comment } from '../comments/comment.entity';
-import { BaseEntity } from '../common/entities/BaseEntity';
+import type { Post } from '../../posts/post-entity/post.entity';
+import type { Comment } from '../../comments/comment-entity/comment.entity';
+import { BaseEntity } from '../../common/entities/BaseEntity';
 
 @Entity('Users')
 export class User extends BaseEntity {
@@ -62,3 +62,4 @@ export class User extends BaseEntity {
     return rest as Omit<User, 'password' | 'toJSON'>;
   }
 }
+

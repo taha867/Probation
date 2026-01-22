@@ -15,7 +15,7 @@ import { CommentsService } from './comments.service';
 import { CreateCommentDto } from './dto/create-comment-input.dto';
 import { UpdateCommentDto } from './dto/update-comment-input.dto';
 import { ListCommentsQueryDto } from './dto/list-comments-query-payload.dto';
-import { User } from '../customDecorators/user.decorator';
+import { User } from '../custom-decorators/user.decorator';
 import { SUCCESS_MESSAGES } from '../lib/constants';
 
 @Controller('comments')

@@ -1,7 +1,7 @@
 import { Repository } from "typeorm";
-import { Post, PostStatus } from "./post.entity";
-import { Comment } from "../comments/comment.entity";
-import { User } from "../users/user.entity";
+import { Post, PostStatus } from "./post-entity/post.entity";
+import { Comment } from "../comments/comment-entity/comment.entity";
+import { User } from "../users/user-entity/user.entity";
 import { CloudinaryService } from "../cloudinary/cloudinary.service";
 import { PaginationService } from "../pagination/pagination.service";
 import { CreatePostDto } from "./dto/create-post-input.dto";
@@ -50,7 +50,7 @@ export declare class PostsService {
                     image: string | null;
                 };
             }[];
-            meta: import("../pagination/dto/pagination-meta.dto").PaginationMetaDto;
+            paginationOptions: import("../pagination/dto/pagination-meta.dto").PaginationMetaDto;
         };
     }>;
     findPostWithAuthor(id: number): Promise<{
@@ -80,7 +80,7 @@ export declare class PostsService {
                 imagePublicId: string | null;
             };
             comments: Comment[];
-            meta: import("../pagination/dto/pagination-meta.dto").PaginationMetaDto;
+            paginationOptions: import("../pagination/dto/pagination-meta.dto").PaginationMetaDto;
         };
     }>;
     updatePost(postId: number, userId: number, updatePostDto: UpdatePostDto, file?: Express.Multer.File): Promise<{

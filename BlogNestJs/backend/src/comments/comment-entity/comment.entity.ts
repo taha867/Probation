@@ -6,9 +6,9 @@ import {
   OneToMany,
   JoinColumn,
 } from "typeorm";
-import type { User } from "../users/user.entity";
-import type { Post } from "../posts/post.entity";
-import { BaseEntity } from "../common/entities/BaseEntity";
+import type { User } from "../../users/user-entity/user.entity";
+import type { Post } from "../../posts/post-entity/post.entity";
+import { BaseEntity } from "../../common/entities/BaseEntity";
 
 @Entity("Comments")
 export class Comment extends BaseEntity {
@@ -53,3 +53,4 @@ export class Comment extends BaseEntity {
   })
   replies: Comment[];
 }
+

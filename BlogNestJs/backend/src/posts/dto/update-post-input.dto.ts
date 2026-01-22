@@ -6,7 +6,7 @@ import {
   MaxLength,
   Matches,
 } from 'class-validator';
-import { PostStatus } from '../post.entity';
+import { PostStatus } from '../post-entity/post.entity';
 import { VALIDATION_MESSAGES, VALIDATION_PATTERNS } from '../../lib/constants';
 
 export class UpdatePostDto {

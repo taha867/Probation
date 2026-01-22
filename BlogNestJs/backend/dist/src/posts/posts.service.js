@@ -16,9 +16,9 @@ exports.PostsService = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
-const post_entity_1 = require("./post.entity");
-const comment_entity_1 = require("../comments/comment.entity");
-const user_entity_1 = require("../users/user.entity");
+const post_entity_1 = require("./post-entity/post.entity");
+const comment_entity_1 = require("../comments/comment-entity/comment.entity");
+const user_entity_1 = require("../users/user-entity/user.entity");
 const cloudinary_service_1 = require("../cloudinary/cloudinary.service");
 const pagination_service_1 = require("../pagination/pagination.service");
 const app_exception_1 = require("../common/exceptions/app.exception");
@@ -125,7 +125,7 @@ let PostsService = class PostsService {
         return {
             data: {
                 items: postRows,
-                meta: paginatedResult.data.meta,
+                paginationOptions: paginatedResult.data.paginationOptions,
             },
         };
     }
@@ -211,7 +211,7 @@ let PostsService = class PostsService {
             data: {
                 post: basePost,
                 comments: paginatedResult.data.items,
-                meta: paginatedResult.data.meta,
+                paginationOptions: paginatedResult.data.paginationOptions,
             },
         };
     }

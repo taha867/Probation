@@ -6,8 +6,8 @@ import {
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository, Brackets, Not } from "typeorm";
-import { User } from "./user.entity";
-import { Post } from "../posts/post.entity";
+import { User } from "./user-entity/user.entity";
+import { Post } from "../posts/post-entity/post.entity";
 import { CloudinaryService } from "../cloudinary/cloudinary.service";
 import { PaginationService } from "../pagination/pagination.service";
 import { AppException } from "../common/exceptions/app.exception";
@@ -50,12 +50,12 @@ export class UsersService {
       limit,
     );
     const {
-      data: { items, meta },
+      data: { items, paginationOptions },
     } = paginatedResult;
     return {
       data: {
         users: items,
-        meta,
+        paginationOptions,
       },
     };
   }
@@ -134,7 +134,7 @@ export class UsersService {
     );
     const { id, name, email, image } = user;
     const {
-      data: { items, meta },
+      data: { items, paginationOptions },
     } = paginatedResult;
     return {
       data: {
@@ -143,7 +143,7 @@ export class UsersService {
         email,
         image,
         posts: items,
-        meta,
+        paginationOptions,
       },
     };
   }

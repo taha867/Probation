@@ -6,9 +6,9 @@ import {
   OneToMany,
   JoinColumn,
 } from "typeorm";
-import type { User } from "../users/user.entity";
-import type { Comment } from "../comments/comment.entity";
-import { BaseEntity } from "../common/entities/BaseEntity";
+import type { User } from "../../users/user-entity/user.entity";
+import type { Comment } from "../../comments/comment-entity/comment.entity";
+import { BaseEntity } from "../../common/entities/BaseEntity";
 
 export enum PostStatus {
   DRAFT = "draft",
@@ -59,3 +59,4 @@ export class Post extends BaseEntity {
   })
   comments: Comment[];
 }
+

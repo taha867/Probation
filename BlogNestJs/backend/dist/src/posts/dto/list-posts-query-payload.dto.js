@@ -12,7 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ListPostsQueryDto = void 0;
 const class_validator_1 = require("class-validator");
 const class_transformer_1 = require("class-transformer");
-const post_entity_1 = require("../post.entity");
+const post_entity_1 = require("../post-entity/post.entity");
 const constants_1 = require("../../lib/constants");
 class ListPostsQueryDto {
     constructor() {

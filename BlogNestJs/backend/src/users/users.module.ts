@@ -5,18 +5,21 @@ import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 import { AuthController } from './auth/auth.controller';
 import { AuthService } from './auth/auth.service';
-import { User } from './user.entity';
-import { Post } from '../posts/post.entity';
+import { User } from './user-entity/user.entity';
+import { Post } from '../posts/post-entity/post.entity';
 import { CloudinaryModule } from '../cloudinary/cloudinary.module';
 import { EmailModule } from '../email/email.module';
 import { PaginationModule } from '../pagination/pagination.module';
+import appConfig from '../config/config';
+
+const config = appConfig();
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([User, Post]),
     JwtModule.register({
       global: true,
-      secret: process.env.JWT_SECRET,
+      secret: config.jwt.secret,
       signOptions: { expiresIn: '15m' },
     }),
     CloudinaryModule,

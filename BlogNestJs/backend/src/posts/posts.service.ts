@@ -6,9 +6,9 @@ import {
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository, Brackets } from "typeorm";
-import { Post, PostStatus } from "./post.entity";
-import { Comment } from "../comments/comment.entity";
-import { User } from "../users/user.entity";
+import { Post, PostStatus } from "./post-entity/post.entity";
+import { Comment } from "../comments/comment-entity/comment.entity";
+import { User } from "../users/user-entity/user.entity";
 import { CloudinaryService } from "../cloudinary/cloudinary.service";
 import { PaginationService } from "../pagination/pagination.service";
 import { AppException } from "../common/exceptions/app.exception";
@@ -167,7 +167,7 @@ export class PostsService {
     return {
       data: {
         items: postRows,
-        meta: paginatedResult.data.meta,
+        paginationOptions: paginatedResult.data.paginationOptions,
       },
     };
   }
@@ -276,7 +276,7 @@ export class PostsService {
       data: {
         post: basePost,
         comments: paginatedResult.data.items,
-        meta: paginatedResult.data.meta,
+        paginationOptions: paginatedResult.data.paginationOptions,
       },
     };
   }

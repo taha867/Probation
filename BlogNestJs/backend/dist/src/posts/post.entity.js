@@ -56,7 +56,7 @@ __decorate([
     (0, typeorm_1.ManyToOne)("User", (user) => user.posts, { onDelete: "CASCADE" }),
     (0, typeorm_1.JoinColumn)({ name: "userId" }) // foreign key owner
     ,
-    __metadata("design:type", Function)
+    __metadata("design:type", Object)
 ], Post.prototype, "author", void 0);
 __decorate([
     (0, typeorm_1.OneToMany)("Comment", (comment) => comment.post, {

@@ -11,8 +11,8 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const comments_controller_1 = require("./comments.controller");
 const comments_service_1 = require("./comments.service");
-const comment_entity_1 = require("./comment.entity");
-const post_entity_1 = require("../posts/post.entity");
+const comment_entity_1 = require("./comment-entity/comment.entity");
+const post_entity_1 = require("../posts/post-entity/post.entity");
 let CommentsModule = class CommentsModule {
 };
 exports.CommentsModule = CommentsModule;

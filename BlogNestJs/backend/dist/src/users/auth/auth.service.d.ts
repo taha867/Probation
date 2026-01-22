@@ -1,6 +1,6 @@
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
-import { User } from '../user.entity';
+import { User } from '../user-entity/user.entity';
 import { EmailService } from '../../email/email.service';
 import { SignUpDto } from './dto/signUp-input.dto';
 import { SignInDto } from './dto/signIn-input.dto';
@@ -8,6 +8,7 @@ export declare class AuthService {
     private userRepository;
     private jwtService;
     private emailService;
+    private readonly config;
     constructor(userRepository: Repository<User>, jwtService: JwtService, emailService: EmailService);
     signUp(signUpDto: SignUpDto): Promise<void>;
     signIn(signInDto: SignInDto): Promise<{

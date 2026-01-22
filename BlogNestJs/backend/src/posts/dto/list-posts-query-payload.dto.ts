@@ -1,6 +1,6 @@
 import { IsOptional, IsInt, Min, Max, IsString, IsEnum } from 'class-validator';
 import { Type } from 'class-transformer';
-import { PostStatus } from '../post.entity';
+import { PostStatus } from '../post-entity/post.entity';
 import { VALIDATION_MESSAGES, VALIDATION_LIMITS } from '../../lib/constants';
 
 export class ListPostsQueryDto {

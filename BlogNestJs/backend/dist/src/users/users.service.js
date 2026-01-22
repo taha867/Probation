@@ -16,8 +16,8 @@ exports.UsersService = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
-const user_entity_1 = require("./user.entity");
-const post_entity_1 = require("../posts/post.entity");
+const user_entity_1 = require("./user-entity/user.entity");
+const post_entity_1 = require("../posts/post-entity/post.entity");
 const cloudinary_service_1 = require("../cloudinary/cloudinary.service");
 const pagination_service_1 = require("../pagination/pagination.service");
 const app_exception_1 = require("../common/exceptions/app.exception");
@@ -43,11 +43,11 @@ let UsersService = class UsersService {
             },
             order: { createdAt: "DESC" },
         }, page, limit);
-        const { data: { items, meta }, } = paginatedResult;
+        const { data: { items, paginationOptions }, } = paginatedResult;
         return {
             data: {
                 users: items,
-                meta,
+                paginationOptions,
             },
         };
     }
@@ -110,7 +110,7 @@ let UsersService = class UsersService {
             .addOrderBy("reply.createdAt", "ASC");
         const paginatedResult = await this.paginationService.paginateQueryBuilder(qb, page, limit);
         const { id, name, email, image } = user;
-        const { data: { items, meta }, } = paginatedResult;
+        const { data: { items, paginationOptions }, } = paginatedResult;
         return {
             data: {
                 id,
@@ -118,7 +118,7 @@ let UsersService = class UsersService {
                 email,
                 image,
                 posts: items,
-                meta,
+                paginationOptions,
             },
         };
     }

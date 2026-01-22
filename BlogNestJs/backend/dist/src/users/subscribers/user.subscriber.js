@@ -8,7 +8,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserSubscriber = void 0;
 const typeorm_1 = require("typeorm");
-const user_entity_1 = require("../user.entity");
+const user_entity_1 = require("../user-entity/user.entity");
 const bcrypt_1 = require("../../lib/utils/bcrypt");
 let UserSubscriber = class UserSubscriber {
     listenTo() {

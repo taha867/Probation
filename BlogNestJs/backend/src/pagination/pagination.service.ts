@@ -44,12 +44,12 @@ export class PaginationService {
       .take(limit)
       .getManyAndCount();
 
-    const meta = this.buildMeta(total, page, limit);
+    const paginationOptions = this.buildMeta(total, page, limit);
 
     return {
       data: {
         items,
-        meta,
+        paginationOptions,
       },
     };
   }
@@ -76,12 +76,12 @@ export class PaginationService {
       take: limit,
     });
 
-    const meta = this.buildMeta(total, page, limit);
+    const paginationOptions = this.buildMeta(total, page, limit);
 
     return {
       data: {
         items,
-        meta,
+        paginationOptions,
       },
     };
   }

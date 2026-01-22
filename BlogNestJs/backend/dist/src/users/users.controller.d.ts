@@ -7,8 +7,8 @@ export declare class UsersController {
     constructor(usersService: UsersService);
     list(query: ListUsersQueryDto): Promise<{
         data: {
-            users: import("./user.entity").User[];
-            meta: import("../pagination/dto/pagination-meta.dto").PaginationMetaDto;
+            users: import("./user-entity/user.entity").User[];
+            paginationOptions: import("../pagination/dto/pagination-meta.dto").PaginationMetaDto;
         };
     }>;
     getCurrentUser(userId: number): Promise<{
@@ -27,8 +27,8 @@ export declare class UsersController {
             name: string;
             email: string;
             image: string | null;
-            posts: import("../posts/post.entity").Post[];
-            meta: import("../pagination/dto/pagination-meta.dto").PaginationMetaDto;
+            posts: import("../posts/post-entity/post.entity").Post[];
+            paginationOptions: import("../pagination/dto/pagination-meta.dto").PaginationMetaDto;
         };
     }>;
     update(id: number, updateUserDto: UpdateUserDto, userId: number, file?: Express.Multer.File): Promise<{

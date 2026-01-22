@@ -2,9 +2,9 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PostsController } from './posts.controller';
 import { PostsService } from './posts.service';
-import { Post } from './post.entity';
-import { Comment } from '../comments/comment.entity';
-import { User } from '../users/user.entity';
+import { Post } from './post-entity/post.entity';
+import { Comment } from '../comments/comment-entity/comment.entity';
+import { User } from '../users/user-entity/user.entity';
 import { CloudinaryModule } from '../cloudinary/cloudinary.module';
 import { PaginationModule } from '../pagination/pagination.module';
 

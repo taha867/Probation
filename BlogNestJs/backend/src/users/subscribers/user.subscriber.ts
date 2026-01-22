@@ -4,7 +4,7 @@ import {
   InsertEvent,
   UpdateEvent,
 } from 'typeorm';
-import { User } from '../user.entity';
+import { User } from '../user-entity/user.entity';
 import { hashPassword } from '../../lib/utils/bcrypt';
 
 @EventSubscriber()

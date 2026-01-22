@@ -7,7 +7,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
-import { User } from '../user.entity';
+import { User } from '../user-entity/user.entity';
 import { EmailService } from '../../email/email.service';
 import { comparePassword } from '../../lib/utils/bcrypt';
 import {
@@ -19,9 +19,12 @@ import {
 import { AppException } from '../../common/exceptions/app.exception';
 import { SignUpDto } from './dto/signUp-input.dto';
 import { SignInDto } from './dto/signIn-input.dto';
+import appConfig from '../../config/config';
 
 @Injectable()
 export class AuthService {
+  private readonly config = appConfig();
+
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
@@ -148,7 +151,7 @@ export class AuthService {
     let decoded;
     try {
       decoded = await this.jwtService.verifyAsync(refreshToken, {
-        secret: process.env.JWT_SECRET,
+        secret: this.config.jwt.secret,
       });
     } catch (error: unknown) {
       if (error instanceof Error && error.name === 'TokenExpiredError') {
@@ -217,7 +220,7 @@ export class AuthService {
     let decoded;
     try {
       decoded = await this.jwtService.verifyAsync(token, {
-        secret: process.env.JWT_SECRET,
+        secret: this.config.jwt.secret,
       });
     } catch (error: unknown) {
       if (error instanceof Error && error.name === 'TokenExpiredError') {

@@ -1,5 +1,5 @@
 import type { User } from "../users/user.entity";
-import type { Post } from "../posts/post.entity";
+import type { Post } from "../posts/post-entity/post.entity";
 import { BaseEntity } from "../common/entities/BaseEntity";
 export declare class Comment extends BaseEntity {
     id: number;

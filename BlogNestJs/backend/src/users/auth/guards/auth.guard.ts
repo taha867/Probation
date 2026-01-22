@@ -7,8 +7,9 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
-import { IS_PUBLIC_KEY } from '../../../customDecorators/public.decorator';
+import { IS_PUBLIC_KEY } from '../../../custom-decorators/public.decorator';
 import { ERROR_MESSAGES } from '../../../lib/constants';
+import appConfig from '../../../config/config';
 
 const {
   INVALID_TOKEN,
@@ -19,6 +20,8 @@ const {
 
 @Injectable()
 export class AuthGuard implements CanActivate {
+  private readonly config = appConfig();
+
   constructor(
     private jwtService: JwtService,
     private reflector: Reflector, // reads metadata set by decorators
@@ -44,7 +47,7 @@ export class AuthGuard implements CanActivate {
 
     try {
       const payload = await this.jwtService.verifyAsync(token, {
-        secret: process.env.JWT_SECRET,
+        secret: this.config.jwt.secret,
       });
 
       if (payload.type !== 'access') {

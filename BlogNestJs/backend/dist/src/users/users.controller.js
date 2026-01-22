@@ -19,8 +19,8 @@ const users_service_1 = require("./users.service");
 const list_users_query_payload_dto_1 = require("./dto/list-users-query-payload.dto");
 const user_posts_query_input_dto_1 = require("./dto/user-posts-query-input.dto");
 const update_user_input_dto_1 = require("./dto/update-user-input.dto");
-const user_decorator_1 = require("../customDecorators/user.decorator");
-const public_decorator_1 = require("../customDecorators/public.decorator");
+const user_decorator_1 = require("../custom-decorators/user.decorator");
+const public_decorator_1 = require("../custom-decorators/public.decorator");
 const constants_1 = require("../lib/constants");
 let UsersController = class UsersController {
     constructor(usersService) {

@@ -11,22 +11,27 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthService = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const jwt_1 = require("@nestjs/jwt");
-const user_entity_1 = require("../user.entity");
+const user_entity_1 = require("../user-entity/user.entity");
 const email_service_1 = require("../../email/email.service");
 const bcrypt_1 = require("../../lib/utils/bcrypt");
 const constants_1 = require("../../lib/constants");
 const app_exception_1 = require("../../common/exceptions/app.exception");
+const config_1 = __importDefault(require("../../config/config"));
 let AuthService = class AuthService {
     constructor(userRepository, jwtService, emailService) {
         this.userRepository = userRepository;
         this.jwtService = jwtService;
         this.emailService = emailService;
+        this.config = (0, config_1.default)();
     }
     async signUp(signUpDto) {
         const { name, email, phone, password, image } = signUpDto;
@@ -112,7 +117,7 @@ let AuthService = class AuthService {
         let decoded;
         try {
             decoded = await this.jwtService.verifyAsync(refreshToken, {
-                secret: process.env.JWT_SECRET,
+                secret: this.config.jwt.secret,
             });
         }
         catch (error) {
@@ -160,7 +165,7 @@ let AuthService = class AuthService {
         let decoded;
         try {
             decoded = await this.jwtService.verifyAsync(token, {
-                secret: process.env.JWT_SECRET,
+                secret: this.config.jwt.secret,
             });
         }
         catch (error) {

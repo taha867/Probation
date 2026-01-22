@@ -20,7 +20,7 @@ const create_post_input_dto_1 = require("./dto/create-post-input.dto");
 const update_post_input_dto_1 = require("./dto/update-post-input.dto");
 const list_posts_query_payload_dto_1 = require("./dto/list-posts-query-payload.dto");
 const pagination_query_input_dto_1 = require("./dto/pagination-query-input.dto");
-const user_decorator_1 = require("../customDecorators/user.decorator");
+const user_decorator_1 = require("../custom-decorators/user.decorator");
 const constants_1 = require("../lib/constants");
 let PostsController = class PostsController {
     constructor(postsService) {
