@@ -119,12 +119,36 @@ const Navbar = memo(() => {
             ) : (
               <div className="flex items-center gap-2">
                 <Link to="/signin">
-                  <Button variant="ghost" size="sm">
+                  <Button
+                    variant={isActive("/signin") ? "outline" : "ghost"}
+                    className={
+                      isActive("/signin")
+                        ? "border-2 border-primary text-primary font-semibold"
+                        : ""
+                    }
+                    size="sm"
+                  >
                     Sign In
                   </Button>
                 </Link>
                 <Link to="/signup">
-                  <Button size="sm">Sign Up</Button>
+                  <Button
+                    variant={
+                      isActive("/signup")
+                        ? "outline"
+                        : isActive("/signin")
+                        ? "ghost"
+                        : "default"
+                    }
+                    className={
+                      isActive("/signup")
+                        ? "border-2 border-primary text-primary font-semibold"
+                        : ""
+                    }
+                    size="sm"
+                  >
+                    Sign Up
+                  </Button>
                 </Link>
               </div>
             )}

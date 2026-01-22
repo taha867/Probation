@@ -143,7 +143,7 @@ export const FormField = ({
                   disabled={disabled}
                   className={`${className} ${
                     config.icon ? "pl-10" : ""
-                  } ${showToggle && type === "password" ? "pr-20" : ""}`}
+                  } ${showToggle && type === "password" ? "pr-10" : ""}`}
                   {...field}
                   {...props}
                 />
@@ -157,19 +157,13 @@ export const FormField = ({
                 {showToggle && type === "password" && (
                   <button
                     type="button"
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center gap-1.5 text-gray-500 hover:text-gray-700 text-sm"
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center justify-center text-gray-500 hover:text-gray-700"
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? (
-                      <>
-                        <EyeOff className="h-4 w-4" />
-                        <span>Hide</span>
-                      </>
+                      <EyeOff className="h-4 w-4" />
                     ) : (
-                      <>
-                        <Eye className="h-4 w-4" />
-                        <span>Show</span>
-                      </>
+                      <Eye className="h-4 w-4" />
                     )}
                   </button>
                 )}
