@@ -20,47 +20,47 @@ __decorate([
     __metadata("design:type", Number)
 ], Comment.prototype, "id", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'text' }),
+    (0, typeorm_1.Column)({ type: "text" }),
     __metadata("design:type", String)
 ], Comment.prototype, "body", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'integer' }),
+    (0, typeorm_1.Column)({ type: "integer" }),
     __metadata("design:type", Number)
 ], Comment.prototype, "postId", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'integer' }),
+    (0, typeorm_1.Column)({ type: "integer" }),
     __metadata("design:type", Number)
 ], Comment.prototype, "userId", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'integer', nullable: true }),
+    (0, typeorm_1.Column)({ type: "integer", nullable: true }),
     __metadata("design:type", Object)
 ], Comment.prototype, "parentId", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)('Post', (post) => post.comments, { onDelete: 'CASCADE' }),
-    (0, typeorm_1.JoinColumn)({ name: 'postId' }),
+    (0, typeorm_1.ManyToOne)("Post", (post) => post.comments, { onDelete: "CASCADE" }),
+    (0, typeorm_1.JoinColumn)({ name: "postId" }),
     __metadata("design:type", Function)
 ], Comment.prototype, "post", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)('User', (user) => user.comments, { onDelete: 'CASCADE' }),
-    (0, typeorm_1.JoinColumn)({ name: 'userId' }),
+    (0, typeorm_1.ManyToOne)("User", (user) => user.comments, { onDelete: "CASCADE" }),
+    (0, typeorm_1.JoinColumn)({ name: "userId" }),
     __metadata("design:type", Function)
 ], Comment.prototype, "author", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)('Comment', (comment) => comment.replies, {
+    (0, typeorm_1.ManyToOne)("Comment", (comment) => comment.replies, {
         nullable: true,
-        onDelete: 'CASCADE',
+        onDelete: "CASCADE",
     }),
-    (0, typeorm_1.JoinColumn)({ name: 'parentId' }),
+    (0, typeorm_1.JoinColumn)({ name: "parentId" }),
     __metadata("design:type", Object)
 ], Comment.prototype, "parent", void 0);
 __decorate([
-    (0, typeorm_1.OneToMany)('Comment', (comment) => comment.parent, {
+    (0, typeorm_1.OneToMany)("Comment", (comment) => comment.parent, {
         cascade: true,
-        onDelete: 'CASCADE',
+        onDelete: "CASCADE",
     }),
     __metadata("design:type", Array)
 ], Comment.prototype, "replies", void 0);
 exports.Comment = Comment = __decorate([
-    (0, typeorm_1.Entity)('Comments')
+    (0, typeorm_1.Entity)("Comments")
 ], Comment);
 //# sourceMappingURL=comment.entity.js.map

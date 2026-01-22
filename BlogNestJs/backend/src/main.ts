@@ -41,7 +41,7 @@ async function bootstrap() {
   app.useGlobalFilters(new AppExceptionFilter());
 
   // Trust proxy (if behind load balancer/reverse proxy)
-  app.set('trust proxy', true);
+  //app.set('trust proxy', true);
 
   const port = process.env.PORT || 3000;
   await app.listen(port);

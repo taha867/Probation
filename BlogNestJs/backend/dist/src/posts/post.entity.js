@@ -29,43 +29,43 @@ __decorate([
     __metadata("design:type", String)
 ], Post.prototype, "title", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'text' }),
+    (0, typeorm_1.Column)({ type: "text" }),
     __metadata("design:type", String)
 ], Post.prototype, "body", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'integer' }),
+    (0, typeorm_1.Column)({ type: "integer" }),
     __metadata("design:type", Number)
 ], Post.prototype, "userId", void 0);
 __decorate([
     (0, typeorm_1.Column)({
-        type: 'enum',
+        type: "enum",
         enum: PostStatus,
         default: PostStatus.DRAFT,
     }),
     __metadata("design:type", String)
 ], Post.prototype, "status", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'varchar', nullable: true }),
+    (0, typeorm_1.Column)({ type: "varchar", nullable: true }),
     __metadata("design:type", Object)
 ], Post.prototype, "image", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'varchar', nullable: true }),
+    (0, typeorm_1.Column)({ type: "varchar", nullable: true }),
     __metadata("design:type", Object)
 ], Post.prototype, "imagePublicId", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)('User', (user) => user.posts, { onDelete: 'CASCADE' }),
-    (0, typeorm_1.JoinColumn)({ name: 'userId' }) // foreign key owner
+    (0, typeorm_1.ManyToOne)("User", (user) => user.posts, { onDelete: "CASCADE" }),
+    (0, typeorm_1.JoinColumn)({ name: "userId" }) // foreign key owner
     ,
     __metadata("design:type", Function)
 ], Post.prototype, "author", void 0);
 __decorate([
-    (0, typeorm_1.OneToMany)('Comment', (comment) => comment.post, {
+    (0, typeorm_1.OneToMany)("Comment", (comment) => comment.post, {
         cascade: true,
-        onDelete: 'CASCADE',
+        onDelete: "CASCADE",
     }),
     __metadata("design:type", Array)
 ], Post.prototype, "comments", void 0);
 exports.Post = Post = __decorate([
-    (0, typeorm_1.Entity)('Posts')
+    (0, typeorm_1.Entity)("Posts")
 ], Post);
 //# sourceMappingURL=post.entity.js.map

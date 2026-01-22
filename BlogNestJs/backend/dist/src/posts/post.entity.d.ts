@@ -1,6 +1,6 @@
-import type { User } from '../users/user.entity';
-import type { Comment } from '../comments/comment.entity';
-import { BaseEntity } from '../common/entities/BaseEntity';
+import type { User } from "../users/user.entity";
+import type { Comment } from "../comments/comment.entity";
+import { BaseEntity } from "../common/entities/BaseEntity";
 export declare enum PostStatus {
     DRAFT = "draft",
     PUBLISHED = "published"

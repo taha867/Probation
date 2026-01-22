@@ -19,11 +19,11 @@ import { UpdateUserDto } from "./dto/update-user-input.dto";
 const { USER_NOT_FOUND, CANNOT_UPDATE_OTHER_USER, CANNOT_DELETE_OTHER_USER } =
   ERROR_MESSAGES;
 
-@Injectable()
+@Injectable() //design pattern
 export class UsersService {
   constructor(
     @InjectRepository(User)
-    private userRepository: Repository<User>,
+    private userRepository: Repository<User>,     
     @InjectRepository(Post)
     private postRepository: Repository<Post>,
     private cloudinaryService: CloudinaryService,

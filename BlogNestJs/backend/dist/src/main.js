@@ -69,7 +69,7 @@ async function bootstrap() {
     // Global exception filter(Error handling Layer)
     app.useGlobalFilters(new httpException_filter_1.AppExceptionFilter());
     // Trust proxy (if behind load balancer/reverse proxy)
-    app.set('trust proxy', true);
+    //app.set('trust proxy', true);
     const port = process.env.PORT || 3000;
     await app.listen(port);
     console.log(`${constants_1.LOG_MESSAGES.APP_RUNNING} ${await app.getUrl()}`);
