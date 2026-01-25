@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useMemo } from "react";
+import { cn } from "@/lib/utils";
 
 const PaginationControls = ({
   currentPage,
@@ -27,32 +28,37 @@ const PaginationControls = ({
   }, [currentPage, totalPages]);
 
   return (
-    <div className="flex items-center justify-center gap-2">
+    <div className="flex items-center justify-center gap-3">
       <Button
-        variant="outline"
+        variant="success"
         size="sm"
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage <= 1 || isPending}
-        className="flex items-center gap-1"
+        className="flex items-center justify-center gap-1.5 min-w-[5.5rem] font-semibold transition-all hover:scale-105 active:scale-95 shadow-sm"
       >
         {isPending && currentPage > 1 ? (
-          <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
+          <div className="animate-spin h-3.5 w-3.5 border-2 border-white border-t-transparent rounded-full" />
         ) : (
-          <span>←</span>
+          <span className="leading-none flex items-center h-full">←</span>
         )}
-        <span>Prev</span>
+        <span className="leading-none">Prev</span>
       </Button>
 
       {/* Page Numbers */}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1.5">
         {pageNumbers.map((pageNum) => (
           <Button
             key={pageNum}
-            variant={pageNum === currentPage ? "default" : "outline"}
+            variant="outline"
             size="sm"
             onClick={() => onPageChange(pageNum)}
             disabled={isPending}
-            className="min-w-[2.5rem]"
+            className={cn(
+              "min-w-[2.5rem] h-9 transition-all duration-200 border-2",
+              pageNum === currentPage 
+                ? "border-green-600 text-green-700 font-bold scale-110 shadow-sm z-10" 
+                : "text-gray-600 hover:border-green-400 hover:text-green-600 bg-white"
+            )}
           >
             {pageNum}
           </Button>
@@ -60,17 +66,17 @@ const PaginationControls = ({
       </div>
 
       <Button
-        variant="outline"
+        variant="success"
         size="sm"
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage >= totalPages || isPending}
-        className="flex items-center gap-1"
+        className="flex items-center justify-center gap-1.5 min-w-[5.5rem] font-semibold transition-all hover:scale-105 active:scale-95 shadow-sm"
       >
-        <span>Next</span>
+        <span className="leading-none">Next</span>
         {isPending && currentPage < totalPages ? (
-          <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
+          <div className="animate-spin h-3.5 w-3.5 border-2 border-white border-t-transparent rounded-full" />
         ) : (
-          <span>→</span>
+          <span className="leading-none flex items-center h-full">→</span>
         )}
       </Button>
     </div>

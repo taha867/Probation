@@ -145,6 +145,7 @@ export class PostsService {
         status,
         image,
         imagePublicId,
+        createdAt,
         author: { id: authorId, name, email, image: authorImage },
       } = post;
       return {
@@ -155,6 +156,7 @@ export class PostsService {
         status: status as PostStatus,
         image: image ?? null,
         imagePublicId: imagePublicId ?? null,
+        createdAt,
         author: {
           id: authorId,
           name,
@@ -184,6 +186,7 @@ export class PostsService {
         status: true,
         image: true,
         imagePublicId: true,
+        createdAt: true,
         author: {
           id: true,
           name: true,
@@ -205,6 +208,7 @@ export class PostsService {
       status,
       image,
       imagePublicId,
+      createdAt,
       author,
     } = post;
     return {
@@ -215,6 +219,7 @@ export class PostsService {
       status: status as PostStatus,
       image: image ?? null,
       imagePublicId: imagePublicId ?? null,
+      createdAt,
       author: {
         id: author.id,
         name: author.name,
@@ -237,6 +242,7 @@ export class PostsService {
         status: true,
         image: true,
         imagePublicId: true,
+        createdAt: true,
       },
     });
 
@@ -253,6 +259,7 @@ export class PostsService {
       status: status as PostStatus,
       image: image ?? null,
       imagePublicId: imagePublicId ?? null,
+      createdAt: post.createdAt,
     };
 
     // Get top-level comments with replies

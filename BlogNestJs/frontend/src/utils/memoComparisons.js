@@ -46,6 +46,7 @@ export const createCommentComparison = () => (prevProps, nextProps) => {
     prevCreatedAt === nextCreatedAt &&
     prevAuthor?.id === nextAuthor?.id &&
     prevAuthor?.name === nextAuthor?.name &&
+    prevAuthor?.image === nextAuthor?.image &&
     prevReplies?.length === nextReplies?.length &&
     prevPostId === nextPostId &&
     prevOnReplySuccess === nextOnReplySuccess
@@ -114,7 +115,8 @@ export const createPostComparison = () => (prevProps, nextProps) => {
     prevVariant === nextVariant &&
     prevOnView === nextOnView &&
     prevOnEdit === nextOnEdit &&
-    prevOnDelete === nextOnDelete
+    prevOnDelete === nextOnDelete &&
+    prevAuthor?.image === nextAuthor?.image
   );
 };
 

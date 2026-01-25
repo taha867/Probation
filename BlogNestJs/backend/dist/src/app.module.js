@@ -26,7 +26,7 @@ exports.AppModule = AppModule = __decorate([
         imports: [
             config_1.ConfigModule.forRoot({
                 isGlobal: true, // Makes ConfigService available globally
-                envFilePath: '.env',
+                envFilePath: ".env",
             }),
             typeorm_1.TypeOrmModule.forRoot({
                 ...data_source_options_1.dataSourceOptions,
@@ -34,13 +34,14 @@ exports.AppModule = AppModule = __decorate([
                 subscribers: [user_subscriber_1.UserSubscriber], // Register TypeORM entity subscriber
             }),
             throttler_1.ThrottlerModule.forRoot([
+                // rate limit per ip address
                 {
-                    name: 'default',
+                    name: "default",
                     ttl: 60000, // 1 minute
-                    limit: 20, // 20 requests per minute
+                    limit: 100, // 20 requests per minute
                 },
                 {
-                    name: 'login', // Login endpoint
+                    name: "login", // Login endpoint
                     ttl: 60000, // 1 minute
                     limit: 5, // 5 login attempts per minute
                 },

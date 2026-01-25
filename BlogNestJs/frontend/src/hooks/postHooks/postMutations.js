@@ -3,7 +3,7 @@
  */
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createPost, updatePost, deletePost } from "../../services/postService";
-import { homePostsKeys, userPostsKeys, postDetailKeys } from "./postQueries";
+import { homePostsKeys, userPostsKeys, postDetailKeys } from "../../utils/queryKeys";
 import { POST_STATUS } from "../../utils/constants";
 
 const { PUBLISHED } = POST_STATUS;

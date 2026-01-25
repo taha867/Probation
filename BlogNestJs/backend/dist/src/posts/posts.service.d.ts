@@ -24,6 +24,7 @@ export declare class PostsService {
             status: PostStatus;
             image: string | null;
             imagePublicId: string | null;
+            createdAt: Date;
             author: {
                 id: number;
                 name: string;
@@ -43,6 +44,7 @@ export declare class PostsService {
                 status: PostStatus;
                 image: string | null;
                 imagePublicId: string | null;
+                createdAt: Date;
                 author: {
                     id: number;
                     name: string;
@@ -61,6 +63,7 @@ export declare class PostsService {
         status: PostStatus;
         image: string | null;
         imagePublicId: string | null;
+        createdAt: Date;
         author: {
             id: number;
             name: string;
@@ -78,6 +81,7 @@ export declare class PostsService {
                 status: PostStatus;
                 image: string | null;
                 imagePublicId: string | null;
+                createdAt: Date;
             };
             comments: Comment[];
             paginationOptions: import("../pagination/dto/pagination-meta.dto").PaginationMetaDto;
@@ -92,6 +96,7 @@ export declare class PostsService {
             status: PostStatus;
             image: string | null;
             imagePublicId: string | null;
+            createdAt: Date;
             author: {
                 id: number;
                 name: string;

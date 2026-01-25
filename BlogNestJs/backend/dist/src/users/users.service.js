@@ -93,10 +93,6 @@ let UsersService = class UsersService {
         const qb = this.postRepository
             .createQueryBuilder("post")
             .leftJoinAndSelect("post.author", "author")
-            .leftJoinAndSelect("post.comments", "comment", "comment.parentId IS NULL")
-            .leftJoinAndSelect("comment.author", "commentAuthor")
-            .leftJoinAndSelect("comment.replies", "reply")
-            .leftJoinAndSelect("reply.author", "replyAuthor")
             .where("post.userId = :userId", { userId });
         if (search) {
             qb.andWhere(new typeorm_2.Brackets((qb) => {
@@ -105,9 +101,7 @@ let UsersService = class UsersService {
                 }).orWhere("post.body ILIKE :search", { search: `%${search}%` });
             }));
         }
-        qb.orderBy("post.createdAt", "DESC")
-            .addOrderBy("comment.createdAt", "DESC")
-            .addOrderBy("reply.createdAt", "ASC");
+        qb.orderBy("post.createdAt", "DESC");
         const paginatedResult = await this.paginationService.paginateQueryBuilder(qb, page, limit);
         const { id, name, email, image } = user;
         const { data: { items, paginationOptions }, } = paginatedResult;

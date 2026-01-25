@@ -12,14 +12,15 @@ import { AuthFallback } from "./components/common/AuthFallback.jsx";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 2, // 2 minutes - data is fresh for 2 minutes (freshness of data)
-      gcTime: 1000 * 60 * 5, // 5 minutes (formerly cacheTime) - unused data kept for 5 minutes (how long the data is kept in memory)
+      staleTime: 1000 * 60 * 2, // data is fresh for 2 minutes
+      gcTime: 1000 * 60 * 5, // unused data kept for 5 minutes in memory
       retry: (failureCount, error) => {
         // Don't retry on 401 (token refresh handles it)
-        if (error?.status === 401) return false;
+        const { status } = error ?? {};
+        if (status === 401) return false;
 
         // Don't retry on client errors (4xx)
-        if (error?.status >= 400 && error?.status < 500) return false;
+        if (status >= 400 && status < 500) return false;
 
         // Retry once on network errors and server errors (5xx)
         return failureCount < 1;
@@ -43,5 +44,5 @@ createRoot(document.getElementById("root")).render(
         </Suspense>
       </QueryClientProvider>
     </ErrorBoundary>
-  </StrictMode>
+  </StrictMode>,
 );

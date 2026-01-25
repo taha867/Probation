@@ -49,6 +49,7 @@ __decorate([
 ], UpdateUserDto.prototype, "password", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.ValidateIf)((o) => o.image !== ""),
     (0, class_validator_1.IsUrl)({}, { message: constants_1.VALIDATION_MESSAGES.IMAGE_INVALID_URL }),
     __metadata("design:type", Object)
 ], UpdateUserDto.prototype, "image", void 0);

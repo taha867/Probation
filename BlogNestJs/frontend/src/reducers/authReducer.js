@@ -18,9 +18,14 @@ const {
 } = AUTH_ACTIONS;
 
 export const authReducer = (state, action) => {
-  switch (action.type) {
+  const {
+    type,
+    payload,
+  } = action;
+
+  switch (type) {
     case LOGIN_SUCCESS:
-      const { user: loginUser } = action.payload;
+      const { user: loginUser } = payload;
       return {
         ...state,
         user: loginUser,
@@ -40,7 +45,7 @@ export const authReducer = (state, action) => {
     case "SET_INITIALIZING":
       return {
         ...state,
-        isInitializing: action.payload.isInitializing,
+        isInitializing: payload.isInitializing,
       };
 
     case LOGOUT:
@@ -49,7 +54,7 @@ export const authReducer = (state, action) => {
       };
 
     case SET_USER_FROM_TOKEN:
-      const { user: tokenUser } = action.payload;
+      const { user: tokenUser } = payload;
       return {
         ...state,
         user: tokenUser,

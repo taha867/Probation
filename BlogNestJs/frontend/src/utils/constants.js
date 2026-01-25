@@ -153,3 +153,23 @@ export const AUTH_ERROR_MESSAGES = {
   FAILED_TO_SEND_RESET_EMAIL: "Failed to send reset email",
   FAILED_TO_RESET_PASSWORD: "Failed to reset password",
 };
+
+// Social Media Links
+export const SOCIAL_LINKS = [
+  {
+    name: "GitHub",
+    href: "https://github.com",
+  },
+  {
+    name: "Instagram",
+    href: "https://instagram.com",
+  },
+  {
+    name: "Twitter",
+    href: "https://twitter.com",
+  },
+  {
+    name: "LinkedIn",
+    href: "https://linkedin.com",
+  },
+];

@@ -1,28 +1,14 @@
 import { Github, Instagram, Twitter, Linkedin } from "lucide-react";
+import { SOCIAL_LINKS } from "../utils/constants";
 
 const Footer = () => {
-  const socialLinks = [
-    {
-      name: "GitHub",
-      href: "https://github.com",
-      icon: Github,
-    },
-    {
-      name: "Instagram",
-      href: "https://instagram.com",
-      icon: Instagram,
-    },
-    {
-      name: "Twitter",
-      href: "https://twitter.com",
-      icon: Twitter,
-    },
-    {
-      name: "LinkedIn",
-      href: "https://linkedin.com",
-      icon: Linkedin,
-    },
-  ];
+  // Map icon names to Lucide components
+  const iconMap = {
+    GitHub: Github,
+    Instagram: Instagram,
+    Twitter: Twitter,
+    LinkedIn: Linkedin,
+  };
 
   return (
     <footer className="border-t bg-white">
@@ -37,8 +23,8 @@ const Footer = () => {
         {/* Social Links - Extreme Right */}
         <div className="flex-shrink-0">
           <div className="flex items-center gap-4">
-            {socialLinks.map((social) => {
-              const Icon = social.icon;
+            {SOCIAL_LINKS.map((social) => {
+              const Icon = iconMap[social.name];
               return (
                 <a
                   key={social.name}

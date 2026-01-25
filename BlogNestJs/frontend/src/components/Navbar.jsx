@@ -1,20 +1,23 @@
 import { memo, useMemo, useState, useEffect, useCallback } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useSearchParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X } from "lucide-react";
+import { Menu, X, PlusCircle } from "lucide-react";
 import { useAuth } from "../hooks/authHooks/authHooks";
 import UserProfileMenu from "./profile/UserProfileMenu";
+import PostFilter from "./common/PostFilter";
 
 const Navbar = memo(() => {
   const { isAuthenticated } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Dynamic navigation links based on authentication status
   const links = useMemo(() => {
     const baseLinks = [{ label: "Home", to: "/" }];
     if (isAuthenticated) {
-      return [...baseLinks, { label: "Dashboard", to: "/dashboard" }];
+      return [...baseLinks, { label: "My Articles", to: "/dashboard" }];
     }
     return baseLinks;
   }, [isAuthenticated]);
@@ -61,7 +64,7 @@ const Navbar = memo(() => {
     <>
       <nav className="sticky top-0 z-40 border-b bg-white/85 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center px-4">
-          {/* Mobile Menu Button + Logo/Brand - Extreme Left */}
+          
           <div className="flex-shrink-0 flex items-center gap-3">
             {/* Mobile Menu Button */}
             <button
@@ -93,29 +96,46 @@ const Navbar = memo(() => {
             </Link>
           </div>
 
-          {/* Navigation Links - Center (Desktop) */}
-          <div className="flex-1 flex justify-center">
-            <div className="hidden items-center gap-6 md:flex">
-              {links.map((link) => (
-                <Link
-                  key={`${link.label}-${link.to}`}
-                  to={link.to}
-                  className={`text-sm font-medium transition-colors ${
-                    isActive(link.to)
-                      ? "text-blue-600"
-                      : "text-slate-600 hover:text-slate-900"
-                  }`}
-                >
-                  {link.label}
-                </Link>
-              ))}
-            </div>
+          {/* Navigation Links */}
+          <div className="flex-1 flex items-center justify-start ml-8 gap-6 hidden md:flex">
+            {links.map((link) => (
+              <Link
+                key={`${link.label}-${link.to}`}
+                to={link.to}
+                className={`text-sm font-medium transition-colors ${
+                  isActive(link.to)
+                    ? "text-blue-600"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                {link.label}
+              </Link>
+            ))}
           </div>
 
-          {/* Auth Actions - Extreme Right */}
-          <div className="flex-shrink-0 flex items-center gap-3">
+          {/* Search Bar (Centered/Right) */}
+          <div className="hidden lg:flex flex-1 max-w-md mx-4">
+            <PostFilter
+              placeholder="Search posts..."
+            />
+          </div>
+
+          {/* Auth Actions */}
+          <div className="flex-shrink-0 flex items-center gap-4 ml-4">
             {isAuthenticated ? (
-              <UserProfileMenu />
+              <>
+                <Link to="/create-post">
+                  <Button
+                    variant="default"
+                    size="sm"
+                    className="bg-zinc-900 text-white hover:bg-zinc-800 rounded-lg px-4 font-semibold hidden sm:flex items-center gap-2"
+                  >
+                    <PlusCircle className="h-4 w-4" />
+                    Create Article
+                  </Button>
+                </Link>
+                <UserProfileMenu />
+              </>
             ) : (
               <div className="flex items-center gap-2">
                 <Link to="/signin">
@@ -189,6 +209,14 @@ const Navbar = memo(() => {
               >
                 <X className="h-5 w-5" />
               </button>
+            </div>
+
+            {/* Mobile Search */}
+            <div className="p-6 border-b">
+              <PostFilter
+                onSearch={closeMobileMenu}
+                placeholder="Search posts..."
+              />
             </div>
 
             {/* Navigation Links */}

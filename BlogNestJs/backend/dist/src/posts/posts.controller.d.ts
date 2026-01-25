@@ -15,6 +15,7 @@ export declare class PostsController {
             status: import("./post-entity/post.entity").PostStatus;
             image: string | null;
             imagePublicId: string | null;
+            createdAt: Date;
             author: {
                 id: number;
                 name: string;
@@ -34,6 +35,7 @@ export declare class PostsController {
                 status: import("./post-entity/post.entity").PostStatus;
                 image: string | null;
                 imagePublicId: string | null;
+                createdAt: Date;
                 author: {
                     id: number;
                     name: string;
@@ -53,6 +55,7 @@ export declare class PostsController {
             status: import("./post-entity/post.entity").PostStatus;
             image: string | null;
             imagePublicId: string | null;
+            createdAt: Date;
             author: {
                 id: number;
                 name: string;
@@ -71,6 +74,7 @@ export declare class PostsController {
                 status: import("./post-entity/post.entity").PostStatus;
                 image: string | null;
                 imagePublicId: string | null;
+                createdAt: Date;
             };
             comments: import("../comments/comment-entity/comment.entity").Comment[];
             paginationOptions: import("../pagination/dto/pagination-meta.dto").PaginationMetaDto;
@@ -85,6 +89,7 @@ export declare class PostsController {
             status: import("./post-entity/post.entity").PostStatus;
             image: string | null;
             imagePublicId: string | null;
+            createdAt: Date;
             author: {
                 id: number;
                 name: string;

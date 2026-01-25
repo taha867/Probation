@@ -107,10 +107,6 @@ export class UsersService {
     const qb = this.postRepository
       .createQueryBuilder("post")
       .leftJoinAndSelect("post.author", "author")
-      .leftJoinAndSelect("post.comments", "comment", "comment.parentId IS NULL")
-      .leftJoinAndSelect("comment.author", "commentAuthor")
-      .leftJoinAndSelect("comment.replies", "reply")
-      .leftJoinAndSelect("reply.author", "replyAuthor")
       .where("post.userId = :userId", { userId });
 
     if (search) {
@@ -123,9 +119,7 @@ export class UsersService {
       );
     }
 
-    qb.orderBy("post.createdAt", "DESC")
-      .addOrderBy("comment.createdAt", "DESC")
-      .addOrderBy("reply.createdAt", "ASC");
+    qb.orderBy("post.createdAt", "DESC");
 
     const paginatedResult = await this.paginationService.paginateQueryBuilder(
       qb,

@@ -8,37 +8,13 @@ import {
 import { POST_STATUS } from "../../utils/constants";
 
 const { PUBLISHED } = POST_STATUS;
-export const homePostsKeys = {
-  all: ["homePosts"],
-  lists: () => [...homePostsKeys.all, "list"],
-  list: (page, limit, search) => [
-    ...homePostsKeys.lists(),
-    page,
-    limit,
-    search || "",
-  ],
-};
+import {
+  homePostsKeys,
+  userPostsKeys,
+  postDetailKeys,
+} from "../../utils/queryKeys";
 
-export const userPostsKeys = {
-  all: ["userPosts"],
-  lists: () => [...userPostsKeys.all, "list"],
-  list: (userId, page, limit, search) => [
-    ...userPostsKeys.lists(),
-    userId,
-    page,
-    limit,
-    search || "",
-  ],
-};
 
-export const postDetailKeys = {
-  all: ["postDetail"],
-  detail: (postId) => [...postDetailKeys.all, postId],
-};
-
-/**
- * Hook for fetching home page posts (published only)
- */
 export const useHomePosts = (page = 1, limit, search) => {
   return useQuery({
     queryKey: homePostsKeys.list(page, limit, search),

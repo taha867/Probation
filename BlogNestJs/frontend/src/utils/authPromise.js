@@ -1,7 +1,4 @@
-/**
- * Handles initial authentication state resolution using cached promises
- * Includes automatic token refresh during app initialization
- */
+
 import {
   getToken,
   decodeAndValidateToken,
@@ -16,9 +13,7 @@ import { fetchCurrentUserProfile } from "../services/userService";
 // Cache for the auth promise to prevent infinite suspense
 let authPromise = null;
 
-/**
- * Refreshes access token using refresh token during app initialization
- */
+
 const refreshTokenDuringInit = async () => {
   try {
     const refreshToken = getRefreshToken();
@@ -73,11 +68,11 @@ const refreshTokenDuringInit = async () => {
  * Includes automatic token refresh if access token is expired
  */
 export const createInitialAuthPromise = () => {
-  //If Promise already exists → reuse it , Prevents multiple auth checks
+  //If Promise already exists reuse it , Prevents multiple auth checks
   if (!authPromise) {
     authPromise = new Promise(async (resolve) => {
       try {
-        // Perform localStorage check
+        
         let token = getToken();
 
         if (token) {
@@ -98,14 +93,13 @@ export const createInitialAuthPromise = () => {
                 resolve({ user });
                 return;
               } else {
-                // User not found in database, clear tokens
                 console.warn("User not found in database");
                 removeTokens();
                 resolve({ user: null });
                 return;
               }
             } catch (error) {
-              // If API call fails, fall back to minimal user object from token
+              
               console.warn(
                 "Failed to fetch user profile, using token data:",
                 error
@@ -180,12 +174,11 @@ export const createInitialAuthPromise = () => {
             resolve({ user: null });
           }
         } else {
-          // No access token found
+          
           resolve({ user: null });
         }
       } catch (error) {
         console.error("Error during auth initialization:", error);
-        // On any error, clear tokens and resolve with no user
         removeTokens();
         resolve({ user: null });
       }

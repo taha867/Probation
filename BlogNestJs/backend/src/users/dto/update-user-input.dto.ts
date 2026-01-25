@@ -5,6 +5,7 @@ import {
   MinLength,
   Matches,
   IsUrl,
+  ValidateIf,
 } from 'class-validator';
 import {
   VALIDATION_MESSAGES,
@@ -43,6 +44,7 @@ export class UpdateUserDto {
   password?: string;
 
   @IsOptional()
+  @ValidateIf((o) => o.image !== "")
   @IsUrl({}, { message: VALIDATION_MESSAGES.IMAGE_INVALID_URL })
   image?: string | null;
 }

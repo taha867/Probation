@@ -5,10 +5,7 @@ import { createInitialAuthPromise } from "../utils/authPromise";
 // Single context for both state and dispatch
 const AuthContext = createContext(null);
 
-/**
- * Auth Provider component that wraps the app with authentication context
- * Integrates use() hook for auth initialization with Suspense
- */
+
 export const AuthProvider = ({ children }) => {
   // This will suspend the component until auth state is resolved
   const { user } = use(createInitialAuthPromise());
@@ -20,7 +17,7 @@ export const AuthProvider = ({ children }) => {
     user,
   };
 
-  // useReducer returns current state and a dispatch function
+  // [current state, function to trigger update] (function that decides how state change, starting state)
   const [state, dispatch] = useReducer(authReducer, initialStateWithUser);
 
   // Mark initialization as complete after promise resolves and component mounts

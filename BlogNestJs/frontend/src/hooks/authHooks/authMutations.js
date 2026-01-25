@@ -4,7 +4,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuthContext } from "../../contexts/authContext";
 import { authActions } from "../../reducers/authReducer";
-import { userPostsKeys, homePostsKeys } from "../postHooks/postQueries";
+import { userPostsKeys, homePostsKeys } from "../../utils/queryKeys";
 import {
   loginUser,
   registerUser,
@@ -150,9 +150,10 @@ export const useUpdateProfileImage = () => {
       // Context state is the single source of truth for runtime auth state
       dispatch(setUserFromToken(updatedUser));
       
-     
-      await queryClient.refetchQueries({ queryKey: userPostsKeys.all });
-      await queryClient.refetchQueries({ queryKey: homePostsKeys.all });
+      // Invalidate queries to ensure fresh data is fetched
+      // invalidateQueries marks data as stale and triggers refetch if query is active
+      await queryClient.invalidateQueries({ queryKey: userPostsKeys.all });
+      await queryClient.invalidateQueries({ queryKey: homePostsKeys.all });
     },
     onError: () => {
       dispatch(authError());

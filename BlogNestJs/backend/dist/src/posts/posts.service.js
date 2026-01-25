@@ -105,7 +105,7 @@ let PostsService = class PostsService {
         qb.orderBy("post.createdAt", "DESC");
         const paginatedResult = await this.paginationService.paginateQueryBuilder(qb, page, limit);
         const postRows = paginatedResult.data.items.map((post) => {
-            const { id, title, body, userId, status, image, imagePublicId, author: { id: authorId, name, email, image: authorImage }, } = post;
+            const { id, title, body, userId, status, image, imagePublicId, createdAt, author: { id: authorId, name, email, image: authorImage }, } = post;
             return {
                 id,
                 title,
@@ -114,6 +114,7 @@ let PostsService = class PostsService {
                 status: status,
                 image: image ?? null,
                 imagePublicId: imagePublicId ?? null,
+                createdAt,
                 author: {
                     id: authorId,
                     name,
@@ -141,6 +142,7 @@ let PostsService = class PostsService {
                 status: true,
                 image: true,
                 imagePublicId: true,
+                createdAt: true,
                 author: {
                     id: true,
                     name: true,
@@ -152,7 +154,7 @@ let PostsService = class PostsService {
         if (!post) {
             return null;
         }
-        const { id: postId, title, body, userId, status, image, imagePublicId, author, } = post;
+        const { id: postId, title, body, userId, status, image, imagePublicId, createdAt, author, } = post;
         return {
             id: postId,
             title,
@@ -161,6 +163,7 @@ let PostsService = class PostsService {
             status: status,
             image: image ?? null,
             imagePublicId: imagePublicId ?? null,
+            createdAt,
             author: {
                 id: author.id,
                 name: author.name,
@@ -181,6 +184,7 @@ let PostsService = class PostsService {
                 status: true,
                 image: true,
                 imagePublicId: true,
+                createdAt: true,
             },
         });
         if (!post) {
@@ -195,6 +199,7 @@ let PostsService = class PostsService {
             status: status,
             image: image ?? null,
             imagePublicId: imagePublicId ?? null,
+            createdAt: post.createdAt,
         };
         // Get top-level comments with replies
         const qb = this.commentRepository

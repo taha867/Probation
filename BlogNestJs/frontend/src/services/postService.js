@@ -11,11 +11,11 @@ export const fetchUserPosts = async (userId, options = {}) => {
   const response = await fetchClient(`/users/${userId}/posts?${params}`, {
     method: "GET",
   });
-  const { posts: userPosts = {}, meta = {} } = response.data || {};
+  const { posts = [], paginationOptions = {} } = response.data || {};
 
   return {
-    posts: userPosts,
-    pagination: meta,
+    posts,
+    pagination: paginationOptions,
   };
 };
 
@@ -96,11 +96,11 @@ export const fetchAllPosts = async (options = {}) => {
   const response = await fetchClient(`/posts?${params}`, {
     method: "GET",
   });
-  // Backend returns "items" and "meta"
-  const { items = [], meta = {} } = response.data || {};
+  // Backend returns "items" and "paginationOptions"
+  const { items = [], paginationOptions = {} } = response.data || {};
 
   return {
     posts: items,
-    pagination: meta,
+    pagination: paginationOptions,
   };
 };

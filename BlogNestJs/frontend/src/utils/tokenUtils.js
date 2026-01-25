@@ -1,14 +1,15 @@
 import { jwtDecode } from "jwt-decode";
 import { STORAGE_KEYS, TOAST_MESSAGES } from "./constants";
 
-//Store access token in localStorage
+const{AUTH_TOKEN,REFRESH_TOKEN}=STORAGE_KEYS;
+
+// Store accesss token in local storage
 export const storeToken = (token) => {
-  localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token);
+  localStorage.setItem(AUTH_TOKEN, token);
 };
 
-//Store refresh token in localStorage
 export const storeRefreshToken = (refreshToken) => {
-  localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, refreshToken);
+  localStorage.setItem(REFRESH_TOKEN, refreshToken);
 };
 
 //Store both tokens in localStorage
@@ -19,22 +20,20 @@ export const storeTokens = (accessToken, refreshToken) => {
 
 //Get access token from localStorage
 export const getToken = () => {
-  return localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+  return localStorage.getItem(AUTH_TOKEN);
 };
 
-//Get refresh token from localStorage
 export const getRefreshToken = () => {
-  return localStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
+  return localStorage.getItem(REFRESH_TOKEN);
 };
 
 //Remove access token from localStorage
 export const removeToken = () => {
-  localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+  localStorage.removeItem(AUTH_TOKEN);
 };
 
-//Remove refresh token from localStorage
 export const removeRefreshToken = () => {
-  localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
+  localStorage.removeItem(REFRESH_TOKEN);
 };
 
 //Remove both tokens from localStorage
@@ -95,7 +94,7 @@ export const hasValidRefreshToken = () => {
   }
 };
 
-//Get user ID from token (commonly needed)
+//Get user ID from token 
 export const getCurrentUserId = () => {
   const user = getCurrentUser();
   return user?.userId || null;
