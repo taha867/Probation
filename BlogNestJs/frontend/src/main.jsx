@@ -8,7 +8,7 @@ import AppInitializer from "./components/common/AppInitializer.jsx";
 import { ErrorBoundary } from "react-error-boundary";
 import { AuthFallback } from "./components/common/AuthFallback.jsx";
 
-// Central cache/ data manager
+//queries : read, mutation : write 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -25,7 +25,7 @@ const queryClient = new QueryClient({
         // Retry once on network errors and server errors (5xx)
         return failureCount < 1;
       },
-      refetchOnWindowFocus: false, // by default on switch tabs or comes back to the window → queries refetch automatically(it prevents that)
+      refetchOnWindowFocus: false, // by default on switch tabs or comes back to the window, queries refetch automatically(it prevents that)
     },
   },
 });

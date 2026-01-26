@@ -4,16 +4,16 @@ import { useHomePosts } from "../../hooks/postHooks/postQueries";
 import { calculateTotalPages } from "../../services/postService";
 import PostCard from "../common/PostCard.jsx";
 import PaginationControls from "../common/PaginationControls.jsx";
-import AppInitializer from "../common/AppInitializer.jsx";
+import { POSTS_PER_PAGE } from "../../utils/constants";
+import AppInitializer from "../common/AppInitializer";
 
 const Home = () => {
-  // Pagination + URL search params
+  
   const [currentPage, setCurrentPage] = useState(1);
   const [searchParams] = useSearchParams();
   const searchQuery = searchParams.get("search") || "";
-  const limit = 3; // Posts per page
+  const limit = POSTS_PER_PAGE; 
 
-  // React Query hook - handles fetching, caching, and refetching automatically
   // It will refetch automatically when searchQuery (from URL) changes
   const { data, isLoading, isFetching } = useHomePosts(
     currentPage,

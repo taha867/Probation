@@ -22,12 +22,7 @@ import { UserSubscriber } from "./users/subscribers/user.subscriber";
       subscribers: [UserSubscriber], // Register TypeORM entity subscriber
     }),
     ThrottlerModule.forRoot([
-      // rate limit per ip address
-      {
-        name: "default",
-        ttl: 60000, // 1 minute
-        limit: 500, // 20 requests per minute
-      },
+      
       {
         name: "login", // Login endpoint
         ttl: 60000, // 1 minute

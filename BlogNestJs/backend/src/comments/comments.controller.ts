@@ -16,6 +16,7 @@ import { CreateCommentDto } from './dto/create-comment-input.dto';
 import { UpdateCommentDto } from './dto/update-comment-input.dto';
 import { ListCommentsQueryDto } from './dto/list-comments-query-payload.dto';
 import { User } from '../custom-decorators/user.decorator';
+import { Public } from '../custom-decorators/public.decorator';
 import { SUCCESS_MESSAGES } from '../lib/constants';
 
 @Controller('comments')
@@ -31,6 +32,7 @@ export class CommentsController {
     return this.commentsService.createCommentOrReply(createCommentDto, userId);
   }
 
+  @Public()
   @Get()
   async list(@Query() query: ListCommentsQueryDto) {
     return this.commentsService.listTopLevelComments(query);

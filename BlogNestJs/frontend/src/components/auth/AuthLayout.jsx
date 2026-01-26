@@ -30,6 +30,7 @@ const AuthLayout = ({ children, title, subtitle }) => {
         console.error("Failed to initialize Vanta effect:", error);
       }
     }
+    //cleanup
     return () => {
       if (vantaEffect) vantaEffect.destroy();
     };
@@ -58,12 +59,7 @@ const AuthLayout = ({ children, title, subtitle }) => {
           {children}
         </div>
         
-        {/* Footer/Brand mark option */}
-        <div className="mt-6 text-center">
-           <p className="text-xs text-white/80 font-medium drop-shadow-sm">
-             Blog Application &copy; 2026
-           </p>
-        </div>
+        
       </div>
     </div>
   );

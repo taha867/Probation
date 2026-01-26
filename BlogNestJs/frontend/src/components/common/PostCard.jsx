@@ -19,9 +19,8 @@ const PostCard = ({ post, variant = "public", onView, onEdit, onDelete }) => {
 
   const isDashboard = variant === "dashboard";
 
-  // Destructure with safe defaults - use undefined (not {}) so utility functions handle them correctly
-  // Must be before useCallback that uses id
-  const { author, createdAt, body, image, title, status, id } = post || {};
+
+  const { author, createdAt, body, image, title, id } = post || {};
 
   // Handle post click - navigate to post detail page (only if not clicking on action buttons)
   const handlePostClick = useCallback(
@@ -37,11 +36,9 @@ const PostCard = ({ post, variant = "public", onView, onEdit, onDelete }) => {
     },
     [navigate, id]
   );
-  // Get author info using utility function
+  
   const { name: authorName } = getAuthorInfo(author);
-
   const formattedDate = useMemo(() => formatPostDate(createdAt), [createdAt]);
-
   const readTime = useMemo(() => calculateReadTime(body), [body]);
 
   const excerpt = useMemo(() => {
@@ -50,10 +47,8 @@ const PostCard = ({ post, variant = "public", onView, onEdit, onDelete }) => {
     return body.length > 120 ? `${body.slice(0, 120)}...` : body;
   }, [body]);
 
-  // Get post image URL using utility function
   const imageUrl = getPostImageUrl(image);
 
-  // Check if we should show placeholder (no image or image failed to load)
   const showPlaceholder = !imageUrl || imageError;
 
   // Handle image load error - set error state once to prevent infinite loop
@@ -88,7 +83,6 @@ const PostCard = ({ post, variant = "public", onView, onEdit, onDelete }) => {
         <div className="flex-shrink-0">
           <div className="w-full sm:w-48 h-48 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg overflow-hidden relative">
             {showPlaceholder ? (
-              // CSS-based placeholder - no external requests
               <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300">
                 <div className="text-center">
                   <ImageIcon className="w-12 h-12 text-gray-400 mx-auto mb-2" />
@@ -116,7 +110,6 @@ const PostCard = ({ post, variant = "public", onView, onEdit, onDelete }) => {
         <div className="flex-1 flex flex-col justify-between min-w-0">
           <div>
             {/* Status / category + action buttons (dashboard only) */}
-            {/* Action buttons (dashboard only) */}
             {isDashboard && (onView || onEdit || onDelete) && (
               <div className="flex items-center justify-end mb-2">
                 <div

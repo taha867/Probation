@@ -2,7 +2,6 @@ import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "../../hooks/authHooks/authHooks.js";
 import AppInitializer from "./AppInitializer.jsx";
 
-// Component to handle auth route protection
 const AuthRoute = () => {
   const { isAuthenticated, isLoading } = useAuth();
 

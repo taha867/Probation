@@ -24,14 +24,11 @@ const ChangePasswordForm = () => {
   const onSubmit = async (data) => {
     try {
       await changePassword(data.newPassword);
-      // Success message is shown automatically by axios interceptor from backend message
-      // Optionally navigate back to dashboard after a delay
-      setTimeout(() => {
+        setTimeout(() => {
         navigate("/dashboard");
       }, 1500);
     } catch (error) {
-      // Error message is handled by axios interceptor
-    }
+          }
   };
 
   const handleSubmit = createSubmitHandlerWithToast(form, onSubmit);

@@ -1,5 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { getPostComments } from "../../services/commentService";
+import { COMMENTS_PER_PAGE } from "../../utils/constants";
 
 export const postCommentsKeys = {
   all: ["postComments"],
@@ -13,24 +14,24 @@ export const postCommentsKeys = {
 };
 
 /**
- * Hook for fetching comments for a specific post
+ * Hook for fetching comments for a specific post with infinite scrolling/load more support
  */
-export const usePostComments = (postId, page = 1, limit = 10) => {
-  return useQuery({
-    queryKey: postCommentsKeys.list(postId, page, limit),
-    queryFn: async () => {
-      // getPostComments returns { post, comments, meta } (fetchClient already extracts data)
-      const result = await getPostComments(postId, { page, limit });
-      const { comments = [], meta = {} } = result || {};
-
-      return {
-        comments: comments || [],
-        meta: meta || {},
-      };
+export const usePostComments = (postId, limit = COMMENTS_PER_PAGE) => {
+  return useInfiniteQuery({ //STORES DATA AS ARRAY OF PAGES
+    queryKey: postCommentsKeys.list(postId, "infinite", limit),
+    initialPageParam: 1,
+    queryFn: async ({ pageParam = 1 }) => {
+      const result = await getPostComments(postId, { page: pageParam, limit });
+      return result || { comments: [], meta: {} };
+    },
+    getNextPageParam: (lastPage, allPages) => {
+      const { meta } = lastPage;
+      if (!meta || !meta.total) return undefined;
+      
+      const loadedCount = allPages.length * limit;
+      return loadedCount < meta.total ? allPages.length + 1 : undefined;
     },
     enabled: !!postId,
-    staleTime: 1000 * 30, // 30 seconds
-    // Removed refetchOnMount: true - React Query handles refetching intelligently
-    // It will refetch when data is stale, but not when fresh (within staleTime)
+    staleTime: 1000 * 30,
   });
 };

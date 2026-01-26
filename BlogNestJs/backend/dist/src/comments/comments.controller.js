@@ -19,6 +19,7 @@ const create_comment_input_dto_1 = require("./dto/create-comment-input.dto");
 const update_comment_input_dto_1 = require("./dto/update-comment-input.dto");
 const list_comments_query_payload_dto_1 = require("./dto/list-comments-query-payload.dto");
 const user_decorator_1 = require("../custom-decorators/user.decorator");
+const public_decorator_1 = require("../custom-decorators/public.decorator");
 const constants_1 = require("../lib/constants");
 let CommentsController = class CommentsController {
     constructor(commentsService) {
@@ -51,6 +52,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], CommentsController.prototype, "create", null);
 __decorate([
+    (0, public_decorator_1.Public)(),
     (0, common_1.Get)(),
     __param(0, (0, common_1.Query)()),
     __metadata("design:type", Function),

@@ -16,17 +16,12 @@ const PostDetailContent = memo(({ postId }) => {
 
   const { data: post, isLoading, error } = usePostDetail(postId);
 
-  // Destructure with safe defaults - use undefined (not {}) so utility functions handle them correctly
-  const { createdAt, body, author, image, title, status } = post || {};
+  const { createdAt, body, author, image, title} = post || {};
 
   const formattedDate = useMemo(() => formatPostDate(createdAt), [createdAt]);
-
   const readTime = useMemo(() => calculateReadTime(body), [body]);
-
   const { name: authorName } = getAuthorInfo(author);
-
   const imageUrl = getPostImageUrl(image);
-
   const showPlaceholder = !imageUrl || imageError;
 
   if (isLoading) {
@@ -42,53 +37,54 @@ const PostDetailContent = memo(({ postId }) => {
   }
 
   return (
-    <article className="max-w-4xl mx-auto px-4 py-8">
-      {/* Tags/Status */}
-      <div className="mb-4">
-        <span className="text-xs text-gray-500 uppercase tracking-wide">
-          {status === "published" ? "Published" : "Draft"}
-        </span>
-        <span className="mx-2 text-gray-300">•</span>
-        <span className="text-xs text-gray-500">{readTime}</span>
-      </div>
+    <article className="max-w-4xl mx-auto px-4 py-12 md:py-16">
+      {/* Header Section */}
+      <header className="mb-10 text-center md:text-left">
+        <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-6 leading-tight tracking-tight">
+          {title}
+        </h1>
 
-      {/* Title */}
-      <h1 className="text-4xl font-bold text-gray-900 mb-4">{title}</h1>
-
-      {/* Author Info */}
-      <div className="flex items-center gap-3 mb-6">
-        <AuthorAvatar author={author} size="md" />
-        <div>
-          <p className="font-semibold text-gray-900">{authorName}</p>
-          <p className="text-sm text-gray-500">{formattedDate}</p>
+        {/* Author & Meta Info */}
+        <div className="flex items-center justify-center md:justify-start gap-4">
+          <AuthorAvatar author={author} size="lg" className="h-12 w-12 ring-2 ring-white shadow-sm" />
+          <div className="text-left">
+            <p className="font-bold text-gray-900 text-lg leading-none mb-1">
+              {authorName}
+            </p>
+            <div className="flex items-center gap-2 text-sm text-gray-500 font-medium">
+              <time dateTime={createdAt}>{formattedDate}</time>
+              <span>•</span>
+              <span>{readTime}</span>
+            </div>
+          </div>
         </div>
-      </div>
+      </header>
 
-      {/* Main Image */}
+      {/* Main Image - Cinematic */}
       {showPlaceholder ? (
-        <div className="w-full min-h-[400px] bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300 rounded-lg mb-8 flex items-center justify-center">
+        <div className="w-full aspect-[21/9] bg-gradient-to-br from-slate-100 to-slate-200 rounded-2xl mb-12 flex items-center justify-center shadow-inner">
           <div className="text-center">
-            <ImageIcon className="w-16 h-16 text-gray-400 mx-auto mb-2" />
-            <p className="text-sm text-gray-500">No Image</p>
+            <ImageIcon className="w-16 h-16 text-slate-300 mx-auto mb-2" />
+            <p className="text-sm text-slate-400 font-medium tracking-wide">No Cover Image</p>
           </div>
         </div>
       ) : (
-        <div className="w-full rounded-lg overflow-hidden mb-8 bg-gray-100">
+        <div className="relative w-full rounded-2xl overflow-hidden mb-12 shadow-xl bg-gray-100 group">
           <img
             src={imageUrl}
             alt={title}
-            className={`w-full h-auto max-h-[70vh] object-contain mx-auto block ${
+            className={`w-full h-auto object-cover max-h-[600px] transition-transform duration-700 hover:scale-105 ${
               imageLoaded ? "opacity-100" : "opacity-0"
-            } transition-opacity duration-300`}
+            }`}
             onError={() => setImageError(true)}
             onLoad={() => setImageLoaded(true)}
           />
         </div>
       )}
 
-      {/* Post Body */}
-      <div className="prose prose-lg max-w-none">
-        <p className="text-gray-700 leading-relaxed whitespace-pre-wrap break-words">
+      {/* Post Body - Typography Enhanced */}
+      <div className="prose prose-lg md:prose-xl prose-slate max-w-none mx-auto">
+        <p className="text-gray-800 leading-relaxed whitespace-pre-wrap break-words">
           {body}
         </p>
       </div>

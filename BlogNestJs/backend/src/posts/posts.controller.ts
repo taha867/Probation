@@ -22,6 +22,7 @@ import { UpdatePostDto } from './dto/update-post-input.dto';
 import { ListPostsQueryDto } from './dto/list-posts-query-payload.dto';
 import { PaginationQueryDto } from './dto/pagination-query-input.dto';
 import { User } from '../custom-decorators/user.decorator';
+import { Public } from '../custom-decorators/public.decorator';
 import { SUCCESS_MESSAGES, ERROR_MESSAGES } from '../lib/constants';
 
 @Controller('posts')
@@ -39,11 +40,13 @@ export class PostsController {
     return this.postsService.createPost(createPostDto, userId, file);
   }
 
+  @Public()
   @Get()
   async list(@Query() query: ListPostsQueryDto) {
     return this.postsService.listPosts(query);
   }
 
+  @Public()
   @Get(':id')
   async getOne(@Param('id', ParseIntPipe) id: number) {
     const post = await this.postsService.findPostWithAuthor(id);
@@ -55,6 +58,7 @@ export class PostsController {
     };
   }
 
+  @Public()
   @Get(':postId/comments')
   async getPostComments(
     @Param('postId', ParseIntPipe) postId: number,

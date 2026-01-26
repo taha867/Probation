@@ -2,7 +2,7 @@ import { fetchClient } from "../middleware/fetchClient";
 
 /**
  * Fetch current authenticated user's profile from backend
- * returns Current user data including id, name, email, image
+ * returns Current user data including id, name, email, image, phone no
  */
 export const fetchCurrentUserProfile = async () => {
   const response = await fetchClient("/users/me", {

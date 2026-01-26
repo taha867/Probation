@@ -34,12 +34,6 @@ exports.AppModule = AppModule = __decorate([
                 subscribers: [user_subscriber_1.UserSubscriber], // Register TypeORM entity subscriber
             }),
             throttler_1.ThrottlerModule.forRoot([
-                // rate limit per ip address
-                {
-                    name: "default",
-                    ttl: 60000, // 1 minute
-                    limit: 500, // 20 requests per minute
-                },
                 {
                     name: "login", // Login endpoint
                     ttl: 60000, // 1 minute

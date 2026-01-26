@@ -1,6 +1,4 @@
-/**
- * Auth Mutations - React Query hooks for authentication operations
- */
+
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuthContext } from "../../contexts/authContext";
 import { authActions } from "../../reducers/authReducer";
@@ -19,9 +17,7 @@ import {
   decodeAndValidateToken,
 } from "../../utils/tokenUtils";
 
-/**
- * Hook for user login
- */
+
 export const useLogin = () => {
   const { dispatch } = useAuthContext();
   const { loginSuccess, authError } = authActions;
@@ -51,9 +47,7 @@ export const useLogin = () => {
   });
 };
 
-/**
- * Hook for user registration
- */
+
 export const useSignup = () => {
   const { dispatch } = useAuthContext();
   const { signupSuccess, authError } = authActions;
@@ -69,9 +63,7 @@ export const useSignup = () => {
   });
 };
 
-/**
- * Hook for user logout
- */
+
 export const useLogout = () => {
   const { dispatch } = useAuthContext();
   const { logout } = authActions;
@@ -91,9 +83,7 @@ export const useLogout = () => {
   });
 };
 
-/**
- * Hook for forgot password
- */
+
 export const useForgotPassword = () => {
   const { dispatch } = useAuthContext();
   const { forgotPasswordSuccess, authError } = authActions;
@@ -109,9 +99,7 @@ export const useForgotPassword = () => {
   });
 };
 
-/**
- * Hook for reset password
- */
+
 export const useResetPassword = () => {
   const { dispatch } = useAuthContext();
   const { resetPasswordSuccess, authError } = authActions;
@@ -127,9 +115,7 @@ export const useResetPassword = () => {
   });
 };
 
-/**
- * Hook for updating profile image
- */
+
 export const useUpdateProfileImage = () => {
   const { dispatch, state } = useAuthContext();
   const { setUserFromToken, authError } = authActions;
@@ -161,9 +147,7 @@ export const useUpdateProfileImage = () => {
   });
 };
 
-/**
- * Hook for changing password
- */
+
 export const useChangePassword = () => {
   const { dispatch, state } = useAuthContext();
   const { authError } = authActions;

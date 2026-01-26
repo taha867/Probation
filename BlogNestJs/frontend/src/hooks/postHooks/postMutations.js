@@ -7,13 +7,10 @@ import { homePostsKeys, userPostsKeys, postDetailKeys } from "../../utils/queryK
 import { POST_STATUS } from "../../utils/constants";
 
 const { PUBLISHED } = POST_STATUS;
-/**
- * Hook for creating a new post
- * Automatically invalidates user posts and home posts (if published)
- */
+
 export const useCreatePost = () => {
   const queryClient = useQueryClient();
-  const { invalidateQueries } = queryClient;
+  
   return useMutation({
     mutationFn: async (formData) => {
       // FormData middleware handles Content-Type automatically
@@ -29,13 +26,9 @@ export const useCreatePost = () => {
   });
 };
 
-/**
- * Hook for updating an existing post
- * Automatically invalidates user posts and home posts (if status changed)
- */
+
 export const useUpdatePost = () => {
   const queryClient = useQueryClient();
-  const { invalidateQueries } = queryClient;
 
   return useMutation({
     mutationFn: async ({ postId, formData, previousStatus }) => {
@@ -66,13 +59,9 @@ export const useUpdatePost = () => {
   });
 };
 
-/**
- * Hook for deleting a post
- * Automatically invalidates user posts and home posts (if was published)
- */
+
 export const useDeletePost = () => {
   const queryClient = useQueryClient();
-  const { invalidateQueries } = queryClient;
 
   return useMutation({
     mutationFn: async ({ postId, wasPublished }) => {

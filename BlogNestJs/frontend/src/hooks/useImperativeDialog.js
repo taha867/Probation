@@ -1,12 +1,3 @@
-/**
- * useImperativeDialog
- *
- * Small, focused hook to manage "imperative" dialog state:
- * - isOpen
- * - payload for the dialog (e.g. post metadata)
- *
- * Each consumer keeps its own domain logic (fetching, deleting, etc.).
- */
 import { useState, useCallback } from "react";
 
 export const useImperativeDialog = (initialPayload = null) => {

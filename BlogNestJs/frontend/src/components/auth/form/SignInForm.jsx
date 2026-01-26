@@ -25,7 +25,7 @@ const SignInForm = () => {
       await signin(data);
       navigate("/dashboard");
     } catch (error) {
-      // Error message is handled by axios interceptor
+      
     }
   };
 

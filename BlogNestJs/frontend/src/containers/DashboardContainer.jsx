@@ -7,12 +7,12 @@ import DeletePostDialog from "../components/posts/DeletePostDialog";
 
 export const DashboardContainer = () => {
 
-  // Dialog refs for controlling local dialog components (refs don't cause re-renders)
+  
   const editDialogRef = useRef(null);
   const deleteDialogRef = useRef(null);
 
-  // Dialog handlers - stabilized with useCallback to prevent child re-renders
-  // React 19 best practice: stabilize handlers passed as props
+  
+
   const handleEditPost = useCallback((post) => {
     editDialogRef.current?.openDialog(post);
   }, []);

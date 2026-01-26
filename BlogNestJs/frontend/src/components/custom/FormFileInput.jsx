@@ -22,7 +22,6 @@ export const FormFileInput = ({
   accept = "image/*",
   maxSizeMB = 5,
   disabled = false,
-  className = "",
   existingImageUrl = null, // URL string for existing image preview
 }) => {
   const [preview, setPreview] = useState(null);

@@ -1,5 +1,5 @@
 import { memo, useMemo, useState, useEffect, useCallback } from "react";
-import { Link, useLocation, useSearchParams, useNavigate } from "react-router-dom";
+import { Link, useLocation} from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, X, PlusCircle } from "lucide-react";
 import { useAuth } from "../hooks/authHooks/authHooks";
@@ -8,7 +8,7 @@ import PostFilter from "./common/PostFilter";
 
 const Navbar = memo(() => {
   const { isAuthenticated } = useAuth();
-  const location = useLocation();
+  const location = useLocation(); //tells where user is rignt now (current path, query string, hash)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Dynamic navigation links based on authentication status

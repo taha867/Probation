@@ -1,7 +1,4 @@
-/**
- * ToastNotification - Centralized toast notification component
- * Provides consistent styling and configuration for react-hot-toast
- */
+
 import { Toaster } from "react-hot-toast";
 
 const ToastNotification = () => {

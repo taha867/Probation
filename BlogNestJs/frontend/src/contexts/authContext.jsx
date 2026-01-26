@@ -27,7 +27,7 @@ export const AuthProvider = ({ children }) => {
     }
   }, [state.isInitializing]);
 
-  // Memoize the context value to prevent unnecessary re-renders
+
   // Only re-creates when state or dispatch changes
   const contextValue = useMemo(
     () => ({

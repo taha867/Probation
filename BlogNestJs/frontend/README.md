@@ -36,6 +36,8 @@ A modern, production-ready blog application frontend built with React 19, showca
 - **Shadcn/ui** - Accessible component library (Radix UI primitives)
 - **Lucide React** - Icon library
 - **Tailwind Merge** - Merge Tailwind classes intelligently
+- **Three.js** - 3D library for WebGL
+- **Vanta.js** - Animated 3D background effects
 
 ### Form Management & Validation
 - **React Hook Form 7.68.0** - Performant form library
@@ -70,7 +72,8 @@ frontend/
 ├── src/
 │   ├── components/           # React components
 │   │   ├── auth/             # Authentication components
-│   │   │   ├── SignIn.jsx    # Sign in page container
+│   │   │   ├── AuthLayout.jsx    # Unified auth layout with 3D background
+│   │   │   ├── SignIn.jsx        # Sign in page container
 │   │   │   ├── SignUp.jsx    # Sign up page container
 │   │   │   ├── ChangePaswword.jsx  # Change password container
 │   │   │   ├── ForgotPassword.jsx  # Forgot password container
@@ -324,7 +327,19 @@ App renders with auth state
 - Retries failed request with new token
 - Redirects to login if refresh fails
 
-### 4. Form Handling Pattern
+- Automatically refreshes token on 401 Unauthorized
+- Pauses requests while refreshing
+- Retries failed request with new token
+- Redirects to login if refresh fails
+
+### 4. 3D Visual Effects
+**Technology**: Vanta.js + Three.js
+- Implemented via `AuthLayout` component
+- Provides interactive "Clouds" effect on authentication pages
+- Uses `useRef` and `useEffect` for WebGL context lifecycle management
+- Graceful cleanup on unmount to prevent memory leaks
+
+### 5. Form Handling Pattern
 
 **Standard Pattern**:
 ```javascript

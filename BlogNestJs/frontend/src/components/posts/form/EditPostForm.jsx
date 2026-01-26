@@ -18,7 +18,7 @@ import { POST_STATUS } from "../../../utils/constants";
 import { createSubmitHandlerWithToast } from "../../../utils/formSubmitWithToast";
 
 const EditPostForm = forwardRef((_props, ref) => {
-  // Dialog state via shared hook
+
   const {
     isOpen,
     payload: currentPost,
@@ -26,7 +26,7 @@ const EditPostForm = forwardRef((_props, ref) => {
     closeDialog: closeDialogState,
   } = useImperativeDialog(null);
 
-  // React Query mutation - handles API call and cache invalidation automatically
+
   const updatePostMutation = useUpdatePost();
 
   // Expose methods to parent via ref
@@ -79,10 +79,7 @@ const EditPostForm = forwardRef((_props, ref) => {
       formData.append("body", data.body);
       formData.append("status", data.status);
 
-      // Handle image:
-      // - If File object: append to FormData (new upload)
-      // - If null: append empty string (remove image)
-      // - If string (existing URL): don't include (backend keeps existing)
+      
       if (data.image instanceof File) {
         // New file selected
         formData.append("image", data.image);
@@ -90,8 +87,7 @@ const EditPostForm = forwardRef((_props, ref) => {
         // Image was removed
         formData.append("image", "");
       }
-      // If data.image is a string (existing URL), don't append (backend keeps existing)
-
+     
       // React Query mutation handles API call and cache invalidation automatically
       // Pass previousStatus so mutation can check if home posts need invalidation
       await updatePostMutation.mutateAsync({
@@ -102,7 +98,7 @@ const EditPostForm = forwardRef((_props, ref) => {
 
       closeDialogState();
     } catch (error) {
-      // Error handling is done by React Query and axios interceptor
+      
     }
   };
 

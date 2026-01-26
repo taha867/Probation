@@ -21,6 +21,7 @@ const update_post_input_dto_1 = require("./dto/update-post-input.dto");
 const list_posts_query_payload_dto_1 = require("./dto/list-posts-query-payload.dto");
 const pagination_query_input_dto_1 = require("./dto/pagination-query-input.dto");
 const user_decorator_1 = require("../custom-decorators/user.decorator");
+const public_decorator_1 = require("../custom-decorators/public.decorator");
 const constants_1 = require("../lib/constants");
 let PostsController = class PostsController {
     constructor(postsService) {
@@ -73,6 +74,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], PostsController.prototype, "create", null);
 __decorate([
+    (0, public_decorator_1.Public)(),
     (0, common_1.Get)(),
     __param(0, (0, common_1.Query)()),
     __metadata("design:type", Function),
@@ -80,6 +82,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], PostsController.prototype, "list", null);
 __decorate([
+    (0, public_decorator_1.Public)(),
     (0, common_1.Get)(':id'),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
@@ -87,6 +90,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], PostsController.prototype, "getOne", null);
 __decorate([
+    (0, public_decorator_1.Public)(),
     (0, common_1.Get)(':postId/comments'),
     __param(0, (0, common_1.Param)('postId', common_1.ParseIntPipe)),
     __param(1, (0, common_1.Query)()),

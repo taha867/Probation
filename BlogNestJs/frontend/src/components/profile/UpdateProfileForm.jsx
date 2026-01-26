@@ -34,16 +34,12 @@ const UpdateProfileForm = () => {
       if (data.image instanceof File) {
         formData.append("image", data.image);
       } else if (data.image === null && user.image) {
-        // If explicitly set to null (removed), send empty string if backend expects it to clear
-        // Logic depends on backend. Current backend: if image is "", it clears it.
-         // But typical FormFileInput logic: if it's null, it might mean "no change" if not dirty?
-         // For now, let's assume if it is NOT undefined, we send it.
       }
       
-      // Since useUpdateProfileImage wraps updateUserProfile service which sends FormData, this works.
+      
       await updateProfileImage(formData);
       
-      // Success is handled by global interceptor hooks usually, but we can verify
+    
     } catch (error) {
       console.error("Update failed", error);
     }
