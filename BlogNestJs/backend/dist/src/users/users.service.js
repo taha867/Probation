@@ -58,26 +58,28 @@ let UsersService = class UsersService {
                 id: true,
                 name: true,
                 email: true,
+                phone: true,
                 image: true,
             },
         });
         if (!user) {
             throw new common_1.NotFoundException(USER_NOT_FOUND);
         }
-        const { name, email, image } = user;
+        const { name, email, phone, image } = user;
         return {
             data: {
                 user: {
                     id: user.id,
                     name,
                     email,
+                    phone,
                     image,
                 },
             },
         };
     }
     async getUserPostsWithComments(userId, query) {
-        const { page, limit, search } = query;
+        const { page, limit, search, status } = query;
         const user = await this.userRepository.findOne({
             where: { id: userId },
             select: {
@@ -94,6 +96,9 @@ let UsersService = class UsersService {
             .createQueryBuilder("post")
             .leftJoinAndSelect("post.author", "author")
             .where("post.userId = :userId", { userId });
+        if (status) {
+            qb.andWhere("post.status = :status", { status });
+        }
         if (search) {
             qb.andWhere(new typeorm_2.Brackets((qb) => {
                 qb.where("post.title ILIKE :search", {

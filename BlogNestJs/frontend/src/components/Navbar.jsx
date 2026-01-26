@@ -9,15 +9,16 @@ import PostFilter from "./common/PostFilter";
 const Navbar = memo(() => {
   const { isAuthenticated } = useAuth();
   const location = useLocation();
-  const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Dynamic navigation links based on authentication status
   const links = useMemo(() => {
     const baseLinks = [{ label: "Home", to: "/" }];
     if (isAuthenticated) {
-      return [...baseLinks, { label: "My Articles", to: "/dashboard" }];
+      return [
+        ...baseLinks,
+        { label: "My Articles", to: "/dashboard" },
+      ];
     }
     return baseLinks;
   }, [isAuthenticated]);
@@ -121,17 +122,18 @@ const Navbar = memo(() => {
           </div>
 
           {/* Auth Actions */}
-          <div className="flex-shrink-0 flex items-center gap-4 ml-4">
+          <div className="flex-shrink-0 flex items-center gap-4 ml-auto">
             {isAuthenticated ? (
               <>
                 <Link to="/create-post">
                   <Button
                     variant="default"
                     size="sm"
-                    className="bg-zinc-900 text-white hover:bg-zinc-800 rounded-lg px-4 font-semibold hidden sm:flex items-center gap-2"
+                    className="bg-zinc-900 text-white hover:bg-zinc-800 rounded-lg px-4 font-semibold flex items-center gap-2"
                   >
                     <PlusCircle className="h-4 w-4" />
-                    Create Article
+                    <span className="hidden sm:inline">Create Article</span>
+                    <span className="sm:hidden">Create</span>
                   </Button>
                 </Link>
                 <UserProfileMenu />

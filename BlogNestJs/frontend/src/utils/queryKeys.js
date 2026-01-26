@@ -12,12 +12,13 @@ export const homePostsKeys = {
 export const userPostsKeys = {
   all: ["userPosts"],
   lists: () => [...userPostsKeys.all, "list"],
-  list: (userId, page, limit, search) => [
+  list: (userId, page, limit, search, status) => [
     ...userPostsKeys.lists(),
     userId,
     page,
     limit,
     search || "",
+    status || "",
   ],
 };
 

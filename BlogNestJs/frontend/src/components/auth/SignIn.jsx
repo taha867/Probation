@@ -2,7 +2,6 @@ import { Link } from "react-router-dom";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -34,9 +33,6 @@ const SignIn = () => {
               <CardTitle className="text-lg font-semibold text-slate-900">
                 Welcome back
               </CardTitle>
-              <CardDescription className="text-xs text-slate-600">
-                Sign in to access your account
-              </CardDescription>
             </CardHeader>
 
             <CardContent className="space-y-3">

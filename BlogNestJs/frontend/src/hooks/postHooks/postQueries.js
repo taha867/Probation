@@ -38,11 +38,11 @@ export const useHomePosts = (page = 1, limit, search) => {
 /**
  * Hook for fetching user's posts (dashboard)
  */
-export const useUserPosts = (page = 1, limit, search) => {
+export const useUserPosts = (page = 1, limit, search, status) => {
   const { user: { id: userId } = {} } = useAuth();
 
   return useQuery({
-    queryKey: userPostsKeys.list(userId, page, limit, search),
+    queryKey: userPostsKeys.list(userId, page, limit, search, status),
     queryFn: async () => {
 
       // No need for null check here - enabled option prevents query when userId is falsy
@@ -50,6 +50,7 @@ export const useUserPosts = (page = 1, limit, search) => {
         page,
         limit,
         search: search || undefined,
+        status: status || undefined,
       });
       const { posts = [], pagination = {} } = result;
       return {

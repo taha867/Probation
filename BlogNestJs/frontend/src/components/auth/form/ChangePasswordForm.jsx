@@ -47,7 +47,6 @@ const ChangePasswordForm = () => {
           placeholder="Enter your new password"
           autoComplete="new-password"
           showToggle
-          helperText="Use 8 or more characters with a mix of letters, numbers & symbols."
           className="h-11"
         />
 
@@ -59,15 +58,13 @@ const ChangePasswordForm = () => {
           placeholder="Re-enter your new password"
           autoComplete="new-password"
           showToggle
-          helperText="Use 8 or more characters with a mix of letters, numbers & symbols."
           className="h-11"
         />
 
         <Button
           type="submit"
-          variant="success"
+          className="w-full h-11 font-medium bg-green-600 hover:bg-green-700 text-white shadow-sm hover:shadow-md transition-all mt-4"
           disabled={isLoading}
-          className="w-full h-11 font-medium"
         >
           {isLoading ? "Saving..." : "Save Changes"}
         </Button>

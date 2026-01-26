@@ -4,6 +4,9 @@ import {
   basePasswordSchema,
   baseConfirmPasswordSchema,
   imageFileSchema,
+  baseNameSchema,
+  basePhoneSchema,
+  baseEmailSchema
 } from "./commonSchemas";
 
 const {
@@ -33,4 +36,15 @@ export const changePasswordSchema = yup.object({
   confirmPassword: baseConfirmPasswordSchema("newPassword").required(
     CONFIRM_PASSWORD_REQUIRED,
   ),
+});
+
+/**
+ * Update Profile Validation Schema
+ * Validates name, phone, email, and optional image
+ */
+export const updateProfileSchema = yup.object({
+  name: baseNameSchema.required(VALIDATION_MESSAGES.NAME_REQUIRED).min(2, VALIDATION_MESSAGES.NAME_TOO_SHORT).max(50, VALIDATION_MESSAGES.NAME_TOO_LONG),
+  phone: basePhoneSchema.required(VALIDATION_MESSAGES.PHONE_REQUIRED),
+  email: baseEmailSchema.required(VALIDATION_MESSAGES.EMAIL_REQUIRED),
+  image: imageFileSchema.nullable(),
 });

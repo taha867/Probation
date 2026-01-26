@@ -67,6 +67,7 @@ export class UsersService {
         id: true,
         name: true,
         email: true,
+        phone: true,
         image: true,
       },
     });
@@ -74,13 +75,14 @@ export class UsersService {
     if (!user) {
       throw new NotFoundException(USER_NOT_FOUND);
     }
-    const { name, email, image } = user;
+    const { name, email, phone, image } = user;
     return {
       data: {
         user: {
           id: user.id,
           name,
           email,
+          phone,
           image,
         },
       },
@@ -88,7 +90,7 @@ export class UsersService {
   }
 
   async getUserPostsWithComments(userId: number, query: GetUserPostsQueryDto) {
-    const { page, limit, search } = query;
+    const { page, limit, search, status } = query;
 
     const user = await this.userRepository.findOne({
       where: { id: userId },
@@ -108,6 +110,10 @@ export class UsersService {
       .createQueryBuilder("post")
       .leftJoinAndSelect("post.author", "author")
       .where("post.userId = :userId", { userId });
+
+    if (status) {
+      qb.andWhere("post.status = :status", { status });
+    }
 
     if (search) {
       qb.andWhere(

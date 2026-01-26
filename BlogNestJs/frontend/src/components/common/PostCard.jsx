@@ -116,13 +116,9 @@ const PostCard = ({ post, variant = "public", onView, onEdit, onDelete }) => {
         <div className="flex-1 flex flex-col justify-between min-w-0">
           <div>
             {/* Status / category + action buttons (dashboard only) */}
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-gray-500 uppercase tracking-wide">
-                {isDashboard
-                  ? (status || "draft").toString().toUpperCase()
-                  : "Published"}
-              </span>
-              {isDashboard && (onView || onEdit || onDelete) && (
+            {/* Action buttons (dashboard only) */}
+            {isDashboard && (onView || onEdit || onDelete) && (
+              <div className="flex items-center justify-end mb-2">
                 <div
                   className="flex items-center gap-1"
                   onClick={(e) => e.stopPropagation()}
@@ -136,7 +132,7 @@ const PostCard = ({ post, variant = "public", onView, onEdit, onDelete }) => {
                         e.stopPropagation();
                         onView(post);
                       }}
-                      className="h-7 w-7"
+                       className="h-7 w-7"
                     >
                       <Eye className="h-4 w-4" />
                     </Button>
@@ -170,8 +166,8 @@ const PostCard = ({ post, variant = "public", onView, onEdit, onDelete }) => {
                     </Button>
                   )}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* Title */}
             <h2 className="text-2xl font-bold text-gray-900 mb-3 line-clamp-2 hover:text-blue-600 transition-colors">

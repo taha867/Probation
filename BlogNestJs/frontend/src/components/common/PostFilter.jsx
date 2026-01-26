@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useId } from "react";
 import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,7 @@ const PostFilter = ({
   const initialSearch = searchParams.get("search") || "";
   
   const [searchValue, setSearchValue] = useState(initialSearch);
-  const inputId = "post-search-input";
+  const inputId = useId();
 
   // 1. Sync local search value if URL changes (e.g. back button)
   useEffect(() => {

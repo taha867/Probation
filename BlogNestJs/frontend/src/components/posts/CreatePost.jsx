@@ -15,9 +15,6 @@ const CreatePost = () => {
         {/* Header */}
         <div>
           <h1 className="text-2xl font-bold">Create New Post</h1>
-          <p className="text-muted-foreground">
-            Share your thoughts with the world
-          </p>
         </div>
 
         {/* Create Post Form */}

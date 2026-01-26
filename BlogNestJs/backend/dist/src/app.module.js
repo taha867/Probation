@@ -38,7 +38,7 @@ exports.AppModule = AppModule = __decorate([
                 {
                     name: "default",
                     ttl: 60000, // 1 minute
-                    limit: 100, // 20 requests per minute
+                    limit: 500, // 20 requests per minute
                 },
                 {
                     name: "login", // Login endpoint
