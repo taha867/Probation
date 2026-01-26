@@ -93,7 +93,6 @@ const UpdateProfileForm = () => {
           label="Email Address"
           placeholder="john@example.com"
           disabled={isLoading}
-          helperText="Changing email may require re-verification."
         />
 
         <div className="flex justify-end pt-4">

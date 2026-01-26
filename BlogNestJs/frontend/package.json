@@ -33,6 +33,8 @@
     "react-router-dom": "^7.10.1",
     "tailwind-merge": "^3.4.0",
     "tailwindcss-animate": "^1.0.7",
+    "three": "^0.182.0",
+    "vanta": "^0.5.24",
     "yup": "^1.7.1",
     "zod": "^4.2.0"
   },
